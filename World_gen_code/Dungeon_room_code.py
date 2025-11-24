@@ -5,8 +5,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import random
 from enum import Enum
-from Objects_code.Item_class import Items
-from Objects_code.Character_class import Enemy
+from Game_systems.Item_class import Items
+from Game_systems.Enemy_class import Enemy
 
 class Room_Types(Enum):
     EMPTY = "empty"
@@ -29,6 +29,7 @@ class Room():
             "items": []
         }
         self.day_counter = day_counter
+        self.enemy_template = None
 
         match room_type:
             case Room_Types.TREASURE_ROOM:
@@ -95,6 +96,8 @@ class Room():
 
         return text_block
     
+    def set_enemy_template(self, enemy_type):
+        self.enemy_template = enemy_type
 
     def __str__(self):
         enemy_list = ", ".join([f"{enemy.name} ({enemy.hp} HP)" for enemy in self.contents["enemies"]]) or "None"
