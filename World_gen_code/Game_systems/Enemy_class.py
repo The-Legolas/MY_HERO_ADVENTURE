@@ -33,6 +33,8 @@ class Enemy_behavior_tag(Enum):
     SLOW = "slow"
     HULKING = "hulking"
 
+
+
 class Enemy(Character):
     def __init__(self, name: str, hp: int, damage: int, 
                  defence: int, rarity: Enemy_Rarity, 
@@ -53,7 +55,7 @@ class Enemy(Character):
         self.behavior_tag = behavior_tag if behavior_tag else Enemy_behavior_tag.NORMAL
 
         self.is_scaled = False
-    
+
     
     def scale_stats(self, day_counter: int, depth: int) -> None:
         if self.is_scaled == True:
@@ -110,7 +112,10 @@ ENEMY_DEFINITIONS = {
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 50,
         "gold_reward": 3,
-        "loot_table": [],
+        "loot_table": [
+            {"item": "goblin_ear", "chance": 0.60},
+            {"item": "small_healing_potion", "chance": 0.10},
+        ],
         "behavior_tag": Enemy_behavior_tag.NORMAL
     },
     Enemy_type.ENEMY_SLIME: {
@@ -122,7 +127,11 @@ ENEMY_DEFINITIONS = {
         "sub_type": Enemy_sub_type.OOZE,
         "xp_reward": 50,
         "gold_reward": 2,
-        "loot_table": [],
+        "loot_table": [
+            {"item": "slime_goop", "chance": 0.70},
+            {"item": "small_healing_potion", "chance": 0.10},
+            {"item": "explosive_potion", "chance": 0.05},
+        ],
         "behavior_tag": Enemy_behavior_tag.COWARDLY
     },
     Enemy_type.ENEMY_WOLF:  {
@@ -134,7 +143,11 @@ ENEMY_DEFINITIONS = {
         "sub_type": Enemy_sub_type.BEAST,
         "xp_reward": 60,
         "gold_reward": 3,
-        "loot_table": [],
+        "loot_table": [
+            {"item": "wolf_tooth", "chance": 0.65},
+            {"item": "small_healing_potion", "chance": 0.13},
+            {"item": "medium_healing_potion", "chance": 0.07},
+        ],
         "behavior_tag": Enemy_behavior_tag.AGGRESSIVE
     },
     Enemy_type.ENEMY_ORC: {
@@ -146,7 +159,11 @@ ENEMY_DEFINITIONS = {
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 100,
         "gold_reward": 20,
-        "loot_table": [],
+        "loot_table": [
+            {"item": "goblin_ear", "chance": 0.25},
+            {"item": "basic_armor", "chance": 0.10},
+            {"item": "medium_healing_potion", "chance": 0.20},
+        ],
         "behavior_tag": Enemy_behavior_tag.SLOW
     },
     Enemy_type.ENEMY_BOSS_DRAGON : {
@@ -158,7 +175,11 @@ ENEMY_DEFINITIONS = {
         "sub_type": Enemy_sub_type.DRAGON,
         "xp_reward": 1800,
         "gold_reward": 450,
-        "loot_table": [],
+        "loot_table": [
+            {"item": "improved_sword", "chance": 1.0},
+            {"item": "grand_healing_potion", "chance": 0.5},
+            {"item": "slime_goop", "chance": 0.001}
+        ],
         "behavior_tag": Enemy_behavior_tag.HULKING
     }
 }

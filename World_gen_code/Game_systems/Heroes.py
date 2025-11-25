@@ -2,12 +2,19 @@ import random
 from Game_systems.Character_class import Character
 
 class Warrior(Character):
-    def __init__(self, name: str, hp: int, damage: int, defence: int, equipment: dict[str, any], level: int | None = None):
-        super().__init__(name, hp, damage, defence, equipment, level)
+    def __init__(self, name: str, hp: int, damage: int, defence: int, 
+    equipment: dict[str, any], inventory: dict[str, any], 
+    level: int | None = None):
+        super().__init__(name, hp, damage, defence, equipment, inventory)
+
         self.defence *= 1.2
         self.hp *= 1.2
         self.damage *= 0.9
         self.max_hp = self.hp
+        self.level = level
+
+        self.equipment = equipment
+        self.inventory = inventory
     
     def take_damage(self, damage: int):
         reduced_damage = damage * 0.9
@@ -27,8 +34,6 @@ class Warrior(Character):
             outcome["damage"] += extra_damage
 
         return outcome
-
-    
 
     def level_up(self): #this method should be called exp_up but I don't want to implement it before I know how hard to make the enemies
         if self.level == 10:
@@ -58,5 +63,3 @@ class Warrior(Character):
                 self.defence *= 1.8
                 self.hp *= 1.9
                 self.damage *= 1.6
-
-

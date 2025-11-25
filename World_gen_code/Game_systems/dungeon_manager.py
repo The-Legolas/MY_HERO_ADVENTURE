@@ -78,11 +78,10 @@ class Dungeon_Manager():
     
 
     def compute_depth(self, pos: tuple[int, int] | None = None):
-        """
-        Computes ring-depth based on coordinates.
-        If no position is supplied, computes depth of the player's position.
-        Depth = max(abs(x), abs(y))
-        """
+        
+        #   Computes ring-depth based on coordinates.
+        #   If no position is supplied, computes depth of the player's position.
+        
         if pos is None:
             pos = self.player_current_pos
 
@@ -91,10 +90,7 @@ class Dungeon_Manager():
 
 
     def get_current_room(self):
-        """
-        Returns the Room object the player is currently inside.
-        If the room is missing (should not happen), returns None.
-        """
+        
         pos = self.player_current_pos
 
         return {
