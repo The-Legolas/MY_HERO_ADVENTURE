@@ -1,5 +1,5 @@
 import random
-from Game_systems.Character_class import Character
+from game.core.Character_class import Character
 
 class Warrior(Character):
     def __init__(self, name: str, hp: int, damage: int, defence: int, 

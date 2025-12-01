@@ -1,6 +1,6 @@
 import random
-from World_gen_code.Dungeon_room_code import Room, Room_Types
-from Game_systems.Enemy_class import Enemy_Spawner, spawn_enemy
+from game.world.Dungeon_room_code import Room, Room_Types
+from game.core.Enemy_class import Enemy_Spawner, spawn_enemy
 
 class Dungeon_Manager():
     def __init__(self, day_counter):
@@ -137,7 +137,7 @@ class Dungeon_Manager():
         return enemy_obj
 
     def spawn_boss_for_room(self, room):
-        from Game_systems.Enemy_class import Enemy_type
+        from game.core.Enemy_class import Enemy_type
 
         depth = self.compute_depth((room.pos_x, room.pos_y))
 

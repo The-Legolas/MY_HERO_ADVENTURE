@@ -5,8 +5,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import random
 from enum import Enum
-from Game_systems.Item_class import Items, spawn_item
-from Game_systems.Enemy_class import Enemy, Enemy_type, spawn_enemy
+from game.core.Item_class import Items, spawn_item
+from game.core.Enemy_class import Enemy, Enemy_type, spawn_enemy
 
 class Room_Types(Enum):
     EMPTY = "empty"

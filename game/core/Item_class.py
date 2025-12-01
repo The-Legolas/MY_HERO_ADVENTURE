@@ -1,7 +1,20 @@
 from enum import Enum
 import random
-from Game_systems.Character_class import Character
-from Game_systems.Enemy_class import Enemy, ENEMY_DEFINITIONS
+from game.core.Character_class import Character
+from game.core.Enemy_class import Enemy, ENEMY_DEFINITIONS
+
+def make_outcome(actor_name, action, target_name=None, damage=0, blocked=False, critical=False, died=False, extra=None):
+    return {
+        "actor": actor_name,
+        "action": action,
+        "target": target_name,
+        "damage": int(damage),
+        "blocked": bool(blocked),
+        "critical": bool(critical),
+        "died": bool(died),
+        "extra": extra or {}
+    }
+
 
 class Item_Type(Enum):
     CONSUMABLE = "consumable"
@@ -22,26 +35,42 @@ class Items():
         self.effect = effect
         self.value = value
 
-    def use(self, target: 'Character'):
+    def use(self, player: Character, target: Character):
         if not self.effect:
-            return "No effect to apply."
+            return make_outcome(player.name, "use_item_fail", getattr(target, "name", None),
+                                extra={"reason": "not_consumable", "item": self.name})
         
         if self.category != Item_Type.CONSUMABLE:
-            return "Item cannot be used."
+            return make_outcome(player.name, "use_item_fail", getattr(target, "name", None),
+                                extra={"reason": "no_effect", "item": self.name})
         
 
-        text_block = ""
+        total_damage = 0
+        total_heal = 0
+        details = []
 
         for effect_type, amount in self.effect.items():
             action = EFFECT_ACTIONS.get(effect_type)
-            if action:
-                action(target, amount)
+            if not action:
+                details.append({"effect": effect_type, "skipped": True})
+                continue
 
-            verb = EFFECT_VERBS.get(effect_type, effect_type)
+            action(target, amount)
 
-            text_block += f"{target.name.capitalize()} has been {verb} by {self.name} for {amount}.\n"
+            if effect_type == "damage":
+                total_damage += amount
+            elif effect_type == "heal":
+                total_heal += amount
 
-        return text_block
+            details.append({"effect": effect_type, "amount": amount})
+
+        extra = {"item": self.name, "details": details}
+        died = not target.is_alive() if hasattr(target, "is_alive") else False
+        outcome = make_outcome(player.name, "use_item", getattr(target, "name", None),
+                               damage=total_damage, blocked=False, critical=False, died=died, extra=extra)
+
+        return outcome
+        
 
 
 

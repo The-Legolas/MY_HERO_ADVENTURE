@@ -1,5 +1,5 @@
 import random
-from Game_systems.Item_class import Item_Type, Items
+from game.core.Item_class import Item_Type, Items, make_outcome
 
 
 class Character():
@@ -8,6 +8,7 @@ class Character():
         self.hp = hp
         self.damage = damage
         self.defence = defence
+        self.xp = 0
         
 
         self.equipment = {
@@ -20,7 +21,7 @@ class Character():
             "gold": 0
         }
     
-    def add_item(self, item: Items, amount:int = 1):
+    def add_item(self, item: Items, amount:int = 1) -> None:
         if item.name not in self.inventory["items"]:
             self.inventory["items"][item.name] = {
                 "item": item, 
@@ -37,7 +38,7 @@ class Character():
         return
     
 
-    def remove_item(self, item: Items, amount: int = 1):
+    def remove_item(self, item: Items, amount: int = 1) -> None:
         entry = self.inventory["items"][item.name]
 
         if item.stackable:
@@ -49,16 +50,32 @@ class Character():
         else:
             del self.inventory["items"][item.name]
 
-    def use_item(self, item: Items, target: 'Character'):
-        if item.category != Item_Type.CONSUMABLE:
-            return "cannot use"
-        
-        item.use(target)
+    def use_item(self, item: Items, target: 'Character') -> None:
+        if isinstance(item, str):
+            entry = self.inventory["items"].get(item)
+            if not entry:
+                return make_outcome(self.name, "use_item_fail", getattr(target, "name", None),
+                                    extra={"reason": "item_key_missing", "item_key": item})
+            item_obj = entry["item"]
+        else:
+            item_obj = item
 
-        self.remove_item(item, 1)
+        outcome = item_obj.use(self, target)
+
+        inventory = self.inventory["items"]
+        if item_obj.name in inventory:
+            entry = inventory[item_obj.name]
+            if item_obj.stackable:
+                entry["count"] -= 1
+                if entry["count"] <= 0:
+                    del inventory[item_obj.name]
+            else:
+                del inventory[item_obj.name]
+
+        return outcome
         
 
-    def equip_item(self, item: Items):
+    def equip_item(self, item: Items) -> None:
         if item.category not in (Item_Type.WEAPON, Item_Type.ARMOR):
             return f"Cannot equip {item.category}"
 
@@ -82,7 +99,7 @@ class Character():
         self.remove_item(item, 1)
         
 
-    def unequip_item(self, item: Items):
+    def unequip_item(self, item: Items) -> None:
         slot = item.category
 
         for stat, value in item.stats.items():
@@ -100,7 +117,7 @@ class Character():
         self.equipment[slot] = None
 
 
-    def sell_item(self, item: Items):
+    def sell_item(self, item: Items) -> None:
         if item.value == 0:
             return "Failed to sell"
         self.inventory["gold"] += item.value
@@ -115,7 +132,7 @@ class Character():
         return True if self.hp > 0 else False
 
 
-    def debug_attack(self, other: 'Character') -> None:
+    def debug_attack(self, other: 'Character') -> str:
         text_block = ""
 
         text_block += f"{self.name} is attacking {other.name}"
@@ -135,7 +152,7 @@ class Character():
         return text_block
     
 
-    def attack(self, other: 'Character') -> None:
+    def attack(self, other: 'Character') -> dict:
         outcome_table = {
             "attacker": self.name,
             "target": other.name,

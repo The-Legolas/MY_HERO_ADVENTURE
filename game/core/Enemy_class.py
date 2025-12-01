@@ -1,6 +1,6 @@
 from enum import Enum
 import random
-from Game_systems.Character_class import Character
+from game.core.Character_class import Character
 
 class Enemy_Rarity(Enum):
     COMMON = 100
