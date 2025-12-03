@@ -188,3 +188,22 @@ def roll_room_type(day_counter) -> Room_Types:
     else:
         return Room_Types.EMPTY
 
+def compute_farthest(dungeon_rooms) -> tuple:
+    if not dungeon_rooms:
+        return None
+
+    best_pos = None
+    best_depth = -1
+
+    for pos in dungeon_rooms.keys():
+        x, y = pos
+        depth = max(abs(x), abs(y))
+        if depth > best_depth:
+            best_depth = depth
+            best_pos = pos
+        elif depth == best_depth:
+            bx, by = best_pos
+            if (abs(x), abs(y)) > (abs(bx), abs(by)):
+                best_pos = pos
+
+    return best_pos

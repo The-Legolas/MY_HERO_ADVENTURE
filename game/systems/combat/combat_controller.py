@@ -1,12 +1,10 @@
+from combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
+from combat.combat_turn import _get_initiative_value
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy
 from game.world.Dungeon_room_code import Room
 from game.core.Item_class import roll_loot
 from typing import Optional, Any
-
-from combat.Combat_manager import Action
-from combat.Combat_manager import _get_initiative_value, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
-
 
 
 class Combat_State():

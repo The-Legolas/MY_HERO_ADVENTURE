@@ -1,6 +1,6 @@
 import random
 from typing import Optional, Any
-from combat.Combat_manager import Combat_State
+from combat.combat_controller import Combat_State
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 

@@ -5,8 +5,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import random
 from enum import Enum
-from game.core.Item_class import Items, spawn_item
-from game.core.Enemy_class import Enemy, Enemy_type, spawn_enemy
+from core.Item_class import Items, spawn_item
+from core.Enemy_class import Enemy, Enemy_type, spawn_enemy
 
 class Room_Types(Enum):
     EMPTY = "empty"
@@ -16,6 +16,7 @@ class Room_Types(Enum):
     SHOP = "shop"
     INN = "inn"
     BOSS_ROOM = "boss room"
+    TOWN_GATE = "town gate"
 
 
 class Room(): 
@@ -37,7 +38,7 @@ class Room():
                         continue
                     self.contents["items"].append(item)
                 
-                self.contents["items"].append(random.choice(Items.list()))
+                #self.contents["items"].append(random.choice(Items.list()))
             
             case Room_Types.BOSS_ROOM:
                 for enemy in boss_room_spawner(self.day_counter):
