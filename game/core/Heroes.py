@@ -5,7 +5,7 @@ class Warrior(Character):
     def __init__(self, name: str, hp: int, damage: int, defence: int, 
     equipment: dict[str, any], inventory: dict[str, any], 
     level: int | None = None):
-        super().__init__(name, hp, damage, defence, equipment, inventory)
+        super().__init__(name, hp, damage, defence, equipment, inventory) ##### add EXP to this class
 
         self.defence *= 1.2
         self.hp *= 1.2

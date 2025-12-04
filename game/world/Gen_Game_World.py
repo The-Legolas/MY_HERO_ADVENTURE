@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import random
 from Dungeon_room_code import Room, Room_Types
 from dungeon_manager import Dungeon_Manager, compute_farthest
+from .town_logic.town_layout import build_town_graph
 
 class Game_World():
     def __init__(self, day_counter, seed=None) -> None:
@@ -20,12 +21,9 @@ class Game_World():
     
 
     def build_town(self) -> None:
-        self.areas["Town"] = {
-            Room(Room_Types.TAVERN, day_counter=self.day_counter),
-            Room(Room_Types.SHOP, day_counter=self.day_counter),
-            Room(Room_Types.INN, day_counter=self.day_counter),
-        }
-    
+        self.areas["Town"] = build_town_graph()
+
+
     def build_persistent_dungeons(self) -> None:
         self.areas["Cave"] = Dungeon_Manager(self.day_counter)
         self.areas["Castle"] = self.build_castle_manager()

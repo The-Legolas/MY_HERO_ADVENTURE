@@ -1,8 +1,3 @@
-import sys
-import os
-# Add the project's root folder to Python's search path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import random
 from enum import Enum
 from core.Item_class import Items, spawn_item
@@ -12,11 +7,7 @@ class Room_Types(Enum):
     EMPTY = "empty"
     ENEMY_ROOM = "enemy room"
     TREASURE_ROOM  = "treasure room"
-    TAVERN = "tavern"
-    SHOP = "shop"
-    INN = "inn"
     BOSS_ROOM = "boss room"
-    TOWN_GATE = "town gate"
 
 
 class Room(): 
@@ -37,9 +28,7 @@ class Room():
                     if item is None:
                         continue
                     self.contents["items"].append(item)
-                
-                #self.contents["items"].append(random.choice(Items.list()))
-            
+                            
             case Room_Types.BOSS_ROOM:
                 for enemy in boss_room_spawner(self.day_counter):
                     self.contents["enemies"].append(enemy)
@@ -58,7 +47,7 @@ class Room():
             for enemy in self.contents["enemies"]:
                 text_block += f"{enemy.name} (hp: {enemy.hp}, damage: {enemy.damage}, rarity: {enemy.rarity}, type: {enemy.type}, subtype: {enemy.sub_type})\n"
         else:
-            text_block += "No enemies present.\n"
+            text_block += "No enemies spawned yet. (this is normal if room not entered)\n"
         
 
         text_block += "Items\n"

@@ -1,3 +1,3 @@
 from .main import main
-from .generate_ import write_init_file, generate_inits, setup_logging, extract_definitions
+from .generate_ import setup_logging, write_init_file, extract_definitions, generate_inits
 # No public classes found
