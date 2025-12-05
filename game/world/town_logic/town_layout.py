@@ -1,19 +1,14 @@
 # Tasks to do
-# 1. and do (TASK GROUP 3: Define all Town Actions (enter building, rest, buy, sell, talk…))
-# this should be the last the Town logic I should need
-#
-#
-# 3. Refractor and add more logic to Gen_Game_World as it currently doesn't do anything with the newly created Town Graph
+# 1. Refractor and add more logic to Gen_Game_World as it currently doesn't do anything with the newly created Town Graph
 # and update it's room_visualize so it works again
 # 
-# 4. Create a basic game loop so I can playtest the game and add reasonable curve to everything
+# 2. Create a basic game loop so I can playtest the game and add reasonable curve to everything
 #
-# 5. Homestretch everything which has to be made, is, so now it's just for fun and adding interesting things to the game
+# 3. Homestretch everything which has to be made, is, so now it's just for fun and adding interesting things to the game
 # afterwards
 
 from .town_creation import Town_Actions, TownGraph, Location, Location_Type
 from .town_names import Town_names
-from core.Item_class import spawn_item
 
 def build_town_graph() -> TownGraph:
     town = TownGraph()
@@ -99,8 +94,8 @@ def _build_interior_locations() -> list[Location]:
 
     shop_metadata = {
         "inventory": [
-            spawn_item("basic_sword"),
-            spawn_item("small_healing_potion")
+            {"item_id": "basic_sword", "max_stock": 1},
+            {"item_id": "small_healing_potion", "max_stock": 6}
         ],
         "buy_multiplier": 1.0,
         "sell_multiplier": 0.5,
@@ -152,17 +147,3 @@ def _build_interior_locations() -> list[Location]:
 
     return [shop_int, inn_int, tavern_int]
 
-shop_metadata = {
-        "inventory": [
-            {
-            "item_id": "small_healing_potion",
-            "object": spawn_item("small_healing_potion"),
-            "base_price": 5,
-            "current_price": 5,
-            "max_stock": 6,
-            "stock": 6,
-            "demand_score": 0,
-            "sold_today": 0
-        },
-        ]
-}

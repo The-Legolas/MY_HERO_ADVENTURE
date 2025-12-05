@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 """
 import random
-from Dungeon_room_code import Room, Room_Types
+from Dungeon_room_code import Room_Types
 from dungeon_manager import Dungeon_Manager, compute_farthest
 from .town_logic.town_layout import build_town_graph
 
