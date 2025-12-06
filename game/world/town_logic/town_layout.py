@@ -1,6 +1,4 @@
 # Tasks to do
-# 1. Refractor and add more logic to Gen_Game_World as it currently doesn't do anything with the newly created Town Graph
-# and update it's room_visualize so it works again
 # 
 # 2. Create a basic game loop so I can playtest the game and add reasonable curve to everything
 #

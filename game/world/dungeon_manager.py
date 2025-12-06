@@ -99,7 +99,7 @@ class Dungeon_Manager():
             "depth": self.compute_depth(pos)
         }
 
-    def process_room_on_enter(self, room: Room):
+    def process_room_on_enter(self, room: Room) -> dict[str, list]:
         encounter = {
             "spawned_enemies": [],
             "special_events": []
@@ -114,6 +114,8 @@ class Dungeon_Manager():
             if len(room.contents["enemies"]) == 0:
                 boss = self.spawn_boss_for_room(room)
                 encounter["spawned_enemies"].append(boss)
+        
+        return encounter
 
 
 
@@ -157,6 +159,47 @@ class Dungeon_Manager():
             "room": room
         }
 
+    def room_visualize(self) -> list:
+        x_values = [pos[0] for pos in self.dungeon_rooms.keys()]
+        y_values = [pos[1] for pos in self.dungeon_rooms.keys()]
+
+        min_x, max_x = min(x_values), max(x_values)
+        min_y, max_y = min(y_values), max(y_values)
+
+        map_rows = []
+
+        for y in range(max_y, min_y - 1, -1):
+            row_string = ""
+
+            for x in range(min_x, max_x + 1):
+                position = (x, y)
+
+                if position in self.dungeon_rooms:
+                    room_pos = self.dungeon_rooms[position]
+
+                    if position == self.starting_position:
+                        symbol = "| S |"
+                    
+                    elif room_pos.room_type == Room_Types.TREASURE_ROOM:
+                        symbol = "| T |"
+
+                    elif room_pos.room_type == Room_Types.ENEMY_ROOM:
+                        symbol = "| E |"
+
+                    elif room_pos.room_type == Room_Types.EMPTY:
+                        symbol = "|EMP|"
+                    
+                    else:
+                        symbol = "| . |"
+
+                else:
+                    symbol = "     "
+                
+                row_string += symbol
+        
+            map_rows.append(row_string)
+
+        return map_rows
 
 
 
