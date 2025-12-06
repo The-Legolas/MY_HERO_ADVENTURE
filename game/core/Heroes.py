@@ -1,20 +1,21 @@
 import random
-from game.core.Character_class import Character
+from .Character_class import Character
 
 class Warrior(Character):
-    def __init__(self, name: str, hp: int, damage: int, defence: int, 
-    equipment: dict[str, any], inventory: dict[str, any], 
-    level: int | None = None):
-        super().__init__(name, hp, damage, defence, equipment, inventory) ##### add EXP to this class
+    def __init__(self, name: str):
+        base_hp = 30
+        base_damage = 7
+        base_defence = 10
 
-        self.defence *= 1.2
-        self.hp *= 1.2
-        self.damage *= 0.9
+        hp = int(base_hp * 1.2)
+        damage = int(base_damage * 0.9)
+        defence = int(base_defence * 1.2)
+
+        super().__init__(name, hp, damage, defence)
+
+        self.level = 1
         self.max_hp = self.hp
-        self.level = level
-
-        self.equipment = equipment
-        self.inventory = inventory
+        self.xp = 0
     
     def take_damage(self, damage: int):
         reduced_damage = damage * 0.9

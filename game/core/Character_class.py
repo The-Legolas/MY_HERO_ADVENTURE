@@ -1,5 +1,5 @@
 import random
-from game.core.Item_class import Item_Type, Items, make_outcome
+from .Item_class import Item_Type, Items, make_outcome
 
 
 class Character():
@@ -31,11 +31,6 @@ class Character():
         
         if item.stackable:
             self.inventory["items"][item.name]["count"] += amount
-
-        #if item.unique:    # There is no difference between having this and not untill I add more logic to
-        #    return 
-        
-        return
     
 
     def remove_item(self, item: Items, amount: int = 1) -> None:

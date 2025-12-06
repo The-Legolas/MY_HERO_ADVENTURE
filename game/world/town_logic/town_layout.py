@@ -45,7 +45,7 @@ def _build_town_gate() -> Location:
         name=Town_names.TOWN_GATE.value,
         location_type=Location_Type.EXTERIOR,
         actions=actions,
-        neighbor_locations=adjacent_locations,
+        adjacent_locations=adjacent_locations,
         extra_metadata={},
     )
 
@@ -60,7 +60,7 @@ def _build_exterior_locations() -> list[Location]:
             Town_Actions.ENTER_BUILDING,
             Town_Actions.TALK,
         ],
-        neighbor_locations=[Town_names.TOWN_GATE.value],
+        adjacent_locations=[Town_names.TOWN_GATE.value],
         extra_metadata={},
     )
 
@@ -71,7 +71,7 @@ def _build_exterior_locations() -> list[Location]:
             Town_Actions.ENTER_BUILDING,
             Town_Actions.TALK,
         ],
-        neighbor_locations=[Town_names.TOWN_GATE.value],
+        adjacent_locations=[Town_names.TOWN_GATE.value],
         extra_metadata={},
     )
 
@@ -82,7 +82,7 @@ def _build_exterior_locations() -> list[Location]:
             Town_Actions.ENTER_BUILDING,
             Town_Actions.TALK,
         ],
-        neighbor_locations=[Town_names.TOWN_GATE.value],
+        adjacent_locations=[Town_names.TOWN_GATE.value],
         extra_metadata={},
     )
 
@@ -107,7 +107,7 @@ def _build_interior_locations() -> list[Location]:
             Town_Actions.TALK,
             Town_Actions.LEAVE_BUILDING,
         ],
-        neighbor_locations=[],
+        adjacent_locations=[],
         extra_metadata=shop_metadata,
     )
 
@@ -123,7 +123,7 @@ def _build_interior_locations() -> list[Location]:
             Town_Actions.TALK,
             Town_Actions.LEAVE_BUILDING,
         ],
-        neighbor_locations=[],
+        adjacent_locations=[],
         extra_metadata=inn_metadata,
     )
 
@@ -139,7 +139,7 @@ def _build_interior_locations() -> list[Location]:
             Town_Actions.TALK,
             Town_Actions.LEAVE_BUILDING,
         ],
-        neighbor_locations=[],
+        adjacent_locations=[],
         extra_metadata=tavern_metadata,
     )
 

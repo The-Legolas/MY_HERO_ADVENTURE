@@ -1,7 +1,7 @@
 import random
 from enum import Enum
-from core.Item_class import Items, spawn_item
-from core.Enemy_class import Enemy, Enemy_type, spawn_enemy
+from ..core.Item_class import Items, spawn_item
+from ..core.Enemy_class import Enemy, Enemy_type, spawn_enemy
 
 class Room_Types(Enum):
     EMPTY = "empty"

@@ -1,6 +1,7 @@
+from __future__ import annotations
 from enum import Enum
 import random
-from game.core.Character_class import Character
+from .Character_class import Character
 
 class Enemy_Rarity(Enum):
     COMMON = 100
@@ -84,7 +85,7 @@ class Enemy(Character):
         }
 
         # Debug output
-        self.debug_scaling(before_stats, after_stats, day_counter, depth)
+        #self.debug_scaling(before_stats, after_stats, day_counter, depth)
 
         self.is_scaled = True
 

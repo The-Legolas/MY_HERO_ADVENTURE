@@ -1,7 +1,8 @@
+from __future__ import annotations
 from enum import Enum
 import random
-from game.core.Character_class import Character
-from game.core.Enemy_class import Enemy, ENEMY_DEFINITIONS
+
+
 
 def make_outcome(actor_name, action, target_name=None, damage=0, blocked=False, critical=False, died=False, extra=None):
     return {
@@ -35,7 +36,7 @@ class Items():
         self.effect = effect
         self.value = value
 
-    def use(self, player: Character, target: Character):
+    def use(self, player, target):
         if not self.effect:
             return make_outcome(player.name, "use_item_fail", getattr(target, "name", None),
                                 extra={"reason": "not_consumable", "item": self.name})
@@ -107,7 +108,7 @@ def spawn_item(item_type):
     return item_obj
 
 
-def roll_loot(enemy: Enemy):
+def roll_loot(enemy):
         loot_result = []
         gold_gained = enemy.gold_reward
 
