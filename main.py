@@ -3,14 +3,29 @@ from game.core.Heroes import Warrior
 from game.world.dungeon_manager import Dungeon_Manager
 from game.world.Gen_Game_World import Game_World
 from game.world.town_logic.town_names import Town_names
+from game.engine.input_parser import normalize_input
 
 
 def main():
 
-    print("  ________________________________")
-    print("\tHello and welcome to\n")
+    title_screen()
+
+    player_hero = pick_character_and_name()
+    
+    game_world = Game_World(player_hero, day_counter=1)
+    game_town = game_world.get_town()
+    game_town.set_starting_location(Town_names.TOWN_GATE.value)
+
+    print("let's play")
+
+def title_screen() -> None:
+    print("  _________________________________")
+    print("\tHello and welcome to:")
     print("\tMy hero adventure")
-    print("  ________________________________\n")
+    print("\n\t\t    by The-Legolas")
+    print("  _________________________________\n")
+
+def pick_character_and_name() -> Character:
     while True:
         print("\nPlease pick your character from amoung these options")
         hero_choice = input("(Warrior, Archer, or Wizard): ").strip().lower()
@@ -19,24 +34,36 @@ def main():
             break
 
         print("please try again.")
+    
+    while True:
+        hero_name = input("\nAnd what shall be your name?\n: ")
+        yes_no = input(f"Is '{hero_name}' correct? (Yes or No)\n: ").strip().lower()
 
-    hero_name = input("\nAnd what shall be your name?\n: ")
+        if yes_no == "yes" or yes_no == "y":
+            break
 
-    if hero_choice == "warrior":
+    if hero_choice: #hero_choice == "warrior":
         player_hero = Warrior(hero_name)
     
-    game_world = Game_World(player_hero, day_counter=1)
-    
-    game_town = game_world.get_town()
-
-    game_town.set_starting_location(Town_names.TOWN_GATE.value)
-
-    print("let's play")
-
-
-
+    return player_hero
 
     
+class GameEngine:
+    def __init__(self, player: Character, game_world: Game_World):
+        self.player = player
+        self.world = game_world
+        self.state = "town"
+
+    def run(self):
+        while True:
+            if self.state == "town":
+                self.run_town_mode()
+            elif self.state == "dungeon":
+                self.run_dungeon_mode()
+            elif self.state == "combat":
+                self.run_combat_mode()
+
+
 
 if __name__ == "__main__":
     main()
