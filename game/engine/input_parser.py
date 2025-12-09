@@ -2,6 +2,7 @@
 def normalize_input(text_input: str) -> str | None:
     t = text_input.strip().lower()
 
+    #   Main Town Menu
     if t in ("1", "shop", "enter shop", "go shop", "go to shop"):
         return "enter_shop"
 
@@ -20,7 +21,7 @@ def normalize_input(text_input: str) -> str | None:
     if t in ("leave building", "exit building", "leave", "back"):
         return "leave_building"
 
-    #    Leave Town submenu
+    #   Leave Town submenu
     if t in ("1", "back", "return"):
         return "go_back"
 

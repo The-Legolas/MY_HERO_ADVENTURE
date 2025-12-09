@@ -6,6 +6,7 @@ class Character():
     def __init__(self, name: str, hp: int, damage: int, defence: int):
         self.name = name
         self.hp = hp
+        self.max_hp = self.hp
         self.damage = damage
         self.defence = defence
         self.xp = 0

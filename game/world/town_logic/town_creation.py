@@ -149,7 +149,8 @@ class TownGraph():
                 return {
                     "success": True,
                     "type": "move_interior",
-                    "destination": destination
+                    "destination": destination,
+                    "location": location_name,
                 }
 
             case Town_Actions.LEAVE_BUILDING:
@@ -163,7 +164,8 @@ class TownGraph():
                 return {
                     "success": True,
                     "type": "leave_building",
-                    "destination": destination
+                    "destination": destination,
+                    "location": location_name,
                 }
             
             case Town_Actions.REST:
@@ -269,6 +271,19 @@ class TownGraph():
                 return {
                     "success": True,
                     "type": "enter_cave",
+                    "location": location_name
+                }
+            
+            case Town_Actions.LEAVE_TOWN.value:
+                if location_name != Town_names.TOWN_GATE.value:
+                    return {
+                        "success": False,
+                        "reason": "You can only enter the cave from the Town Gate."
+                    }
+                
+                return {
+                    "success": True,
+                    "type": "leave_town",
                     "location": location_name
                 }
             
