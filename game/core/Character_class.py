@@ -14,7 +14,9 @@ class Character():
 
         self.equipment = {
             "weapon": None,
-            "armor": None
+            "armor": None,
+            "ring1": None,
+            "ring2": None
         }
 
         self.inventory = {
@@ -34,17 +36,24 @@ class Character():
             self.inventory["items"][item.name]["count"] += amount
     
 
-    def remove_item(self, item: Items, amount: int = 1) -> None:
-        entry = self.inventory["items"][item.name]
+    def remove_item(self, item_id: str, amount: int = 1) -> None:
+        items = self.inventory["items"]
 
-        if item.stackable:
+        if item_id not in items:
+            return  # nothing to remove
+
+        entry = items[item_id]
+        item_obj = entry["item"]
+
+        # stackable items
+        if item_obj.stackable:
             entry["count"] -= amount
-
             if entry["count"] <= 0:
-                del self.inventory["items"][item.name]
+                del items[item_id]
 
+        # unique / non-stackable
         else:
-            del self.inventory["items"][item.name]
+            del items[item_id]
 
     def use_item(self, item: Items, target: 'Character') -> None:
         if isinstance(item, str):

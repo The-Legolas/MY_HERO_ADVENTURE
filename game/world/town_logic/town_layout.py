@@ -1,7 +1,13 @@
 # Tasks to do
 # 
 # 2. Create a basic game loop so I can playtest the game and add reasonable curve to everything
+
 #
+# Add a details page (show item stats before buying/selling)
+# Add category sorting (Weapons → Potions → Others)
+# Add dynamic merchant dialogue (based on demand, discounts, etc.)
+# Engine simplification
+
 # 3. Homestretch everything which has to be made, is, so now it's just for fun and adding interesting things to the game
 # afterwards
 
@@ -15,7 +21,6 @@ def build_town_graph() -> TownGraph:
     
     all_locations = [
         town_gate,
-        *_build_exterior_locations(),
         *_build_interior_locations(),
     ]
 
@@ -29,15 +34,16 @@ def build_town_graph() -> TownGraph:
 def _build_town_gate() -> Location:
 
     adjacent_locations = [
-        Town_names.SHOP_EXTERIOR.value,
-        Town_names.INN_EXTERIOR.value,
-        Town_names.TAVERN_EXTERIOR.value,
+        Town_names.SHOP_INTERIOR.value,
+        Town_names.INN_INTERIOR.value,
+        Town_names.TAVERN_INTERIOR.value,
     ]
 
     actions = [
+        Town_Actions.ENTER_SHOP,
+        Town_Actions.ENTER_INN,
+        Town_Actions.ENTER_TAVERN,
         Town_Actions.TALK,
-        Town_Actions.ENTER_CAVE,
-        Town_Actions.ENTER_CASTLE,
         Town_Actions.LEAVE_TOWN,
     ]
 
@@ -50,43 +56,6 @@ def _build_town_gate() -> Location:
     )
 
     return town_gate
-
-def _build_exterior_locations() -> list[Location]:
-
-    shop_ext = Location(
-        name=Town_names.SHOP_EXTERIOR.value,
-        location_type=Location_Type.EXTERIOR,
-        actions=[
-            Town_Actions.ENTER_BUILDING,
-            Town_Actions.TALK,
-        ],
-        adjacent_locations=[Town_names.TOWN_GATE.value],
-        extra_metadata={},
-    )
-
-    inn_ext = Location(
-        name=Town_names.INN_EXTERIOR.value,
-        location_type=Location_Type.EXTERIOR,
-        actions=[
-            Town_Actions.ENTER_BUILDING,
-            Town_Actions.TALK,
-        ],
-        adjacent_locations=[Town_names.TOWN_GATE.value],
-        extra_metadata={},
-    )
-
-    tavern_ext = Location(
-        name=Town_names.TAVERN_EXTERIOR,
-        location_type=Location_Type.EXTERIOR,
-        actions=[
-            Town_Actions.ENTER_BUILDING,
-            Town_Actions.TALK,
-        ],
-        adjacent_locations=[Town_names.TOWN_GATE.value],
-        extra_metadata={},
-    )
-
-    return [shop_ext, inn_ext, tavern_ext]
 
 def _build_interior_locations() -> list[Location]:
 
@@ -102,12 +71,12 @@ def _build_interior_locations() -> list[Location]:
         name=Town_names.SHOP_INTERIOR.value,
         location_type=Location_Type.INTERIOR,
         actions=[
+            Town_Actions.TALK,
             Town_Actions.BUY_FROM_SHOP,
             Town_Actions.SELL_FROM_SHOP,
-            Town_Actions.TALK,
             Town_Actions.LEAVE_BUILDING,
         ],
-        adjacent_locations=[],
+        adjacent_locations=[Town_names.TOWN_GATE.value],
         extra_metadata=shop_metadata,
     )
 
@@ -116,14 +85,14 @@ def _build_interior_locations() -> list[Location]:
         "heal_amount": "full",
     }
     inn_int = Location(
-        name=Town_names.INN_INTERIOR,
+        name=Town_names.INN_INTERIOR.value,
         location_type=Location_Type.INTERIOR,
         actions=[
-            Town_Actions.REST,
             Town_Actions.TALK,
+            Town_Actions.REST,
             Town_Actions.LEAVE_BUILDING,
         ],
-        adjacent_locations=[],
+        adjacent_locations=[Town_names.TOWN_GATE.value],
         extra_metadata=inn_metadata,
     )
 
@@ -135,11 +104,11 @@ def _build_interior_locations() -> list[Location]:
         name=Town_names.TAVERN_INTERIOR.value,
         location_type=Location_Type.INTERIOR,
         actions=[
-            Town_Actions.BUY_BEER,
             Town_Actions.TALK,
+            Town_Actions.BUY_BEER,
             Town_Actions.LEAVE_BUILDING,
         ],
-        adjacent_locations=[],
+        adjacent_locations=[Town_names.TOWN_GATE.value],
         extra_metadata=tavern_metadata,
     )
 

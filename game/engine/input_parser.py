@@ -1,8 +1,21 @@
 
-def normalize_input(text_input: str) -> str | None:
-    t = text_input.strip().lower()
+def parse_leave_town_input(raw: str) -> str | None:
+    t = raw.strip().lower()
 
-    #   Main Town Menu
+    if t in ("1", "back", "return"):
+        return "go_back"
+
+    if t in ("2", "enter cave", "cave", "go cave", "go to cave"):
+        return "enter_cave"
+
+    if t in ("3", "enter castle", "castle", "go castle", "go to castle"):
+        return "enter_castle"
+
+    return None
+
+def parse_town_gate_input(raw: str) -> str | None:
+    t = raw.strip().lower()
+
     if t in ("1", "shop", "enter shop", "go shop", "go to shop"):
         return "enter_shop"
 
@@ -15,20 +28,33 @@ def normalize_input(text_input: str) -> str | None:
     if t in ("4", "leave", "leave town", "exit", "go outside"):
         return "leave_town"
 
-    if t in ("talk", "5", "speak"):
+    return None
+
+def parse_interior_input(raw: str) -> str | None:
+    t = raw.strip().lower()
+
+    if t in ("1", "talk", "speak"):
         return "talk"
 
-    if t in ("leave building", "exit building", "leave", "back"):
+    if t in ("2", "menu", "action", "rest", "shop", "buy", "buy beer", "beer"):
+        return "menu"
+
+    if t in ("3", "leave", "back", "exit", "leave building", "exit building",):
         return "leave_building"
 
-    #   Leave Town submenu
-    if t in ("1", "back", "return"):
-        return "go_back"
+    return None
 
-    if t in ("2", "enter cave", "cave", "go cave"):
-        return "enter_cave"
+def parse_shop_input(raw: str) -> str | None:
+    t = raw.strip().lower()
 
-    if t in ("3", "enter castle", "castle", "go castle"):
-        return "enter_castle"
+    if t in ("1", "buy", "buy item", "buy_item"):
+        return "buy_item"
+
+    if t in ("2", "sell", "sell item", "sell_item"):
+        return "sell_item"
+
+    if t in ("3", "leave", "leave_shop", "leave the shop", "leave shop", "exit", "exit shop", "exit_shop"):
+        return "leave_shop"
 
     return None
+
