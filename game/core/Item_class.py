@@ -22,6 +22,7 @@ class Item_Type(Enum):
     WEAPON = "weapon"
     ARMOR = "armor"
     SCRAP = "scrap"
+    RING = "ring"
 
 
 class Items():

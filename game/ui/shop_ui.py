@@ -34,6 +34,10 @@ class ShopUI:
                 
                 else:
                     print("Invalid input.")
+    
+
+
+
 
     def handle_buy_item(self, inventory: dict[str, any], buy_mult: float):
         while True:
@@ -57,7 +61,7 @@ class ShopUI:
                 return
             
             if self.player.inventory["gold"] <= 0:
-                print("You have no gold.")
+                print("\nYou have no gold.")
                 input()
                 return
             
@@ -108,15 +112,15 @@ class ShopUI:
 
             print(f"\nConfirm purchase:")
             print(f"{qty} × {record.item.name} × {price} each = {total_price} gold")
-            confirm = input("Buy these items? (yes/no) > ").strip().lower()
+            confirm = input("\nBuy these items? (yes/no) > ").strip().lower()
 
             if confirm not in ("yes", "y"):
-                print("Purchase cancelled.")
+                print("\nPurchase cancelled.")
                 input()
                 continue
 
             if self.player.inventory["gold"] < total_price:
-                print("You cannot afford that.")
+                print("\nYou cannot afford that.")
                 input()
                 continue
 
@@ -127,7 +131,7 @@ class ShopUI:
             for _ in range(qty):
                 self.player.add_item(record.item)
 
-            print(f"You bought {qty} × {record.item.name}!")
+            print(f"\nYou bought {qty} × {record.item.name}!")
             input()
             
 
@@ -199,10 +203,10 @@ class ShopUI:
 
             print(f"\nConfirm sale:")
             print(f"{qty} × {item_obj.name} × {sell_price} each = {total_gold} gold")
-            confirm = input("Sell these items? (yes/no) > ").strip().lower()
+            confirm = input("\nSell these items? (yes/no) > ").strip().lower()
 
             if confirm not in ("yes", "y"):
-                print("Sale cancelled.")
+                print("\nSale cancelled.")
                 continue
 
             for _ in range(qty):
@@ -210,7 +214,7 @@ class ShopUI:
 
             self.player.inventory["gold"] += total_gold
 
-            print(f"You sold {qty} × {item_obj.name} for {total_gold} gold!")
+            print(f"\nYou sold {qty} × {item_obj.name} for {total_gold} gold!")
             input()
 
         

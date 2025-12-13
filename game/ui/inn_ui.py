@@ -43,7 +43,7 @@ class InnUI:
             if confirm not in ("yes", "y"):
                 print("Purchase cancelled.")
                 input()
-                continue
+                return                
 
             self.player.inventory["gold"] -= cost
 

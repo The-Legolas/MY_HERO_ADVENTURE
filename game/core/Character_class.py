@@ -40,7 +40,7 @@ class Character():
         items = self.inventory["items"]
 
         if item_id not in items:
-            return  # nothing to remove
+            return
 
         entry = items[item_id]
         item_obj = entry["item"]
@@ -51,7 +51,6 @@ class Character():
             if entry["count"] <= 0:
                 del items[item_id]
 
-        # unique / non-stackable
         else:
             del items[item_id]
 
@@ -81,15 +80,31 @@ class Character():
         
 
     def equip_item(self, item: Items) -> None:
-        if item.category not in (Item_Type.WEAPON, Item_Type.ARMOR):
-            return f"Cannot equip {item.category}"
+        if item.category not in (Item_Type.WEAPON, Item_Type.ARMOR, Item_Type.RING):
+            print(f"Cannot equip {item.category.value}")
+            return 
 
-        slot = "weapon" if item.category == Item_Type.WEAPON else "armor"
 
+        if item.category == Item_Type.WEAPON:
+            slot = "weapon"
+        elif item.category == Item_Type.ARMOR:
+            slot = "armor"
+        elif item.category == Item_Type.RING:
+                if self.equipment["ring1"] is None:
+                    slot = "ring1"
+                elif self.equipment["ring2"] is None:
+                    slot = "ring2"
+                else:
+                    print("Both ring slots are full.\n")
+                    return
+
+    
         if self.equipment[slot] is not None:
             self.unequip_item(self.equipment[slot])
-        
+
         self.equipment[slot] = item
+        
+        self.remove_item(item.name, 1)
 
         for stat, value in item.stats.items():
             if stat == "damage":
@@ -101,11 +116,33 @@ class Character():
             elif stat == "crit_chance":
                 pass #not implemented yet
 
-        self.remove_item(item, 1)
+        print(f"You equipped {item.name} in {slot} slot.")
         
 
     def unequip_item(self, item: Items) -> None:
-        slot = item.category
+        slot_found = False
+
+        if item.category == Item_Type.WEAPON:
+            if self.equipment["weapon"] == item:
+                self.equipment["weapon"] = None
+                slot_found = True
+
+        elif item.category == Item_Type.ARMOR:
+            if self.equipment["armor"] == item:
+                self.equipment["armor"] = None
+                slot_found = True
+
+        elif item.category == Item_Type.RING:
+            if self.equipment["ring1"] == item:
+                self.equipment["ring1"] = None
+                slot_found = True
+            elif self.equipment["ring2"] == item:
+                self.equipment["ring2"] = None
+                slot_found = True
+
+        if not slot_found:
+            print("Item is not equipped.")
+            return
 
         for stat, value in item.stats.items():
             if stat == "damage":
@@ -118,15 +155,8 @@ class Character():
                 pass #not implemented yet
 
         self.add_item(item, 1)
+        print(f"You unequipped {item.name}.")
 
-        self.equipment[slot] = None
-
-
-    def sell_item(self, item: Items) -> None:
-        if item.value == 0:
-            return "Failed to sell"
-        self.inventory["gold"] += item.value
-        self.remove_item(item, 1)
 
 
     def take_damage(self, damage: int) -> None:

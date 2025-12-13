@@ -58,3 +58,11 @@ def parse_shop_input(raw: str) -> str | None:
 
     return None
 
+def inventory_input_parser(raw: str) -> str | None:
+    t = raw.strip().lower()
+
+    if t in ("i", "inventory", "bag", "equipment", "backpack"):
+        return "open_inventory"
+    
+    return None
+
