@@ -1,16 +1,11 @@
-"""import sys
-import os
-# Add the project's root folder to Python's search path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-"""
 import random
 from .Dungeon_room_code import Room_Types
-from .dungeon_manager import Dungeon_Manager, compute_farthest
 from .town_logic.town_layout import build_town_graph
 from .town_logic.town_shop_system import restock_shop_for_new_day, initialize_shop_inventory
 from .town_logic.town_names import Town_names
 from .town_logic.town_creation import TownGraph
 from game.core.Character_class import Character
+from .dungeon_manager import Dungeon_Manager, compute_farthest
 
 class Game_World():
     def __init__(self, player: Character, day_counter: any, seed: any =None) -> None:
@@ -36,12 +31,12 @@ class Game_World():
 
 
     def build_persistent_dungeons(self) -> None:
-        self.areas["Cave"] = Dungeon_Manager(self.day_counter)
+        self.areas["Cave"] = Dungeon_Manager(self.day_counter, dungeon_type="cave")
         self.areas["Castle"] = self.build_castle_manager()
 
 
     def build_castle_manager(self):
-        manager = Dungeon_Manager(self.day_counter)
+        manager = Dungeon_Manager(self.day_counter, dungeon_type="castle")
 
         deepest_pos = compute_farthest(manager.dungeon_rooms)
 

@@ -1,7 +1,6 @@
 from game.core.Character_class import Character
-from game.world.Gen_Game_World import Game_World
 from game.world.town_logic.town_names import Town_names
-from game.engine.input_parser import parse_interior_input, parse_leave_town_input, parse_town_gate_input, inventory_input_parser, parse_shop_input
+from game.engine.input_parser import parse_interior_input, parse_leave_town_input, parse_town_gate_input, inventory_input_parser, parse_shop_input, parse_dungeon_input, parse_dungeon_move_input
 from game.world.town_logic.town_creation import Location, Town_Actions, TownGraph
 from game.core.Item_class import spawn_item
 from game.ui.shop_ui import ShopUI
@@ -9,6 +8,12 @@ from game.ui.tavern_ui import TavernUI
 from game.ui.inn_ui import InnUI
 from game.ui.inventory_ui import run_inventory_menu
 from enum import Enum
+from game.world.Dungeon_room_code import Room, Room_Types
+from game.world.dungeon_manager import Dungeon_Manager
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.world.Gen_Game_World import Game_World
 
 class Command_Context(Enum):
     TOWN_GATE = "town_gate"
@@ -21,19 +26,19 @@ class Command_Context(Enum):
 
 
 class GameEngine:
-    def __init__(self, player: Character, game_world: Game_World):
-        self.player = player
-        self.world = game_world
-        self.state = "town"
+    def __init__(self, player: Character, game_world: 'Game_World'):
+        self.player: Character = player
+        self.world: 'Game_World' = game_world
+        self.state: str = "town"
 
-        self.current_dungeon = None
-        self.current_room = None
+        self.current_dungeon: Dungeon_Manager | None = None
+        self.current_room: Room | None = None
 
         self.shop_ui = ShopUI(self.player)
         self.tavern_ui = TavernUI(self.player)
         self.inn_ui = InnUI(self.player, self.world)
 
-    def get_player_command(self, raw_input: str, context: str) -> str | None:
+    def get_player_command(self, raw_input: str, context: str, *, has_room_action: bool = False) -> str | None:
         cmd = inventory_input_parser(raw_input)
         if cmd:
             return cmd
@@ -53,9 +58,9 @@ class GameEngine:
         if context == Command_Context.LEAVE_TOWN.value:
             return parse_leave_town_input(raw_input)
 
-        """ if context == Command_Context.DUNGEON.value:
-            return parse_dungeon_input(raw_input)
-
+        if context == Command_Context.DUNGEON.value:
+            return parse_dungeon_input(raw_input, has_room_action)
+        """
         if context == Command_Context.COMBAT.value:
             return parse_combat_input(raw_input)
 """
@@ -70,6 +75,128 @@ class GameEngine:
                 self.run_dungeon_mode()
             elif self.state == "combat":
                 self.run_combat_mode()
+
+
+    def run_dungeon_mode(self) -> None:
+        dungeon = self.current_dungeon
+
+        if dungeon is None:
+            print("Error: No dungeon loaded.")
+            self.state = "town"
+            return
+        
+        while self.state == "dungeon":
+            room_info = dungeon.get_current_room()
+            room = room_info["room"]
+            depth = room_info["depth"]
+
+            self.current_room = room
+
+            has_room_action = (
+                self.current_room.room_type == Room_Types.TREASURE_ROOM
+                and not self.current_room.treasure_opened
+            )
+
+            entry_result = dungeon.process_room_on_enter(room)
+
+            if entry_result["spawned_enemies"]:
+                print("\nEnemies appear!")
+                print("Combat will begin here (placeholder).")
+                #self.state = "combat"
+                return
+
+            self.show_dungeon_menu(room)
+
+            raw = input("> ")
+
+            command = self.get_player_command(raw, Command_Context.DUNGEON.value, has_room_action=has_room_action)
+
+            if command == "open_inventory":
+                run_inventory_menu(self.player)
+                continue
+
+            if command == "debug_menu":
+                self.run_debug_menu()
+                continue
+            
+            if command is None:
+                print("I don't understand that. Try again.")
+                continue
+
+            if command == "move":
+                while True:
+                    for r in dungeon.room_visualize():
+                        print(r)
+                    self.show_move_menu()
+                    raw = input("> ")
+
+                    direction = parse_dungeon_move_input(raw)
+                    if not direction:
+                        print("Invalid direction.")
+                        continue
+
+                    if direction == "back":
+                        break
+
+                    result = dungeon.move_player(direction)
+                    if not result["success"]:
+                        print(result["reason"])
+                        input()
+                    break
+
+                continue
+
+            if command == "room_action":
+                result = self.current_dungeon.room_action(room)
+
+                if not result:
+                    print("\nThere is nothing to do here.")
+                    input()
+                    continue
+
+                print(f"\n{result['message']}")
+                for item in result.get("items", []):
+                    self.player.add_item(item)
+                    print(f"- {item.name}")
+
+                input()
+                continue
+
+            if command == "inspect":
+                text = self.current_dungeon.inspect_room(room)
+                print(text)
+                input()
+                continue
+
+            if command == "leave_dungeon":
+                print("\nYou leave the dungeon.")
+                self.current_dungeon = None
+                self.current_room = None
+                self.state = "town"
+                return
+            
+
+
+    def show_dungeon_menu(self, room: Room):
+        print("\n--- Dungeon ---")
+        print("1. Move")
+
+        action_label = self.current_dungeon.get_room_action_label(room)
+        if action_label:
+            print(f"2. {action_label}")
+            print("3. Inspect")
+            print("4. Leave Dungeon")
+        else:
+            print("2. Inspect")
+            print("3. Leave Dungeon")
+
+    def show_move_menu(self):
+        print("\nWhere do you want to go?")
+        print("1. North")
+        print("2. South")
+        print("3. East")
+        print("4. West")
+        print("Type 'back' to cancel.")
 
 
     def run_town_mode(self) -> None:

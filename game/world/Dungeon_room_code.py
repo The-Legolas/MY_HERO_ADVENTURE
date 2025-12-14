@@ -20,6 +20,9 @@ class Room():
             "items": []
         }
         self.day_counter = day_counter
+        self.visited: bool = False
+        self.cleared: bool = False
+        self.treasure_opened: bool = False
 
         match room_type:
             case Room_Types.TREASURE_ROOM:

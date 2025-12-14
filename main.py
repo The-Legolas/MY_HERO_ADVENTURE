@@ -3,7 +3,7 @@ from game.core.Heroes import Warrior
 from game.world.Gen_Game_World import Game_World
 from game.world.town_logic.town_names import Town_names
 from game.engine.game_engine import GameEngine
-# did about 1 hour
+# did about 2 hour
 
 def main():
 

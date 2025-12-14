@@ -3,8 +3,9 @@ from game.world.Dungeon_room_code import Room, Room_Types
 from game.core.Enemy_class import Enemy_Spawner, spawn_enemy
 
 class Dungeon_Manager():
-    def __init__(self, day_counter):
+    def __init__(self, day_counter: int, dungeon_type: str):
         self.day_counter = day_counter
+        self.dungeon_type = dungeon_type
         
         self.player_starting_pos = (0,0)
         self.player_current_pos = (0,0)
@@ -105,15 +106,19 @@ class Dungeon_Manager():
             "special_events": []
         }
 
-        if room.room_type == Room_Types.ENEMY_ROOM:
-            if len(room.contents["enemies"]) == 0:
-                enemy = self.spawn_enemy_for_room(room)
+        if room.visited:
+            return encounter
+        
+        room.visited = True
+
+        if room.room_type == Room_Types.ENEMY_ROOM and not room.cleared:
+            enemy = self.spawn_enemy_for_room(room)
+            if enemy:
                 encounter["spawned_enemies"].append(enemy)
 
-        if room.room_type == Room_Types.BOSS_ROOM:
-            if len(room.contents["enemies"]) == 0:
-                boss = self.spawn_boss_for_room(room)
-                encounter["spawned_enemies"].append(boss)
+        if room.room_type == Room_Types.BOSS_ROOM and not room.cleared:
+            boss = self.spawn_boss_for_room(room)
+            encounter["spawned_enemies"].append(boss)
         
         return encounter
 
@@ -158,6 +163,99 @@ class Dungeon_Manager():
             "exists": room is not None,
             "room": room
         }
+    
+    def open_treasure(self, room: Room) -> list:
+        if room.room_type != Room_Types.TREASURE_ROOM:
+            return []
+
+        if room.treasure_opened:
+            return []
+        
+        room.treasure_opened = True
+        return room.contents["items"]
+    
+    
+    def inspect_room(self, room: Room) -> str:
+        depth = self.compute_depth((room.pos_x, room.pos_y))
+        boss_distance = self.distance_to_boss()
+        dungeon = self.dungeon_type
+
+        mood = pick_flavor(
+            dungeon,
+            "depth",
+            depth_tier(depth),
+        )
+        boss_mood = pick_flavor(
+            dungeon,
+            "boss",
+            boss_tier(boss_distance),
+        )
+
+        return (
+            f"\n{mood}\n"
+            f"You are {depth} levels deep.\n"
+            f"{boss_mood}\n"
+            )
+
+
+    def resolve_room_entry(self, room: Room):
+        encounter = self.process_room_on_enter(room)
+
+        result = {
+            "start_combat": False,
+            "enemies": [],
+            "message": None
+        }
+
+        if encounter["spawned_enemies"]:
+            result["start_combat"] = True
+            result["enemies"] = encounter["spawned_enemies"]
+
+            if room.room_type == Room_Types.BOSS_ROOM:
+                result["message"] = "A terrifying presence fills the room."
+            
+            else:
+                result["message"] = "Enemies emerge from the shadows."
+        
+        return result
+    
+    def get_boss_position(self)  -> tuple:
+        return compute_farthest(self.dungeon_rooms)
+    
+    def distance_to_boss(self):
+        boss_pos = self.get_boss_position()
+        player_pos = self.player_current_pos
+
+        if boss_pos is None:
+            return None
+        
+        bx, by = boss_pos
+        px, py = player_pos
+
+        dx = abs(bx - px)
+        dy = abs(by - py)
+
+        return dx + dy
+    
+    def get_room_action_label(self, room: Room) -> str | None:
+        if room.room_type == Room_Types.TREASURE_ROOM and not room.treasure_opened:
+            return "Open chest"
+
+        if room.room_type == Room_Types.ENEMY_ROOM and room.cleared:
+            return None
+
+        return None
+    
+    def room_action(self, room: Room):
+        if room.room_type == Room_Types.TREASURE_ROOM and not room.treasure_opened:
+            items = self.open_treasure(room)
+            return {
+                "items": items,
+                "message": "You open the chest."
+            }
+
+        return None
+
 
     def room_visualize(self) -> list:
         x_values = [pos[0] for pos in self.dungeon_rooms.keys()]
@@ -177,7 +275,7 @@ class Dungeon_Manager():
                 if position in self.dungeon_rooms:
                     room_pos = self.dungeon_rooms[position]
 
-                    if position == self.starting_position:
+                    if position == self.player_current_pos:
                         symbol = "| S |"
                     
                     elif room_pos.room_type == Room_Types.TREASURE_ROOM:
@@ -250,3 +348,157 @@ def compute_farthest(dungeon_rooms) -> tuple:
                 best_pos = pos
 
     return best_pos
+
+
+def depth_tier(depth: int) -> str:
+    if depth < 2:
+        return "shallow"
+    elif depth < 6:
+        return "mid"
+    else:
+        return "deep"
+
+
+def boss_tier(distance: int) -> str:
+    if distance < 3:
+        return "close"
+    elif distance < 8:
+        return "mid"
+    else:
+        return "far"
+
+
+def pick_flavor(dungeon: str, category: str, tier: str) -> str:
+    return random.choice(FLAVOR_TEXT[dungeon][category][tier])
+
+
+FLAVOR_TEXT = {
+    "cave": {
+        "depth": {
+            "shallow": [
+                "The stone walls are cool to the touch, damp with condensation.",
+                "Water drips steadily somewhere in the dark.",
+                "The air smells of earth and wet rock.",
+                "Faint echoes follow even the smallest sound.",
+                "The cave feels quiet, but not abandoned.",
+            ],
+            "mid": [
+                "The walls are uneven and scarred, as if something clawed through the stone.",
+                "The air is thick and hard to breathe.",
+                "Shadows cling unnaturally to the corners of the cave.",
+                "The ground is slick, coated in mud and something darker.",
+                "Every sound feels louder than it should.",
+            ],
+            "deep": [
+                "Cracks split the walls, oozing moisture and decay.",
+                "The air is stale and oppressive, heavy in your lungs.",
+                "You feel watched, though nothing moves.",
+                "The darkness here seems to swallow light.",
+                "The cave feels hostile, as if it wants you gone.",
+            ],
+        },
+        "boss": {
+            "far": [
+                "The echoes here feel slightly distorted.",
+                "The cave air carries a faint, unfamiliar smell.",
+                "Loose stones shift when you move.",
+            ],
+            "mid": [
+                "The walls seem to close in around you.",
+                "Your footsteps echo longer than they should.",
+                "The air is heavy, pressing against your lungs.",
+            ],
+            "close": [
+                "The stone vibrates faintly beneath your feet.",
+                "The darkness feels alive, watching you.",
+                "The cave itself seems to recoil from something ahead.",
+            ],
+        },
+    },
+
+    "castle": {
+        "depth": {
+            "shallow": [
+                "Cold marble floors stretch out before you.",
+                "Dust coats every surface, undisturbed for ages.",
+                "The air is still and unnaturally quiet.",
+                "Faded banners hang limply from the walls.",
+                "Your footsteps echo through empty corridors.",
+            ],
+            "mid": [
+                "Cracks run along the marble walls.",
+                "The air is heavy and stale, clinging to your skin.",
+                "Broken statues stare with hollow eyes.",
+                "The silence feels deliberate, oppressive.",
+                "The castle feels less abandoned than it should.",
+            ],
+            "deep": [
+                "The walls are fractured and bleeding dark stains.",
+                "The air is suffocating, thick with dread.",
+                "Shadows writhe unnaturally across the stone.",
+                "Every instinct tells you to flee.",
+                "This place radiates malice.",
+            ],
+        },
+        "boss": {
+            "far": [
+                "The air here is colder than the surrounding halls.",
+                "Distant sounds echo briefly, then vanish.",
+                "The walls bear fresh cracks and damage.",
+            ],
+            "mid": [
+                "The silence is oppressive and deliberate.",
+                "The air feels stale, heavy with old hatred.",
+                "The castle seems to loom over you.",
+            ],
+            "close": [
+                "The stone walls radiate malice.",
+                "The air grows thick, choking and cold.",
+                "You can feel the presence waiting just ahead.",
+            ],
+        },
+    },
+
+    "swamp": {
+        "depth": {
+            "shallow": [
+                "The ground squelches beneath your feet.",
+                "Thick reeds sway gently in the stagnant water.",
+                "The air is humid and smells faintly of rot.",
+                "Insects buzz lazily around you.",
+                "Murky water reflects the dull sky above.",
+            ],
+            "mid": [
+                "The water grows darker and deeper with every step.",
+                "Rotting vegetation floats on the surface.",
+                "The buzzing of insects becomes constant and maddening.",
+                "The air feels warm and suffocating.",
+                "You swear something moved beneath the water.",
+            ],
+            "deep": [
+                "The water is black and foul, reeking of decay.",
+                "Dead trees loom like twisted corpses.",
+                "The air is thick with spores and rot.",
+                "Every step threatens to pull you under.",
+                "The swamp feels alive—and hungry.",
+            ],
+        },
+        "boss": {
+            "far": [
+                "The water ripples without any clear cause.",
+                "The insects grow suddenly quiet.",
+                "A foul scent drifts on the stagnant air.",
+            ],
+            "mid": [
+                "The swamp water churns slowly around you.",
+                "The air is thick, heavy with decay.",
+                "You feel something moving beneath the surface.",
+            ],
+            "close": [
+                "The water pulls at your legs as if alive.",
+                "The swamp grows unnaturally silent.",
+                "You feel eyes on you from every direction.",
+            ],
+        },
+    },
+}
