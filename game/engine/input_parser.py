@@ -105,20 +105,3 @@ def parse_dungeon_input(raw: str, has_room_action: bool) -> str | None:
         return "leave_dungeon"
 
     return None
-
-def parse_dungeon_move_input(raw: str) -> str | None:
-    t = raw.strip().lower()
-
-    if t in ("1", "n", "north"):
-        return "north"
-    if t in ("2", "s", "south"):
-        return "south"
-    if t in ("3", "e", "east"):
-        return "east"
-    if t in ("4", "w", "west"):
-        return "west"
-    if t in ("5.", "back", "cancel", "c"):
-        return "back"
-
-    return None
-

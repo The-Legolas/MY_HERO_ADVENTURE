@@ -1,11 +1,10 @@
-from combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
-from combat.combat_turn import _get_initiative_value
+from game.systems.combat.combat_turn import _get_initiative_value
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy
 from game.world.Dungeon_room_code import Room
 from game.core.Item_class import roll_loot
 from typing import Optional, Any
-
+from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
 
 class Combat_State():
     def __init__(self, player: Character, enemy_list: list[Enemy]):
@@ -83,7 +82,7 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
 
 
 
-def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional[Action]:
+def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['Action']:
     while True:
         choice = input("What do you wish to do? (attack / item / flee) : ").strip().lower()
         if choice in ("attack", "item", "flee"):
@@ -134,7 +133,7 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional[Ac
             return None
 
 
-def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> Action:
+def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
     # Example: if enemy has .max_hp, check low-health behavior (defensive)
     # special_move = getattr(enemy, "special_move", None)
     # if special_move and enemy.hp < getattr(enemy, "max_hp", enemy.hp) * 0.5:

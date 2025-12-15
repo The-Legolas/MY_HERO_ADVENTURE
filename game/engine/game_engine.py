@@ -1,6 +1,6 @@
 from game.core.Character_class import Character
 from game.world.town_logic.town_names import Town_names
-from game.engine.input_parser import parse_interior_input, parse_leave_town_input, parse_town_gate_input, inventory_input_parser, parse_shop_input, parse_dungeon_input, parse_dungeon_move_input
+from game.engine.input_parser import parse_interior_input, parse_leave_town_input, parse_town_gate_input, inventory_input_parser, parse_shop_input, parse_dungeon_input, parse_combat_input
 from game.world.town_logic.town_creation import Location, Town_Actions, TownGraph
 from game.core.Item_class import spawn_item
 from game.ui.shop_ui import ShopUI
@@ -10,6 +10,7 @@ from game.ui.inventory_ui import run_inventory_menu
 from enum import Enum
 from game.world.Dungeon_room_code import Room, Room_Types
 from game.world.dungeon_manager import Dungeon_Manager
+from game.systems.combat.combat_controller import start_encounter
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -33,6 +34,9 @@ class GameEngine:
 
         self.current_dungeon: Dungeon_Manager | None = None
         self.current_room: Room | None = None
+    
+        self.combat_enemies: list = []
+        self.combat_turn: str | None = None
 
         self.shop_ui = ShopUI(self.player)
         self.tavern_ui = TavernUI(self.player)
@@ -60,10 +64,6 @@ class GameEngine:
 
         if context == Command_Context.DUNGEON.value:
             return parse_dungeon_input(raw_input, has_room_action)
-        """
-        if context == Command_Context.COMBAT.value:
-            return parse_combat_input(raw_input)
-"""
         return None
 
 
@@ -101,8 +101,31 @@ class GameEngine:
 
             if entry_result["spawned_enemies"]:
                 print("\nEnemies appear!")
-                print("Combat will begin here (placeholder).")
-                #self.state = "combat"
+                
+                result = start_encounter(self.player, room)
+                if result["result"] == "victory":
+                    print("\nYou are victorious!")
+
+                    loot = result.get("loot", {})
+                    gold = loot.get("gold", 0)
+                    if gold:
+                        self.player.inventory["gold"] += gold
+                        print(f"You gained {gold} gold.")
+
+                    room.cleared = True
+                    room.contents["enemies"].clear()
+
+                    input()
+                    continue
+
+                elif result["result"] == "defeat":
+                    print("\nYou were defeated...")
+                    # future: death handling
+                    self.state = "town"
+                    return
+
+                elif result["result"] == "no_enemies":
+                    continue
                 return
 
             self.show_dungeon_menu(room)
@@ -124,24 +147,56 @@ class GameEngine:
                 continue
 
             if command == "move":
+                available_moves = dungeon.get_available_moves()
+
+                if not available_moves:
+                    print("\nThere is nowhere to go.")
+                    input()
+                    continue
+
                 while True:
-                    for r in dungeon.room_visualize():
-                        print(r)
-                    self.show_move_menu()
-                    raw = input("> ")
+                    for rooms in dungeon.room_visualize():
+                        print(rooms)
 
-                    direction = parse_dungeon_move_input(raw)
-                    if not direction:
-                        print("Invalid direction.")
-                        continue
+                    print("\n--- Move ---")
+                    idx_to_dir = {}
+                    idx = 1
 
-                    if direction == "back":
+                    for direction in ("north", "east", "south", "west"):
+                        if direction in available_moves:
+                            print(f"{idx}. Go {direction.title()}")
+                            idx_to_dir[str(idx)] = direction
+                            idx += 1
+
+                    print(f"{idx}. Back")
+
+                    choice = input("> ").strip().lower()
+
+                    if choice == str(idx) or choice == "back":
                         break
+
+                    # number input
+                    if choice in idx_to_dir:
+                        direction = idx_to_dir[choice]
+                    else:
+                        # text input fallback
+                        aliases = {
+                            "n": "north", "north": "north",
+                            "s": "south", "south": "south",
+                            "e": "east",  "east":  "east",
+                            "w": "west",  "west":  "west",
+                        }
+                        direction = aliases.get(choice)
+
+                        if direction not in available_moves:
+                            print("You cannot go that way.")
+                            continue
 
                     result = dungeon.move_player(direction)
                     if not result["success"]:
                         print(result["reason"])
                         input()
+
                     break
 
                 continue
@@ -174,8 +229,6 @@ class GameEngine:
                 self.current_room = None
                 self.state = "town"
                 return
-            
-
 
     def show_dungeon_menu(self, room: Room):
         print("\n--- Dungeon ---")
@@ -190,13 +243,30 @@ class GameEngine:
             print("2. Inspect")
             print("3. Leave Dungeon")
 
-    def show_move_menu(self):
+    def show_move_menu(self, dungeon: Dungeon_Manager) -> dict[int, str]:
+        moves = dungeon.get_available_moves()
+
+        print("\n--- Move ---")
         print("\nWhere do you want to go?")
+
+        menu_map = {}
+        idx = 1
+
+        for direction in ("north", "east", "south", "west"):
+            if direction in moves:
+                print(f"{idx}. Go {direction.title()}")
+                menu_map[idx] = direction
+                idx += 1
+
+        print(f"{idx}. Cancel")
+
+        return menu_map
+        """print("\nWhere do you want to go?")
         print("1. North")
         print("2. South")
         print("3. East")
         print("4. West")
-        print("Type 'back' to cancel.")
+        print("Type 'back' to cancel.")"""
 
 
     def run_town_mode(self) -> None:

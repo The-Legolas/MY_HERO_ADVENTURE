@@ -20,7 +20,7 @@ class Dungeon_Manager():
         starting_room = Room(Room_Types.EMPTY, start_x, start_y, day_counter=self.day_counter)
         self.dungeon_rooms[start_x, start_y] = starting_room
 
-        base_size = 12
+        base_size = 20
         dungeon_room_count = base_size + int(self.day_counter * 0.2)
 
         current_pos = (0, 0)
@@ -76,7 +76,24 @@ class Dungeon_Manager():
             "depth": self.current_depth,
             "room": self.dungeon_rooms[new_pos]
         }
-    
+
+
+    def get_available_moves(self) -> dict[str, tuple[int, int]]:
+        px, py = self.player_current_pos
+
+        candidates = {
+            "north": (px, py + 1),
+            "south": (px, py - 1),
+            "east":  (px + 1, py),
+            "west":  (px - 1, py),
+        }
+
+        return {
+            direction: pos
+            for direction, pos in candidates.items()
+            if pos in self.dungeon_rooms
+        }
+
 
     def compute_depth(self, pos: tuple[int, int] | None = None):
         
@@ -249,10 +266,16 @@ class Dungeon_Manager():
     def room_action(self, room: Room):
         if room.room_type == Room_Types.TREASURE_ROOM and not room.treasure_opened:
             items = self.open_treasure(room)
-            return {
-                "items": items,
-                "message": "You open the chest."
-            }
+            if items:
+                return {
+                    "items": items,
+                    "message": "You open the chest."
+                }
+            else:
+                return {
+                    "items": items,
+                    "message": "You open the chest, but it was empty"
+                }
 
         return None
 

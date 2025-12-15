@@ -1,8 +1,11 @@
 import random
 from typing import Optional, Any
-from combat.combat_controller import Combat_State
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.systems.combat.combat_controller import Combat_State
 
 
 
@@ -74,7 +77,7 @@ def _choose_consumable_from_inventory(actor: Character) -> Optional[dict[str, An
 
  
 
-def resolve_action(action: Action, combat_state: Combat_State) -> dict:
+def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
     actor = action.actor
     if not actor.is_alive():
         outcome = _make_outcome(getattr(actor, "name", "Unknown"), "noop", None)
@@ -116,7 +119,7 @@ def resolve_action(action: Action, combat_state: Combat_State) -> dict:
     return outcome
 
     
-def _compute_escape_chance(combat_state: Combat_State) -> bool:
+def _compute_escape_chance(combat_state: 'Combat_State') -> bool:
     base = 0.70
     behavior_penalty = 0.0
     for enemy in combat_state.enemy_list:

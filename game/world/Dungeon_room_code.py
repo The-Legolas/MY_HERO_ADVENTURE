@@ -73,6 +73,8 @@ def treasure_room_spawner() -> list['Items']:
     item_list = []
     item_list_type = ["small_healing_potion", "medium_healing_potion", "grand_healing_potion", "explosive_potion", None]
     amount = random.randint(1, 4)
+    if amount == 1:
+        amount += 1
     for _ in range(amount):
         rnd = random.choice(item_list_type)
         if rnd is None:
