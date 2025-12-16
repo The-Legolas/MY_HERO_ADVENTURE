@@ -48,10 +48,18 @@ class Game_World():
 
         return manager
     
-    def on_day_advance(self):
+    def on_day_advance(self) -> dict[str, any]:
         self.day_counter += 1
         self.build_persistent_dungeons()
         self.restock_all_shops(self.areas["Town"])
+
+        return {
+            "day": self.day_counter,
+            "events": [
+                "shops_restocked",
+                "dungeons_refreshed"
+            ]
+        }
 
 
     def restock_all_shops(self, town: TownGraph):

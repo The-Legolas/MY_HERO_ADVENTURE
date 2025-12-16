@@ -35,9 +35,9 @@ def _make_outcome(actor_name: str, action: str, target_name: Optional[str], dama
 
 def _choose_enemy_target(enemies: list[Enemy]) -> Optional[Enemy]:
     if not enemies:
-        print("There are no enemies to target.")
+        print("\nThere are no enemies to target.")
         return None
-
+    print()
     for i, e in enumerate(enemies, start=1):
         print(f"{i}. {e.name} (HP: {e.hp})")
     while True:
@@ -57,7 +57,8 @@ def _choose_consumable_from_inventory(actor: Character) -> Optional[dict[str, An
     inventory = getattr(actor, "inventory", {}).get("items", {})
     consumables = [entry for entry in inventory.items() if entry[1]["item"].category.name == "CONSUMABLE"]
     if not consumables:
-        print("You have no consumable items.")
+        print("\nYou have no consumable items.")
+        input()
         return None
 
     for i, (key, data) in enumerate(consumables, start=1):

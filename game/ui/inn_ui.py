@@ -1,11 +1,16 @@
 from game.core.Character_class import Character
 from game.world.Gen_Game_World import Game_World
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.engine.game_engine import GameEngine
 
 
 class InnUI:
-    def __init__(self, player: Character, world: Game_World):
+    def __init__(self, player: Character, world: Game_World, engine: 'GameEngine'):
         self.player = player
         self.world = world
+        self.engine = engine
 
     def run_inn_menu(self, metadata: dict):
         night_cost = metadata.get("night_cost", 50)
@@ -50,9 +55,7 @@ class InnUI:
             if heal_amount == "full":
                 self.player.hp = self.player.max_hp
 
-            self.world.on_day_advance()
-            print("\nYou rest peacefully. Your HP is fully restored!\n")
-            input()
+            self.engine._handle_day_transition(context="rest")
             return
 
     def talk(self):

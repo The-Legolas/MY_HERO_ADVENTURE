@@ -1,6 +1,6 @@
 from game.core.Character_class import Character
 from game.world.town_logic.town_names import Town_names
-from game.engine.input_parser import parse_interior_input, parse_leave_town_input, parse_town_gate_input, inventory_input_parser, parse_shop_input, parse_dungeon_input, parse_combat_input
+from game.engine.input_parser import parse_interior_input, parse_leave_town_input, parse_town_gate_input, inventory_input_parser, parse_shop_input, parse_dungeon_input
 from game.world.town_logic.town_creation import Location, Town_Actions, TownGraph
 from game.core.Item_class import spawn_item
 from game.ui.shop_ui import ShopUI
@@ -11,10 +11,30 @@ from enum import Enum
 from game.world.Dungeon_room_code import Room, Room_Types
 from game.world.dungeon_manager import Dungeon_Manager
 from game.systems.combat.combat_controller import start_encounter
+from game.systems.combat.combat_log_viewer import combat_log_renderer
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.world.Gen_Game_World import Game_World
+
+DEATH_MESSAGES = {
+    "generic": [
+        "You were gravely wounded, but someone managed to carry you back to town.",
+        "Your vision fades. When you awaken, you are safely back in town.",
+        "You remember collapsing… and then warmth. You survived."
+    ],
+    "deep_dungeon": [
+        "You barely escaped the depths alive. The dungeon almost claimed you.",
+        "Bloodied and broken, you are dragged back from the darkness below."
+    ]
+}
+
+REST_MESSAGES = [
+    "You wake up feeling rested and ready for a new day.",
+    "Morning light greets you as you rise, refreshed.",
+    "A peaceful night leaves you fully restored."
+]
+
 
 class Command_Context(Enum):
     TOWN_GATE = "town_gate"
@@ -37,10 +57,17 @@ class GameEngine:
     
         self.combat_enemies: list = []
         self.combat_turn: str | None = None
+        self.last_combat_log:list | None = None
+        self.last_combat_result: str | None = None
+
+        self._last_transition_message: dict[str, int] = {
+            "death": -1,
+            "rest": -1
+        }
 
         self.shop_ui = ShopUI(self.player)
         self.tavern_ui = TavernUI(self.player)
-        self.inn_ui = InnUI(self.player, self.world)
+        self.inn_ui: 'InnUI' = InnUI(self.player, self.world, engine=self)
 
     def get_player_command(self, raw_input: str, context: str, *, has_room_action: bool = False) -> str | None:
         cmd = inventory_input_parser(raw_input)
@@ -103,30 +130,57 @@ class GameEngine:
                 print("\nEnemies appear!")
                 
                 result = start_encounter(self.player, room)
-                if result["result"] == "victory":
-                    print("\nYou are victorious!")
 
-                    loot = result.get("loot", {})
-                    gold = loot.get("gold", 0)
-                    if gold:
-                        self.player.inventory["gold"] += gold
-                        print(f"You gained {gold} gold.")
+                self.last_combat_log = result.get("log")
+                self.last_combat_result = result.get("result")
+
+                if result["result"] == "victory":
+                    print("\nYou survived the fight.")
+                    print("1. View battle report")
+                    print("2. Continue")
 
                     room.cleared = True
-                    room.contents["enemies"].clear()
 
-                    input()
+                    choice = input("> ").strip()
+                    if choice == "1":
+                        print(combat_log_renderer(self.last_combat_log))
+                        input()
+                    
                     continue
+
 
                 elif result["result"] == "defeat":
-                    print("\nYou were defeated...")
-                    # future: death handling
+                    self.player.hp = self.player.max_hp
+
+                    dungeon_depth = self.current_dungeon.current_depth
+
+                    self.current_dungeon = None
+                    self.current_room = None
+
                     self.state = "town"
+
+                    self._handle_day_transition(context="death", dungeon_depth=dungeon_depth)
                     return
 
-                elif result["result"] == "no_enemies":
+                    """
+                if result["result"] == "victory":
+                    input()
+                    room.cleared = True
                     continue
-                return
+
+                if result["result"] == "defeat":
+                    print("\nYou collapse from your wounds...")
+                    input()
+
+                    self.player.hp = self.player.max_hp
+
+                    self.current_dungeon = None
+                    self.current_room = None
+
+                    self.state = "town"
+
+                    self._handle_day_transition(context="death")
+                    return"""
 
             self.show_dungeon_menu(room)
 
@@ -229,6 +283,36 @@ class GameEngine:
                 self.current_room = None
                 self.state = "town"
                 return
+        
+    def _handle_day_transition(self, context: str, *, dungeon_depth: int | None = None) -> None:
+        info = self.world.on_day_advance()
+
+        print("\n--- A New Day Dawns ---")
+        print(f"Day {info['day']}")
+
+        if context == "death":
+            if dungeon_depth is not None and dungeon_depth >= 3:
+                pool = DEATH_MESSAGES["deep_dungeon"]
+            else:
+                pool = DEATH_MESSAGES["generic"]
+            
+            msg = self._cycle_message("death", pool)
+            print(msg)
+
+        elif context == "rest":
+            msg = self._cycle_message("rest", REST_MESSAGES)
+            print(msg)
+        else:
+            print("Time passes...")
+
+        input("\nPress Enter to continue.")
+
+    def _cycle_message(self, key: str, messages: list[str]) -> str:
+        last = self._last_transition_message.get(key, -1)
+        next_idx = (last + 1) % len(messages)
+        self._last_transition_message[key] = next_idx
+        return messages[next_idx]
+
 
     def show_dungeon_menu(self, room: Room):
         print("\n--- Dungeon ---")
@@ -261,13 +345,6 @@ class GameEngine:
         print(f"{idx}. Cancel")
 
         return menu_map
-        """print("\nWhere do you want to go?")
-        print("1. North")
-        print("2. South")
-        print("3. East")
-        print("4. West")
-        print("Type 'back' to cancel.")"""
-
 
     def run_town_mode(self) -> None:
         game_town = self.world.get_town()

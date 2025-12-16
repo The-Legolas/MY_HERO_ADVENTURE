@@ -17,6 +17,17 @@ class Combat_State():
     def alive_enemies(self) -> list[Enemy]:
         return [enemy for enemy in self.enemy_list if enemy.is_alive()]
 
+def show_combat_status(combat: Combat_State):
+    player = combat.player
+    print("\n=== COMBAT STATUS ===")
+    print(f"You: {player.hp}/{getattr(player, 'max_hp', player.hp)} HP")
+
+    print("\nEnemies:")
+    for i, enemy in enumerate(combat.alive_enemies(), start=1):
+        max_hp = getattr(enemy, "max_hp", enemy.hp)
+        print(f"{i}. {enemy.name} ({enemy.hp}/{max_hp} HP)")
+    print("=====================\n")
+
 
 
 def start_encounter(player: Character, room: Room) -> dict[str, Any]:
@@ -50,19 +61,47 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
             else:
                 action = decide_enemy_action(actor, combat_state)
 
-            resolve_action(action, combat_state)
-
+            outcome = resolve_action(action, combat_state)
+            render_combat_outcome(outcome)
+            input()
+            
             if not combat_state.alive_enemies():
                 killed = [enemy for enemy in enemy_list if not enemy.is_alive()]
                 total_loot = {"gold": 0, "items": []}
                 for dead in killed:
                     loot = roll_loot(dead)
                     total_loot["gold"] += loot.get("gold", 0)
+
+                    xp_gain = 0
                     for item in loot.get("items", []):
                         total_loot["items"].append(item)
                         player.add_item(item)
-                    
-                    player.xp = getattr(player, "xp", 0) + getattr(dead, "xp_reward", 0)
+                        xp_gain += getattr(dead, "xp_reward", 0)
+
+                    player.xp = getattr(player, "xp", 0) + xp_gain
+                
+                print("\n=== VICTORY ===")
+
+                if total_loot["gold"] > 0:
+                    print(f"You gained {total_loot['gold']} gold.")
+                else:
+                    print("You gained no gold.")
+
+                if xp_gain > 0:
+                    print(f"You gained {xp_gain} experience.")
+
+                if total_loot["items"]:
+                    print("\nLoot obtained:")
+                    item_counts = {}
+                    for item in total_loot["items"]:
+                        item_counts[item.name] = item_counts.get(item.name, 0) + 1
+
+                    for name, count in item_counts.items():
+                        print(f"- {name} x{count}")
+                else:
+                    print("\nNo items dropped.")
+
+                print("================\n")
                 
                 combat_state.log.append({"event": "victory", "loot": total_loot})
                 combat_state.is_running = False
@@ -84,53 +123,128 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
 
 def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['Action']:
     while True:
-        choice = input("What do you wish to do? (attack / item / flee) : ").strip().lower()
-        if choice in ("attack", "item", "flee"):
-            break
-        print("Invalid action.")
-    
-    match choice:
-        case "attack":
-                enemies = combat.alive_enemies()
-                target = _choose_enemy_target(enemies)
-                if target is None:
-                    return None
-                return Action(combat.player, "attack", target)
+        show_combat_status(combat)
 
-        case "item":        
-            inventory_choice = _choose_consumable_from_inventory(combat.player)
+        print("What do you want to do?")
+        print("1. Attack")
+        print("2. Use Item")
+        print("3. Inspect Enemy")
+        print("4. Flee")
+
+        choice = input("> ").strip().lower()
+
+        aliases = {
+            "1": "attack", "attack": "attack", "a": "attack",
+            "2": "item",   "item": "item",   "i": "item",
+            "3": "inspect","inspect": "inspect", "x": "inspect",
+            "4": "flee",   "flee": "flee",   "f": "flee",
+        }
+
+        action = aliases.get(choice)
+        if not action:
+            print("Invalid choice.")
+            continue
+
+        if action == "attack":
+            enemies = combat.alive_enemies()
+            target = _choose_enemy_target(enemies)
+            if target is None:
+                continue
+            return Action(actor, "attack", target)
+        
+        if action == "item":
+            inventory_choice = _choose_consumable_from_inventory(actor)
             if inventory_choice is None:
-                return None
-            print("Who to use the item on?")
-            print("1. Self")
-            
+                continue
+
+            print("\nWho do you want to use it on?")
+            print("1. Yourself")
             enemies = combat.alive_enemies()
             for i, e in enumerate(enemies, start=2):
-                print(f"{i}. {e.name} (HP:{e.hp})")
-            
+                print(f"{i}. {e.name} ({e.hp} HP)")
+
             while True:
-                target = input("Target # : ").strip().lower()
-                if target == "c":
-                    return None
+                target_input = input("> ").strip().lower()
+                if target_input in ("c", "back", "cancel"):
+                    break
                 try:
-                    idx = int(target)
+                    print()
+                    idx = int(target_input)
                     if idx == 1:
-                        return Action(combat.player, "item", combat.player, item_id=inventory_choice["key"])
-                    else:
-                        enemy_idx = idx - 2
-                        if 0 <= enemy_idx < len(enemies):
-                            return Action(combat.player, "item", enemies[enemy_idx], item_id=inventory_choice["key"])
+                        return Action(actor, "item", actor, item_id=inventory_choice["key"])
+                    enemy_idx = idx - 2
+                    if 0 <= enemy_idx < len(enemies):
+                        return Action(actor, "item", enemies[enemy_idx], item_id=inventory_choice["key"])
                 except ValueError:
                     pass
-                print("Invalid selection.")
+                print("Invalid target.")
 
+            continue
 
+        if action == "inspect":
+            enemies = combat.alive_enemies()
+            if not enemies:
+                print("There is nothing to inspect.")
+                input()
+                continue
+            
+            print()
+            for i, e in enumerate(enemies, start=1):
+                print(f"{i}. {e.name}")
+            print("c. Cancel")
 
-        case "flee":
+            choice = input("> ").strip().lower()
+            if choice in ("c", "back", "cancel"):
+                continue
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(enemies):
+                    e = enemies[idx]
+                    print(f"\n{e.name}")
+                    print(f"HP: {e.hp}")
+                    etype = getattr(e, "type", None)
+                    behavior = getattr(e, "behavior_tag", None)
+
+                    print(f"Type: {etype.value if etype else 'Unknown'}")
+                    print(f"Behavior: {behavior.value if behavior else 'Unknown'}")
+
+                    input("\nPress Enter to continue...")
+            except ValueError:
+                pass
+            continue
+
+        if action == "flee":
             return Action(actor, "flee", None)
-        
-        case _:
-            return None
+
+def render_combat_outcome(outcome: dict):
+    actor = outcome["actor"]
+    action = outcome["action"]
+    target = outcome["target"]
+    dmg = outcome["damage"]
+    blocked = outcome["blocked"]
+    critical = outcome["critical"]
+    died = outcome["died"]
+    extra = outcome.get("extra", {})
+
+    if action == "attack":
+        if blocked:
+            print(f"{actor.title()}'s attack was blocked by {target.title()}!")
+        else:
+            crit = " CRITICAL HIT!" if critical else ""
+            print(f"{actor.title()} hits {target.title()} for {dmg} damage.{crit}")
+        if died:
+            print(f"\n{target.title()} has been slain!")
+
+    elif action == "item":
+        print(f"{actor.title()} uses an item on {target.title()}.")
+
+    elif action == "flee":
+        if extra.get("escaped"):
+            print(f"{actor.title()} successfully fled!")
+        else:
+            print(f"{actor.title()} failed to flee!")
+
+    print()  # spacing after action
 
 
 def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
