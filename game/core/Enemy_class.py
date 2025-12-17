@@ -4,9 +4,9 @@ import random
 from .Character_class import Character
 
 class Enemy_Rarity(Enum):
-    COMMON = 100
-    UNCOMMON = 40
-    RARE = 15
+    COMMON = 100 #100
+    UNCOMMON = 40 #40
+    RARE = 20 # 15
     ELITE = 5
     MINI_BOSS = 2
     BOSS = 0
@@ -74,7 +74,10 @@ class Enemy(Character):
         day_counter_scaling = 1 + (day_counter / 100)
         depth_scaling = 1 + (depth / 50)
 
-        self.hp = max(1, int(self.hp * day_counter_scaling))
+        scaled_hp = max(1, int(self.base_hp * day_counter_scaling))
+        self.max_hp = scaled_hp
+        self.hp = scaled_hp
+
         self.defence = max(0, int(self.defence * day_counter_scaling))
         self.damage = max(1, int(self.damage * depth_scaling))
         

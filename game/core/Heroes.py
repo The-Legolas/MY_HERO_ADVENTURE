@@ -3,9 +3,9 @@ from .Character_class import Character
 
 class Warrior(Character):
     def __init__(self, name: str):
-        base_hp = 5
-        base_damage = 7
-        base_defence = 0
+        base_hp = 30
+        base_damage = 30
+        base_defence = 10
 
         hp = int(base_hp * 1.2)
         damage = int(base_damage * 0.9)
@@ -18,7 +18,7 @@ class Warrior(Character):
         self.xp = 0
     
     def take_damage(self, damage: int):
-        reduced_damage = damage * 0.9
+        reduced_damage = int(damage * 0.9)
         return super().take_damage(reduced_damage)
     
     def attack(self, other: 'Character'):
@@ -30,9 +30,11 @@ class Warrior(Character):
             outcome["warrior_rage"] = True
 
             extra_damage = int(outcome["damage"] * 0.5)
-            
-            other.take_damage(extra_damage)
-            outcome["damage"] += extra_damage
+            if extra_damage > 0 and other.is_alive():
+                other.take_damage(extra_damage)
+                outcome["damage"] += extra_damage
+                if not other.is_alive():
+                    outcome["died"] = True
 
         return outcome
 

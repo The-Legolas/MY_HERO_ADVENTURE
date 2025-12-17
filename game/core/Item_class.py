@@ -77,7 +77,8 @@ class Items():
 
 
 def apply_heal(target, amount):
-    target.hp += amount
+    target.heal(amount)
+    #target.hp += amount   #old version
 
 def apply_damage(target, amount):
     target.hp -= amount

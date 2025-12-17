@@ -160,7 +160,10 @@ class Character():
 
 
     def take_damage(self, damage: int) -> None:
-        self.hp -= damage
+        self.hp = max(0, self.hp - int(damage))
+    
+    def heal(self, amount: int) -> None:
+        self.hp = min(self.max_hp, self.hp + int(amount))
 
 
     def is_alive(self) -> bool:

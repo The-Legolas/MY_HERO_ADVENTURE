@@ -7,9 +7,12 @@ def combat_log_renderer(log: list[dict]) -> str:
         event = entry.get("event")
 
         if event == "encounter_start":
-            lines.append(
-                f"You are ambushed by {entry.get('enemy_count', 0)} enemy(s).\n"
-            )
+            count = entry.get('enemy_count', 0)
+            if count == 1:
+                lines.append(f"You are ambushed by {count} enemy.\n")
+            else:
+                lines.append(f"You are ambushed by {count} enemies.\n")
+                             
             continue
 
         if event == "victory":
