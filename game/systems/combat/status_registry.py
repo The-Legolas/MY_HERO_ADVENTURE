@@ -1,28 +1,8 @@
 
-STATUS_REGISTRY: dict[str, dict[str, any]] = {
-
-
-    "weakened": {
-        "icon": "⬇",
-        "modifiers": {
-            "damage_mult": 0.75
-        },
-        "stacking": "refresh",
-        "description": "Reduces damage dealt."
-    },
-
-    "stunned": {
-        "icon": "💫",
-        "prevents_action": True,
-        "stacking": "refresh",
-        "description": "Cannot act."
-    }
-}
-
 STATUS_REGISTRY = {
     "poison": {
         "on_tick": lambda target, status: target.take_damage(status.magnitude),
-        "stacking": "refresh",   # refresh duration, keep magnitude
+        "stacking": "refresh",
         "max_stacks": 1,
         "icon": "☠",
         "prevents_action": False,

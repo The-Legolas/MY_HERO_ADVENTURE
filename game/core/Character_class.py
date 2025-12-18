@@ -310,7 +310,7 @@ class Character():
 
         return logs
 
-    def apply_status(self, new_status: Status) -> None:
+    def apply_status(self, new_status: 'Status') -> None:
         data = STATUS_REGISTRY.get(new_status.id, {})
         stacking = data.get("stacking", "replace")
         max_stacks = data.get("max_stacks", 1)
