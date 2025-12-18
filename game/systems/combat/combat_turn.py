@@ -11,7 +11,7 @@ class Status():
         self.magnitude = magnitude
 
 
-def _get_initiative_value(entity: Character) -> int:
+def _get_initiative_value(entity: 'Character') -> int:
     speed = getattr(entity, "speed", None)
     if speed is not None:
         return int(speed)

@@ -49,9 +49,24 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
                 break
             if not actor.is_alive():
                 continue
-            
-            # process statuses placeholder (not implemented yet)
-            # _process_statuses(actor, state)
+
+            status_logs = actor.process_statuses()
+            combat_state.log.extend(status_logs)
+
+            if not actor.is_alive():
+                combat_state.log.append({
+                    "event": "death",
+                    "target": actor.name,
+                    "cause": "status"
+                })
+                continue
+
+            if not actor.can_act():
+                combat_state.log.append({
+                    "event": "status_prevented_action",
+                    "target": actor.name
+                })
+                continue
 
             if actor is combat_state.player:
                 action = ask_player_for_action(actor, combat_state)
@@ -62,6 +77,7 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
                 action = decide_enemy_action(actor, combat_state)
 
             outcome = resolve_action(action, combat_state)
+            combat_state.log.append(outcome)
             render_combat_outcome(outcome)
             input()
             

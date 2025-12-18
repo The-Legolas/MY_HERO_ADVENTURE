@@ -1,6 +1,10 @@
 import random
 from .Item_class import Item_Type, Items, make_outcome
+from game.systems.combat.status_registry import STATUS_REGISTRY
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from game.systems.combat.combat_turn import Status
 
 class Character():
     def __init__(self, name: str, hp: int, damage: int, defence: int):
@@ -10,6 +14,8 @@ class Character():
         self.damage = damage
         self.defence = defence
         self.xp = 0
+        self.statuses: list['Status'] = []
+
         
 
         self.equipment = {
@@ -200,7 +206,7 @@ class Character():
             "died": False
         }
 
-        temp_damage = self.damage
+        temp_damage = int(self.damage * self.get_damage_multiplier())
 
         if random.random() >= 0.95:
             temp_damage *= 2
@@ -219,9 +225,125 @@ class Character():
         
         return outcome_table
     
+    def get_damage_multiplier(self) -> float:
+        mult = 1.0
+        for status in self.statuses:
+            modifiers = STATUS_REGISTRY.get(status.id, {}).get("modifiers", {})
+            mult *= modifiers.get("damage_mult", 1.0)
+        return mult
+    
+    def can_act(self) -> bool:
+        for status in self.statuses:
+            if STATUS_REGISTRY.get(status.id, {}).get("prevents_action"):
+                return False
+        return True
+
+
+    
 
     def level_up(self) -> None:
         pass
+
+
+    def add_status(self, status: 'Status') -> None:
+        self.statuses.append(status)
+
+    def remove_status(self, status_id: str) -> None:
+        self.statuses = [status for status in self.statuses if status.id != status_id]
+
+    def has_status(self, status_id: str) -> bool:
+        return any(status.id == status_id for status in self.statuses)
+
+    def add_status(self, new_status: 'Status'):
+        registry = STATUS_REGISTRY.get(new_status.id)
+        if not registry:
+            return
+
+        for status in self.statuses:
+            if status.id == new_status.id:
+                rule = registry.get("stacking", "refresh")
+
+                if rule == "refresh":
+                    status.remaining_turns = max(
+                        status.remaining_turns,
+                        new_status.remaining_turns
+                    )
+                    return
+
+                if rule == "stack":
+                    status.magnitude += new_status.magnitude
+                    return
+
+        self.statuses.append(new_status)
+    
+    
+    def process_statuses(self) -> list[dict]:
+        expired = []
+        logs = []
+
+        for status in self.statuses:
+            data = STATUS_REGISTRY.get(status.id, {})
+
+            if "on_tick" in data:
+                before_hp = self.hp
+                data["on_tick"](self, status)
+
+                logs.append({
+                    "event": "status_tick",
+                    "status": status.id,
+                    "target": self.name,
+                    "hp_before": before_hp,
+                    "hp_after": self.hp
+                })
+
+            status.remaining_turns -= 1
+            if status.remaining_turns <= 0:
+                expired.append(status)
+
+        for status in expired:
+            self.statuses.remove(status)
+            logs.append({
+                "event": "status_expired",
+                "status": status.id,
+                "target": self.name
+            })
+
+        return logs
+
+    def apply_status(self, new_status: Status) -> None:
+        data = STATUS_REGISTRY.get(new_status.id, {})
+        stacking = data.get("stacking", "replace")
+        max_stacks = data.get("max_stacks", 1)
+
+        existing = [s for s in self.statuses if s.id == new_status.id]
+
+        if not existing:
+            self.statuses.append(new_status)
+            return
+
+        current = existing[0]
+
+        if stacking == "refresh":
+            current.remaining_turns = max(
+                current.remaining_turns,
+                new_status.remaining_turns
+            )
+
+        elif stacking == "replace":
+            self.statuses.remove(current)
+            self.statuses.append(new_status)
+
+        elif stacking == "stack":
+            if len(existing) < max_stacks:
+                self.statuses.append(new_status)
+            else:
+                # refresh strongest / longest
+                current.remaining_turns = max(
+                    current.remaining_turns,
+                    new_status.remaining_turns
+                )
+
+
 
     def __str__(self):
         return f"name:{self.name}, hp:{self.hp}, damage:{self.damage}, level:{self.level}, defence: {self.defence}, equipment: {self.equipment}"
