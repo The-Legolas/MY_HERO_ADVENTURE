@@ -44,3 +44,4 @@ STATUS_REGISTRY = {
         "prevents_action": True,
     }
 }
+

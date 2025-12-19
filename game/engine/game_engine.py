@@ -185,6 +185,7 @@ class GameEngine:
             self.show_dungeon_menu(room)
 
             raw = input("> ")
+            print()
 
             command = self.get_player_command(raw, Command_Context.DUNGEON.value, has_room_action=has_room_action)
 
@@ -586,6 +587,10 @@ class GameEngine:
                     print(f"\nGave player: {item_obj.name}")
                 except:
                     print("\nInvalid item ID.")
+                    
+                item_obj = spawn_item(item_id)
+                self.player.add_item(item_obj)
+                print(f"\nGave player: {item_obj.name}")
 
             elif choice == "3":
                 print("\nExiting debug menu.")

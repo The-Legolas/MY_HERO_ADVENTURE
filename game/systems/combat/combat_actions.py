@@ -2,6 +2,7 @@ import random
 from typing import Optional, Any
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
+from game.systems.combat.combat_turn import Status
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -94,6 +95,30 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         blocked = raw.get("blocked", False)
         critical = raw.get("critical_hit", raw.get("critical", False))
         died = raw.get("died", False)
+        
+        if not blocked and damage > 0 and action.target:
+            weapon = getattr(actor, "equipment", {}).get("weapon")
+
+            if weapon and hasattr(weapon, "on_hit_status") and weapon.on_hit_status:
+                data = weapon.on_hit_status
+                status_target = actor if data.get("target") == "self" else action.target
+
+                if random.random() < data.get("chance", 1.0):
+                    status = Status(
+                        id=data["id"],
+                        remaining_turns=data["duration"],
+                        magnitude=data.get("magnitude"),
+                        source=weapon.name,
+                    )
+                    status_target.apply_status(status)
+
+                    combat_state.log.append({
+                        "event": "status_applied",
+                        "status": status.id,
+                        "source": attacker_name,
+                        "target": status_target.name,
+                    })
+
 
         outcome = _make_outcome(attacker_name, "attack", target_name, damage, blocked, critical, died)
         combat_state.log.append(outcome)

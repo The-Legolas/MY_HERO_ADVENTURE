@@ -98,14 +98,21 @@ def spawn_item(item_type):
     template = ITEM_DEFINITIONS[item_type].copy()
 
     item_obj = Items(
-            name        = template["name"],
-            category    = template["category"],
-            stackable   = template["stackable"],
-            unique      = template["unique"],
-            stats       = template["stats"],
-            effect      = template["effect"],
-            value       = template["value"],
-        )
+        name      = template["name"],
+        category  = template["category"],
+        stackable = template["stackable"],
+        unique    = template["unique"],
+        stats     = template.get("stats"),
+        effect    = template.get("effect"),      # ← SAFE ACCESS
+        value     = template["value"],
+    )
+
+    # Attach optional behavior data
+    if "on_hit_status" in template:
+        item_obj.on_hit_status = template["on_hit_status"]
+
+    if "on_equip_status" in template:
+        item_obj.on_equip_status = template["on_equip_status"]
 
     return item_obj
 
@@ -150,6 +157,65 @@ ITEM_DEFINITIONS = {
         "effect": None,
         "value": 40
     },
+    "venom_fang_dagger": {
+    "name": "Venom Fang Dagger",
+    "category": Item_Type.WEAPON,
+    "stackable": False,
+    "unique": False,
+    "stats": {"damage": +3},
+    "on_hit_status": {
+        "id": "poison",
+        "chance": 0.35,
+        "duration": 3,
+        "magnitude": 2
+    },
+    "value": 45
+    },
+    "cracked_warhammer": {
+    "name": "Cracked Warhammer",
+    "category": Item_Type.WEAPON,
+    "stackable": False,
+    "unique": False,
+    "stats": {"damage": +6},
+    "on_hit_status": {
+        "id": "weakened",
+        "chance": 0.25,
+        "duration": 2,
+        "magnitude": {"damage_mult": 0.8}
+    },
+    "value": 60
+    },
+    "frostbrand_sword": {
+    "name": "Frostbrand Sword",
+    "category": Item_Type.WEAPON,
+    "stackable": False,
+    "unique": False,
+    "stats": {"damage": +5},
+    "on_hit_status": {
+        "id": "stun",
+        "chance": 0.15,
+        "duration": 1,
+        "magnitude": None
+    },
+    "value": 80
+    },
+    "bloodletter_axe": {
+    "name": "Bloodletter Axe",
+    "category": Item_Type.WEAPON,
+    "stackable": False,
+    "unique": False,
+    "stats": {"damage": +7},
+    "on_hit_status": {
+        "id": "strength_up",
+        "chance": 0.30,
+        "duration": 2,
+        "magnitude": {
+            "damage_mult": 1.25
+        },
+        "target": "self"
+    },
+    "value": 90
+    },
     "basic_armor": {
         "name": "Basic Armor",
         "category": Item_Type.ARMOR,
@@ -167,6 +233,42 @@ ITEM_DEFINITIONS = {
         "stats": {"defence": +25},
         "effect": None,
         "value": 50
+    },
+    "ring_of_vital_flow": {
+    "name": "Ring of Vital Flow",
+    "category": Item_Type.RING,
+    "stackable": False,
+    "unique": False,
+    "on_equip_status": {
+        "id": "regen",
+        "duration": -1,   # infinite while equipped
+        "magnitude": 1
+    },
+    "value": 75
+    },
+    "ring_of_iron_will": {
+    "name": "Ring of Iron Will",
+    "category": Item_Type.RING,
+    "stackable": False,
+    "unique": False,
+    "passive_modifiers": {
+        "stun_resist": 0.50
+    },
+    "value": 65
+    },
+    "ring_of_corruption": {
+    "name": "Ring of Corruption",
+    "category": Item_Type.RING,
+    "stackable": False,
+    "unique": False,
+    "on_turn_status": {
+        "id": "strength_up",
+        "duration": 1,
+        "magnitude": {
+            "damage_mult": 1.15
+        }
+    },
+    "value": 100
     },
     "small_healing_potion": {
         "name": "Small Healing Potion",
