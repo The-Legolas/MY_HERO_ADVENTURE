@@ -587,10 +587,6 @@ class GameEngine:
                     print(f"\nGave player: {item_obj.name}")
                 except:
                     print("\nInvalid item ID.")
-                    
-                item_obj = spawn_item(item_id)
-                self.player.add_item(item_obj)
-                print(f"\nGave player: {item_obj.name}")
 
             elif choice == "3":
                 print("\nExiting debug menu.")

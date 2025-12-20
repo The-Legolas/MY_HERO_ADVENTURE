@@ -66,6 +66,8 @@ def _show_inventory_items(player: Character, equippable_only: bool) -> list[tupl
                 )
 
             print(f"{idx}. {item.name} x{count}  ({item.category.value})  {stats}")
+            print(f"\t{item.get_tooltip()}")
+    
 
     return items
 

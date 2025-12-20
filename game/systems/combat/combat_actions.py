@@ -99,7 +99,7 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         if not blocked and damage > 0 and action.target:
             weapon = getattr(actor, "equipment", {}).get("weapon")
 
-            if weapon and hasattr(weapon, "on_hit_status") and weapon.on_hit_status:
+            if weapon and weapon.on_hit_status:
                 data = weapon.on_hit_status
                 status_target = actor if data.get("target") == "self" else action.target
 
@@ -110,14 +110,16 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                         magnitude=data.get("magnitude"),
                         source=weapon.name,
                     )
-                    status_target.apply_status(status)
+                    status_target.apply_status(status, combat_state.log)
 
+                    """
                     combat_state.log.append({
                         "event": "status_applied",
                         "status": status.id,
                         "source": attacker_name,
                         "target": status_target.name,
                     })
+                    """
 
 
         outcome = _make_outcome(attacker_name, "attack", target_name, damage, blocked, critical, died)
@@ -144,7 +146,7 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
     combat_state.log.append(outcome)
     return outcome
 
-    
+
 def _compute_escape_chance(combat_state: 'Combat_State') -> bool:
     base = 0.70
     behavior_penalty = 0.0

@@ -27,15 +27,50 @@ class Item_Type(Enum):
 
 class Items():
     def __init__(self, name: str, category: Item_Type, stackable: bool, unique: bool,
-                 stats: dict[str, any] | None = None, 
-                 effect: dict[str, any] | None = None, value: int = 0):
+                 stats: dict[str, any] | None = None, effect: dict[str, any] | None = None, 
+                 passive_modifiers: dict[str, float] | None = None,
+                 on_hit_status: dict | None = None, value: int = 0):
         self.name = name
         self.category = category
         self.stackable = stackable
         self.unique = unique
-        self.stats = stats
-        self.effect = effect
         self.value = value
+
+        self.effect = effect
+        self.stats = stats or {}
+        self.passive_modifiers = passive_modifiers or {}
+        self.on_hit_status = on_hit_status
+
+    def get_tooltip(self) -> list[str]:
+        lines = []
+
+        # Stats (weapons, armor)
+        if self.stats:
+            for k, v in self.stats.items():
+                sign = "+" if v > 0 else ""
+                lines.append(f"{k.replace('_', ' ').title()}: {sign}{v}")
+
+        # On-hit status (weapons)
+        if getattr(self, "on_hit_status", None):
+            s = self.on_hit_status
+            lines.append(
+                f"On hit: {int(s['chance'] * 100)}% chance to "
+                f"{s['id'].replace('_', ' ').title()} "
+                f"({s.get('magnitude', '')} for {s['duration']} turns)"
+            )
+
+        # Passive modifiers (rings)
+        if getattr(self, "passive_modifiers", None):
+            for k, v in self.passive_modifiers.items():
+                lines.append(
+                    f"Passive: {k.replace('_', ' ').title()} +{int(v * 100)}%"
+                )
+
+        if not lines:
+            return ""
+
+        return "\n".join(lines)
+
 
     def use(self, player, target):
         if not self.effect:
@@ -163,12 +198,17 @@ ITEM_DEFINITIONS = {
     "stackable": False,
     "unique": False,
     "stats": {"damage": +3},
-    "on_hit_status": {
-        "id": "poison",
-        "chance": 0.35,
-        "duration": 3,
-        "magnitude": 2
-    },
+    "effect": [
+        {
+        "trigger": "on_hit",
+        "chance": 0.80,
+        "status": {
+            "id": "poison",
+            "magnitude": 2,
+            "duration": 3,
+        }
+        }
+    ],
     "value": 45
     },
     "cracked_warhammer": {
@@ -177,12 +217,17 @@ ITEM_DEFINITIONS = {
     "stackable": False,
     "unique": False,
     "stats": {"damage": +6},
-    "on_hit_status": {
-        "id": "weakened",
-        "chance": 0.25,
-        "duration": 2,
-        "magnitude": {"damage_mult": 0.8}
-    },
+    "effect": [
+        {
+        "trigger": "on_hit",
+        "chance": 0.45,
+        "status": {
+            "id": "weakened",
+            "duration": 4,
+            "magnitude": {"damage_mult": 0.8},
+        }
+        }
+    ],
     "value": 60
     },
     "frostbrand_sword": {
@@ -191,12 +236,17 @@ ITEM_DEFINITIONS = {
     "stackable": False,
     "unique": False,
     "stats": {"damage": +5},
-    "on_hit_status": {
-        "id": "stun",
+    "effect": [
+        {
+        "trigger": "on_hit",
         "chance": 0.15,
-        "duration": 1,
-        "magnitude": None
-    },
+        "status": {
+            "id": "stun",
+            "duration": 1,
+            "magnitude": None,
+        }
+        }
+    ],
     "value": 80
     },
     "bloodletter_axe": {
@@ -205,15 +255,20 @@ ITEM_DEFINITIONS = {
     "stackable": False,
     "unique": False,
     "stats": {"damage": +7},
-    "on_hit_status": {
-        "id": "strength_up",
-        "chance": 0.30,
-        "duration": 2,
-        "magnitude": {
-            "damage_mult": 1.25
-        },
-        "target": "self"
-    },
+    "effect": [
+        {
+        "trigger": "on_hit",
+        "chance": 0.60,
+        "status": {
+            "id": "strength_up",
+            "duration": 2,
+            "magnitude": {
+                "damage_mult": 1.25
+            },
+            "target": "self"
+        }
+        }
+    ],
     "value": 90
     },
     "basic_armor": {
@@ -239,11 +294,17 @@ ITEM_DEFINITIONS = {
     "category": Item_Type.RING,
     "stackable": False,
     "unique": False,
-    "on_equip_status": {
-        "id": "regen",
-        "duration": -1,   # infinite while equipped
-        "magnitude": 1
-    },
+    "stats": None,
+    "effect": [
+        {
+        "trigger": "on_equip",
+        "status": {
+            "id": "regen",
+            "duration": -1,   # infinite while equipped
+            "magnitude": 1
+        }
+        }
+    ],
     "value": 75
     },
     "ring_of_iron_will": {
@@ -251,9 +312,8 @@ ITEM_DEFINITIONS = {
     "category": Item_Type.RING,
     "stackable": False,
     "unique": False,
-    "passive_modifiers": {
-        "stun_resist": 0.50
-    },
+    "stats": {"stun_resist": 0.50},
+    "effect": None,
     "value": 65
     },
     "ring_of_corruption": {
@@ -261,13 +321,19 @@ ITEM_DEFINITIONS = {
     "category": Item_Type.RING,
     "stackable": False,
     "unique": False,
-    "on_turn_status": {
-        "id": "strength_up",
-        "duration": 1,
-        "magnitude": {
-            "damage_mult": 1.15
+    "stats": None,
+    "effect": [
+        {
+        "trigger": "on_turn",
+        "status": {
+            "id": "strength_up",
+            "duration": 1,
+            "magnitude": {
+                "damage_mult": 1.15
+            }
         }
-    },
+        }
+    ],
     "value": 100
     },
     "small_healing_potion": {

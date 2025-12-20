@@ -112,15 +112,14 @@ class Character():
         
         self.remove_item(item.name, 1)
 
-        for stat, value in item.stats.items():
-            if stat == "damage":
-                self.damage += value
-            elif stat == "defence":
-                self.defence += value
-            elif stat == "hp":
-                self.hp += value
-            elif stat == "crit_chance":
-                pass #not implemented yet
+        if item.category in (Item_Type.WEAPON, Item_Type.ARMOR):
+            for stat, value in item.stats.items():
+                if stat == "damage":
+                    self.damage += value
+                elif stat == "defence":
+                    self.defence += value
+                elif stat == "hp":
+                    self.hp += value
 
         print(f"You equipped {item.name} in {slot} slot.")
         
@@ -310,7 +309,17 @@ class Character():
 
         return logs
 
-    def apply_status(self, new_status: 'Status') -> None:
+    def apply_status(self, new_status: 'Status', combat_log: list[dict] | None = None) -> bool:
+        resist = self.get_status_resistance(new_status.id)
+        if resist > 0 and random.random() < resist:
+            if combat_log is not None:
+                combat_log.append({
+                    "event": "status_resisted",
+                    "status": new_status.id,
+                    "target": self.name
+                })
+            return False
+
         data = STATUS_REGISTRY.get(new_status.id, {})
         stacking = data.get("stacking", "replace")
         max_stacks = data.get("max_stacks", 1)
@@ -320,28 +329,72 @@ class Character():
         if not existing:
             self.statuses.append(new_status)
             return
+        else:
+            current = existing[0]
 
-        current = existing[0]
-
-        if stacking == "refresh":
-            current.remaining_turns = max(
-                current.remaining_turns,
-                new_status.remaining_turns
-            )
-
-        elif stacking == "replace":
-            self.statuses.remove(current)
-            self.statuses.append(new_status)
-
-        elif stacking == "stack":
-            if len(existing) < max_stacks:
-                self.statuses.append(new_status)
-            else:
-                # refresh strongest / longest
+            if stacking == "refresh":
                 current.remaining_turns = max(
                     current.remaining_turns,
                     new_status.remaining_turns
                 )
+
+            elif stacking == "replace":
+                self.statuses.remove(current)
+                self.statuses.append(new_status)
+
+            elif stacking == "stack":
+                if len(existing) < max_stacks:
+                    self.statuses.append(new_status)
+                else:
+                    # refresh strongest / longest
+                    current.remaining_turns = max(
+                        current.remaining_turns,
+                        new_status.remaining_turns
+                    )
+        
+        if combat_log is not None:
+            combat_log.append({
+                "event": "status_applied",
+                "status": new_status.id,
+                "target": self.name,
+                "source": new_status.source
+            })
+
+        return True
+        
+    def get_status_resistance(self, status_id: str) -> float:
+        resist = 0.0
+        key = f"{status_id}_resist"
+
+        for item in self.equipment.values():
+            if not item:
+                continue
+            resist += item.passive_modifiers.get(key, 0.0)
+
+        # Cap to avoid total immunity
+        return min(resist, 0.95)
+    
+    def get_effects_by_trigger(self, trigger: str) -> list[dict]:
+        effects = []
+
+        for item in self.equipment.values():
+            if not item or not item.effect:
+                continue
+
+            for effect in item.effect:
+                if effect.get("trigger") == trigger:
+                    effects.append(effect)
+
+        return effects
+
+    def get_on_hit_effects(self):
+        return self.get_effects_by_trigger("on_hit")
+
+    def get_on_equip_effects(self):
+        return self.get_effects_by_trigger("on_equip")
+
+    def get_on_turn_effects(self):
+        return self.get_effects_by_trigger("on_turn")
 
 
 

@@ -27,17 +27,7 @@ def show_combat_status(combat: Combat_State):
     for i, e in enumerate(combat.alive_enemies(), start=1):
         icons = format_status_icons(e)
         print(f"{i}. {e.name} ({e.hp}/{e.max_hp} HP) {icons}")
-
-    # old logic but have to test logic above
-    """#print(f"You: {player.hp}/{getattr(player, 'max_hp', player.hp)} HP\n")
-
-    print("\n=== COMBAT STATUS ===")
-    print(f"You: {player.hp}/{getattr(player, 'max_hp', player.hp)} HP")
-"""
-    print("\nEnemies:")
-    for i, enemy in enumerate(combat.alive_enemies(), start=1):
-        max_hp = getattr(enemy, "max_hp", enemy.hp)
-        print(f"{i}. {enemy.name} ({enemy.hp}/{max_hp} HP)")
+            
     print("=====================\n")
 
 

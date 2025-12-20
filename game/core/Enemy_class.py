@@ -4,7 +4,7 @@ import random
 from .Character_class import Character
 
 class Enemy_Rarity(Enum):
-    COMMON = 100 #100
+    COMMON = 40 #100
     UNCOMMON = 40 #40
     RARE = 20 # 15
     ELITE = 5
