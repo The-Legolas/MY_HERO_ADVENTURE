@@ -41,35 +41,69 @@ class Items():
         self.passive_modifiers = passive_modifiers or {}
         self.on_hit_status = on_hit_status
 
-    def get_tooltip(self) -> list[str]:
+    def get_tooltip(self) -> str:
         lines = []
 
-        # Stats (weapons, armor)
         if self.stats:
             for k, v in self.stats.items():
-                sign = "+" if v > 0 else ""
-                lines.append(f"{k.replace('_', ' ').title()}: {sign}{v}")
+                name = k.replace("_", " ").title()
 
-        # On-hit status (weapons)
-        if getattr(self, "on_hit_status", None):
-            s = self.on_hit_status
-            lines.append(
-                f"On hit: {int(s['chance'] * 100)}% chance to "
-                f"{s['id'].replace('_', ' ').title()} "
-                f"({s.get('magnitude', '')} for {s['duration']} turns)"
-            )
+                if isinstance(v, float):
+                    lines.append(f"{name}: +{int(v * 100)}%")
+                else:
+                    sign = "+" if v > 0 else ""
+                    lines.append(f"{name}: {sign}{v}")
 
-        # Passive modifiers (rings)
-        if getattr(self, "passive_modifiers", None):
+        if self.passive_modifiers:
             for k, v in self.passive_modifiers.items():
-                lines.append(
-                    f"Passive: {k.replace('_', ' ').title()} +{int(v * 100)}%"
-                )
+                name = k.replace("_", " ").replace("resist", "Resist").title()
+                lines.append(f"{name}: +{int(v * 100)}%")
 
-        if not lines:
-            return ""
 
-        return "\n".join(lines)
+        if isinstance(self.effect, dict):
+            for effect, amount in self.effect.items():
+                verb = effect.replace("_", " ").title()
+                lines.append(f"Use: {verb} {amount}")
+
+
+
+        elif isinstance(self.effect, list):
+            for entry in self.effect:
+                trigger = entry.get("trigger")
+                chance = entry.get("chance", 1.0)
+                status = entry.get("status")
+
+                if not status:
+                    continue
+
+                status_name = status["id"].replace("_", " ").title()
+                duration = status.get("duration")
+                magnitude = status.get("magnitude")
+
+                if magnitude is not None:
+                    effect_text = f"{status_name} x{magnitude}"
+                else:
+                    effect_text = status_name
+
+                if trigger == "on_hit":
+                    lines.append(
+                        f"\tOn hit: {int(chance * 100)}% chance to apply "
+                        f"{effect_text} for {duration} turns"
+                    )
+
+                elif trigger == "on_turn":
+                    lines.append(
+                        f"Each turn: {int(chance * 100)}% chance to gain "
+                        f"{effect_text} for for {duration} turns"
+                    )
+
+                elif trigger == "on_equip":
+                    lines.append(
+                        f"On equip: gain {effect_text}"
+                    )
+
+        return "\n".join(lines) if lines else ""
+
 
 
     def use(self, player, target):
@@ -239,7 +273,7 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.15,
+        "chance": 0.70, #0,15
         "status": {
             "id": "stun",
             "duration": 1,
@@ -327,7 +361,7 @@ ITEM_DEFINITIONS = {
         "trigger": "on_turn",
         "status": {
             "id": "strength_up",
-            "duration": 1,
+            "duration": 2,
             "magnitude": {
                 "damage_mult": 1.15
             }

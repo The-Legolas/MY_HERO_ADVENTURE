@@ -97,29 +97,29 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         died = raw.get("died", False)
         
         if not blocked and damage > 0 and action.target:
-            weapon = getattr(actor, "equipment", {}).get("weapon")
+            effects = actor.get_on_hit_effects()
 
-            if weapon and weapon.on_hit_status:
-                data = weapon.on_hit_status
-                status_target = actor if data.get("target") == "self" else action.target
+            for effect in effects:
+                if random.random() > effect.get("chance", 1.0):
+                    continue
 
-                if random.random() < data.get("chance", 1.0):
-                    status = Status(
-                        id=data["id"],
-                        remaining_turns=data["duration"],
-                        magnitude=data.get("magnitude"),
-                        source=weapon.name,
-                    )
-                    status_target.apply_status(status, combat_state.log)
+                status_data = effect.get("status")
+                if not status_data:
+                    continue
 
-                    """
-                    combat_state.log.append({
-                        "event": "status_applied",
-                        "status": status.id,
-                        "source": attacker_name,
-                        "target": status_target.name,
-                    })
-                    """
+                target_entity = actor if status_data.get("target") == "self" else action.target
+                if not target_entity:
+                    continue
+
+                status = Status(
+                    id=status_data["id"],
+                    remaining_turns=status_data["duration"],
+                    magnitude=status_data.get("magnitude", 1),
+                    source=actor.name,
+                )
+
+                target_entity.apply_status(status, combat_state.log)
+
 
 
         outcome = _make_outcome(attacker_name, "attack", target_name, damage, blocked, critical, died)

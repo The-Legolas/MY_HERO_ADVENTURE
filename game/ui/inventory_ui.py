@@ -38,13 +38,7 @@ def _show_equipped_items(player: Character) -> None:
         return
     
     for idx, (slot, item) in enumerate(equipped, start=1):
-        stats = ""
-        if item.stats:
-            stats = " | ".join(
-                f"{k.title()}: {v}" for k, v in item.stats.items()
-                )
-
-        print(f"{idx}. {slot.title()}: {item.name}  {stats}")
+        print(f"{idx}. {slot.title()}: {item.name}")
 
 
 
@@ -59,14 +53,8 @@ def _show_inventory_items(player: Character, equippable_only: bool) -> list[tupl
 
 
     for idx, (_, item, count) in enumerate(items, start=1):
-            stats = ""
-            if item.stats:
-                stats = " | ".join(
-                    f"{k.title()}: {v}" for k, v in item.stats.items()
-                )
-
-            print(f"{idx}. {item.name} x{count}  ({item.category.value})  {stats}")
-            print(f"\t{item.get_tooltip()}")
+            print(f"{idx}. {item.name} x{count}  ({item.category.value})")
+            print(f"\t{item.get_tooltip()}\n")
     
 
     return items

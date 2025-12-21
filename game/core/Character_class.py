@@ -244,9 +244,6 @@ class Character():
         pass
 
 
-    def add_status(self, status: 'Status') -> None:
-        self.statuses.append(status)
-
     def remove_status(self, status_id: str) -> None:
         self.statuses = [status for status in self.statuses if status.id != status_id]
 

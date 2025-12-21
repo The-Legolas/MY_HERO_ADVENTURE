@@ -6,6 +6,8 @@ from game.core.Item_class import roll_loot
 from typing import Optional, Any
 from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
 from game.ui.combat_ui import format_status_icons
+import random
+from game.systems.combat.combat_turn import Status
 
 class Combat_State():
     def __init__(self, player: Character, enemy_list: list[Enemy]):
@@ -52,6 +54,26 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
             if not actor.is_alive():
                 continue
 
+            turn_effects = actor.get_on_turn_effects()
+
+            for effect in turn_effects:
+                if random.random() > effect.get("chance", 1.0):
+                    continue
+
+                status_data = effect.get("status")
+                if not status_data:
+                    continue
+
+                status = Status(
+                    id=status_data["id"],
+                    remaining_turns=status_data["duration"],
+                    magnitude=status_data.get("magnitude", 1),
+                    source=actor.name,
+                )
+
+                actor.apply_status(status, combat_state.log)
+
+
             status_logs = actor.process_statuses()
             combat_state.log.extend(status_logs)
 
@@ -63,26 +85,7 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
                 })
                 continue
 
-            if not actor.can_act():
-                combat_state.log.append({
-                    "event": "status_prevented_action",
-                    "target": actor.name
-                })
-                continue
 
-            if actor is combat_state.player:
-                action = ask_player_for_action(actor, combat_state)
-                if action is None:
-                    continue
-
-            else:
-                action = decide_enemy_action(actor, combat_state)
-
-            outcome = resolve_action(action, combat_state)
-            combat_state.log.append(outcome)
-            render_combat_outcome(outcome)
-            input()
-            
             if not combat_state.alive_enemies():
                 killed = [enemy for enemy in enemy_list if not enemy.is_alive()]
                 total_loot = {"gold": 0, "items": []}
@@ -125,6 +128,26 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
                 combat_state.is_running = False
                 return {"result": "victory", "log": combat_state.log, "loot": total_loot}
 
+
+            if not actor.can_act():
+                combat_state.log.append({
+                    "event": "status_prevented_action",
+                    "target": actor.name
+                })
+                continue
+
+            if actor is combat_state.player:
+                action = ask_player_for_action(actor, combat_state)
+                if action is None:
+                    continue
+
+            else:
+                action = decide_enemy_action(actor, combat_state)
+
+            outcome = resolve_action(action, combat_state)
+            combat_state.log.append(outcome)
+            render_combat_outcome(outcome)
+            input()
 
 
  
