@@ -160,27 +160,7 @@ class GameEngine:
                     self.state = "town"
 
                     self._handle_day_transition(context="death", dungeon_depth=dungeon_depth)
-                    return
-
-                    """
-                if result["result"] == "victory":
-                    input()
-                    room.cleared = True
-                    continue
-
-                if result["result"] == "defeat":
-                    print("\nYou collapse from your wounds...")
-                    input()
-
-                    self.player.hp = self.player.max_hp
-
-                    self.current_dungeon = None
-                    self.current_room = None
-
-                    self.state = "town"
-
-                    self._handle_day_transition(context="death")
-                    return"""
+                    return    
 
             self.show_dungeon_menu(room)
 

@@ -1,10 +1,11 @@
 import random
-from .Item_class import Item_Type, Items, make_outcome
+from game.core.Item_class import Item_Type, Items, make_outcome
+from game.systems.combat.status_evaluator import evaluate_status_magnitude
 from game.systems.combat.status_registry import STATUS_REGISTRY
+
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from game.systems.combat.combat_turn import Status
+from game.core.Status import Status
 
 class Character():
     def __init__(self, name: str, hp: int, damage: int, defence: int):
@@ -174,7 +175,8 @@ class Character():
     def is_alive(self) -> bool:
         return True if self.hp > 0 else False
 
-
+    """
+Let's see if this crashes the game
     def debug_attack(self, other: 'Character') -> str:
         text_block = ""
 
@@ -193,6 +195,7 @@ class Character():
             text_block += " but it was blocked!\n"
 
         return text_block
+"""
     
 
     def attack(self, other: 'Character') -> dict:
@@ -232,7 +235,13 @@ class Character():
         return mult
     
     def can_act(self) -> bool:
-        for status in self.statuses:
+        statuses_sorted = sorted(
+            self.statuses,
+            key=lambda s: STATUS_REGISTRY.get(s.id, {}).get("priority", 50),
+            reverse=True
+        )
+
+        for status in statuses_sorted:
             if STATUS_REGISTRY.get(status.id, {}).get("prevents_action"):
                 return False
         return True
@@ -272,17 +281,65 @@ class Character():
 
         self.statuses.append(new_status)
     
-    
     def process_statuses(self) -> list[dict]:
         expired = []
         logs = []
 
-        for status in self.statuses:
+        statuses_sorted = sorted(
+            self.statuses,
+            key=lambda s: STATUS_REGISTRY.get(s.id, {}).get("priority", 50)
+        )
+
+        for status in statuses_sorted:
             data = STATUS_REGISTRY.get(status.id, {})
 
             if "on_tick" in data:
                 before_hp = self.hp
-                data["on_tick"](self, status)
+
+                base_magnitude = status.magnitude
+                effective_magnitude = evaluate_status_magnitude(
+                    status=status,
+                    active_statuses=self.statuses
+                )
+
+                if effective_magnitude != base_magnitude:
+                    interactions = data.get("interactions", {})
+                    strongest_rule = None
+                    strongest_multiplier = None
+
+                    for other in self.statuses:
+                        rule = interactions.get(other.id)
+                        if not rule:
+                            continue
+
+                        mult = rule.get("damage_multiplier")
+                        if mult is None:
+                            continue
+
+                        if (
+                            strongest_multiplier is None
+                            or abs(mult - 1.0) > abs(strongest_multiplier - 1.0)
+                        ):
+                            strongest_multiplier = mult
+                            strongest_rule = other.id
+
+                    if strongest_rule is not None:
+                        logs.append({
+                            "event": "status_interaction",
+                            "status": status.id,
+                            "target": self.name,
+                            "source": strongest_rule,
+                            "multiplier": strongest_multiplier
+                        })
+
+                temp_status = Status(
+                    id=status.id,
+                    remaining_turns=status.remaining_turns,
+                    magnitude=effective_magnitude,
+                    source=status.source
+                )
+
+                data["on_tick"](self, temp_status)
 
                 logs.append({
                     "event": "status_tick",
@@ -306,6 +363,7 @@ class Character():
 
         return logs
 
+
     def apply_status(self, new_status: 'Status', combat_log: list[dict] | None = None) -> bool:
         resist = self.get_status_resistance(new_status.id)
         if resist > 0 and random.random() < resist:
@@ -322,10 +380,12 @@ class Character():
         max_stacks = data.get("max_stacks", 1)
 
         existing = [s for s in self.statuses if s.id == new_status.id]
+        
+        applied = False
 
         if not existing:
             self.statuses.append(new_status)
-            return
+            applied = True
         else:
             current = existing[0]
 
@@ -334,22 +394,26 @@ class Character():
                     current.remaining_turns,
                     new_status.remaining_turns
                 )
+                applied = True
 
             elif stacking == "replace":
                 self.statuses.remove(current)
                 self.statuses.append(new_status)
+                applied = True
 
             elif stacking == "stack":
                 if len(existing) < max_stacks:
                     self.statuses.append(new_status)
+                    applied = True
                 else:
                     # refresh strongest / longest
                     current.remaining_turns = max(
                         current.remaining_turns,
                         new_status.remaining_turns
                     )
+                    applied = True
         
-        if combat_log is not None:
+        if applied and combat_log is not None:
             combat_log.append({
                 "event": "status_applied",
                 "status": new_status.id,
@@ -357,7 +421,7 @@ class Character():
                 "source": new_status.source
             })
 
-        return True
+        return applied
         
     def get_status_resistance(self, status_id: str) -> float:
         resist = 0.0
@@ -398,6 +462,8 @@ class Character():
     def __str__(self):
         return f"name:{self.name}, hp:{self.hp}, damage:{self.damage}, level:{self.level}, defence: {self.defence}, equipment: {self.equipment}"
 
+"""
+Let's see if this crashes the game
 def render_attack_text(outcome: dict) -> str:
 
         text_block = ""
@@ -419,5 +485,5 @@ def render_attack_text(outcome: dict) -> str:
         if outcome["died"] == True:
             text_block += outcome["target"] + " has fallen.\n"
 
-        return text_block
+        return text_block"""
 

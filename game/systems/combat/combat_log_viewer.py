@@ -1,6 +1,20 @@
+
 def combat_log_renderer(log: list[dict]) -> str:
     lines: list[str] = []
     lines.append("\n=== BATTLE REPORT ===\n")
+
+    current_turn = None
+    start_phase = []
+    action_phase = []
+    post_action_phase = []
+
+    def flush_turn():
+        for line in start_phase:
+            lines.append(line)
+        for line in action_phase:
+            lines.append(line)
+        for line in post_action_phase:
+            lines.append(line)
 
     for entry in log:
         event = entry.get("event")
@@ -9,107 +23,128 @@ def combat_log_renderer(log: list[dict]) -> str:
         actor = entry.get("actor", "Unknown")
         target = entry.get("target", "Unknown")
 
-        match event:
-            case "encounter_start":
-                count = entry.get("enemy_count", 0)
-                enemy_word = "enemy" if count == 1 else "enemies"
-                lines.append(f"You are ambushed by {count} {enemy_word}.\n")
-                continue
 
-            case "victory":
-                loot = entry.get("loot", {})
-                gold = loot.get("gold", 0)
-                items = loot.get("items", [])
+        if event == "turn_start":
+            if current_turn is not None:
+                flush_turn()
+                start_phase.clear()
+                action_phase.clear()
+                post_action_phase.clear()
 
-                lines.append("\nYou are victorious!\n")
-                lines.append(f"Gold gained: {gold}")
+            current_turn = entry["turn"]
+            lines.append(f"\n--- Turn {current_turn} ---")
+            continue
 
-                if items:
-                    lines.append("Items gained:")
-                    for item in items:
-                        lines.append(f" - {item.name}")
-                continue
 
-            case "defeat":
-                lines.append("\nYou have been defeated.\n")
-                continue
+        if event == "encounter_start":
+            count = entry.get("enemy_count", 0)
+            enemy_word = "enemy" if count == 1 else "enemies"
+            lines.append(f"You are ambushed by {count} {enemy_word}.\n")
+            continue
+        
+        if event == "victory":
+            flush_turn()
+            lines.append("\nYou are victorious!")
+            loot = entry.get("loot", {})
+            if loot.get("gold"):
+                lines.append(f"Gold gained: {loot['gold']}")
+            if loot.get("items"):
+                lines.append("Items gained:")
+                for item in loot["items"]:
+                    lines.append(f" - {item.name}")
+            continue
 
-            case "status_applied":
-                lines.append(
-                    f"{entry['target']} is afflicted with {entry['status']}!"
-                )
-                continue
+        if event == "defeat":
+            flush_turn()
+            lines.append("\nYou have been defeated.")
+            continue
 
-            case "status_resisted":
-                lines.append(
-                    f"{entry['target']} resisted {entry['status']}."
-                )
-                continue
+        if event == "status_tick":
+            status = entry.get("status", "").replace("_", " ").title()
+            before = entry.get("hp_before")
+            after = entry.get("hp_after")
 
-            case "status_tick":
-                if "damage" in entry:
-                    lines.append(
-                        f"{entry['target']} takes {entry['damage']} damage from {entry['status']}."
+            if before is not None and after is not None:
+                delta = before - after
+                if delta > 0:
+                    start_phase.append(
+                        f"{entry['target']} takes {delta} damage from {status}."
                     )
-                elif "heal" in entry:
-                    lines.append(
-                        f"{entry['target']} recovers {entry['heal']} HP from {entry['status']}."
+                elif delta < 0:
+                    start_phase.append(
+                        f"{entry['target']} recovers {-delta} HP from {status}."
                     )
-                continue
+            continue
 
-            case "status_expire":
+        if event == "status_expired":
+            status = entry.get("status", "").replace("_", " ").title()
+            start_phase.append(f"{status} on {entry['target']} wears off.")
+            continue
+
+        if event == "status_prevented_action":
+            action_phase.append(f"{entry['target']} is unable to act!")
+            continue
+
+        if event == "status_interaction":
+            status = entry["status"].replace("_", " ").title()
+            source = entry["source"].replace("_", " ").title()
+            mult = entry["multiplier"]
+
+            if mult < 1:
                 lines.append(
-                    f"{entry['status']} on {entry['target']} wears off."
+                    f"{status} is weakened by {source}."
                 )
-                continue
-
-            case "status_prevented_action":
+            else:
                 lines.append(
-                    f"{entry['target']} is stunned and cannot act!"
+                    f"{status} is amplified by {source}."
                 )
-                continue
+            continue
 
-            case _:
-                pass  
+        if event == "status_applied":
+            status = entry.get("status", "").replace("_", " ").title()
+            post_action_phase.append(f"{entry['target']} is afflicted with {status}.")
+            continue
+
+        if event == "status_resisted":
+            status = entry.get("status", "").replace("_", " ").title()
+            post_action_phase.append(f"{entry['target']} resists {status}.")
+            continue
+
+        if event == "death":
+            post_action_phase.append(f"{entry['target']} collapses.")
+            continue
 
 
-        match action:
-            case "attack":
-                dmg = entry.get("damage", 0)
-                blocked = entry.get("blocked", False)
-                crit = entry.get("critical", False)
-                died = entry.get("died", False)
+        if action == "attack":
+            dmg = entry.get("damage", 0)
+            blocked = entry.get("blocked", False)
+            crit = entry.get("critical", False)
+            died = entry.get("died", False)
 
-                text = f"{actor} attacks {target}"
+            if blocked:
+                action_phase.append(f"{actor} attacks {target}, but the blow is blocked.")
+            else:
+                text = f"{actor} strikes {target} for {dmg} damage"
+                if crit:
+                    text += " (CRITICAL HIT)"
+                action_phase.append(text + ".")
 
-                if blocked:
-                    text += ", but the blow is blocked."
-                else:
-                    text += f" for {dmg} damage"
-                    if crit:
-                        text += " CRITICAL HIT"
-                    if died:
-                        text += f". {target} is slain."
-                    else:
-                        text += "."
+                if died:
+                    post_action_phase.append(f"{target} is slain.")
+            continue
 
-                lines.append(text)
-                continue
+        if action == "item":
+            action_phase.append(f"{actor} uses an item on {target}.")
+            continue
 
-            case "item":
-                lines.append(f"{actor} uses an item on {target}.")
-                continue
-
-            case "flee":
-                escaped = entry.get("extra", {}).get("escaped", False)
-                if escaped:
-                    lines.append(f"{actor} successfully flees the battle.")
-                else:
-                    lines.append(f"{actor} tries to flee, but fails.")
-                continue
-
-            case _:
-                pass
-
+        if action == "flee":
+            escaped = entry.get("extra", {}).get("escaped", False)
+            if escaped:
+                action_phase.append(f"{actor} successfully flees the battle.")
+            else:
+                action_phase.append(f"{actor} tries to flee, but fails.")
+            continue
+    
+    flush_turn()
     lines.append("\n=====================\n")
     return "\n".join(lines)

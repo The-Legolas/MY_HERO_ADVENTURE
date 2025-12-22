@@ -7,7 +7,9 @@ from typing import Optional, Any
 from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
 from game.ui.combat_ui import format_status_icons
 import random
-from game.systems.combat.combat_turn import Status
+from game.core.Status import Status
+from game.ui.status_ui import render_status_tooltip
+from game.systems.combat.status_registry import STATUS_REGISTRY
 
 class Combat_State():
     def __init__(self, player: Character, enemy_list: list[Enemy]):
@@ -48,6 +50,12 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
         participants = [player] + combat_state.alive_enemies()
         participants_sorted = sorted(participants, key=_get_initiative_value, reverse=True)
 
+        combat_state.log.append({
+            "event": "turn_start",
+            "turn": combat_state.round_number
+        })
+
+
         for actor in participants_sorted:
             if not combat_state.is_running:
                 break
@@ -76,15 +84,6 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
 
             status_logs = actor.process_statuses()
             combat_state.log.extend(status_logs)
-
-            if not actor.is_alive():
-                combat_state.log.append({
-                    "event": "death",
-                    "target": actor.name,
-                    "cause": "status"
-                })
-                continue
-
 
             if not combat_state.alive_enemies():
                 killed = [enemy for enemy in enemy_list if not enemy.is_alive()]
@@ -129,6 +128,14 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
                 return {"result": "victory", "log": combat_state.log, "loot": total_loot}
 
 
+            if not actor.is_alive():
+                combat_state.log.append({
+                    "event": "death",
+                    "target": actor.name,
+                    "cause": "status"
+                })
+                continue
+
             if not actor.can_act():
                 combat_state.log.append({
                     "event": "status_prevented_action",
@@ -145,7 +152,6 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
                 action = decide_enemy_action(actor, combat_state)
 
             outcome = resolve_action(action, combat_state)
-            combat_state.log.append(outcome)
             render_combat_outcome(outcome)
             input()
 
@@ -169,7 +175,7 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
         print("What do you want to do?")
         print("1. Attack")
         print("2. Use Item")
-        print("3. Inspect Enemy")
+        print("3. Inspect")
         print("4. Flee")
 
         choice = input("> ").strip().lower()
@@ -223,36 +229,106 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
             continue
 
         if action == "inspect":
-            enemies = combat.alive_enemies()
-            if not enemies:
-                print("There is nothing to inspect.")
-                input()
-                continue
-            
-            print()
-            for i, e in enumerate(enemies, start=1):
-                print(f"{i}. {e.name}")
+            print("\nInspect:")
+            print("1. Enemies")
+            print(f"2. {actor.name}'s statuses")
             print("c. Cancel")
 
-            choice = input("> ").strip().lower()
-            if choice in ("c", "back", "cancel"):
+            sub = input("> ").strip().lower()
+
+            if sub in ("c", "back", "cancel"):
                 continue
-            try:
-                idx = int(choice) - 1
-                if 0 <= idx < len(enemies):
-                    e = enemies[idx]
-                    print(f"\n{e.name}")
-                    print(f"HP: {e.hp}")
-                    etype = getattr(e, "type", None)
-                    behavior = getattr(e, "behavior_tag", None)
+
+            if sub in ("1", "enemies", "enemy"):
+                enemies = combat.alive_enemies()
+                if not enemies:
+                    print("There is nothing to inspect.")
+                    input()
+                    continue
+                
+                print()
+                for i, enemy in enumerate(enemies, start=1):
+                    print(f"{i}. {enemy.name}")
+                print("c. Cancel")
+
+                choice = input("> ").strip().lower()
+                if choice in ("c", "back", "cancel"):
+                    continue
+                try:
+                    idx = int(choice) - 1
+                    if not (0 <= idx < len(enemies)):
+                        continue
+
+                    enemy = enemies[idx]
+
+                    print(f"\n{enemy.name}")
+                    print(f"HP: {enemy.hp}")
+
+                    etype = getattr(enemy, "type", None)
+                    behavior = getattr(enemy, "behavior_tag", None)
 
                     print(f"Type: {etype.value if etype else 'Unknown'}")
                     print(f"Behavior: {behavior.value if behavior else 'Unknown'}")
 
+                    if not enemy.statuses:
+                        print("Statuses: None")
+                        input("\nPress Enter to continue...")
+                        continue
+
+                    print("Statuses:")
+                    for s in enemy.statuses:
+                        icon = STATUS_REGISTRY.get(s.id, {}).get("icon", "?")
+                        print(f" - {icon} {s.id.replace('_', ' ').title()} ({s.remaining_turns})")
+
+                    print("\nInspect enemy statuses?")
+                    print("1. Yes")
+                    print("2. Back")
+
+                    sub_choice = input("> ").strip().lower()
+                    if sub_choice != "1":
+                        continue
+
+                    print()
+                    tooltip_lines = render_status_tooltip(s, enemy)
+
+                    for line in tooltip_lines:
+                        print(line)
+                        
+                    print("-" * 30)
+
                     input("\nPress Enter to continue...")
-            except ValueError:
-                pass
-            continue
+
+                except ValueError:
+                    pass
+                continue
+
+            if sub in ("2", "statuses", "status"):
+
+                if not actor.statuses:
+                    print("\nYou have no active statuses.")
+                    input()
+                    continue
+
+                print()
+                for i, s in enumerate(actor.statuses, start=1):
+                    print(f"{i}. {s.id.replace('_', ' ').title()}")
+                print("c. Cancel")
+
+                choice = input("> ").strip().lower()
+                if choice in ("c", "back", "cancel"):
+                    continue
+
+                try:
+                    idx = int(choice) - 1
+                    if 0 <= idx < len(actor.statuses):
+                        status = actor.statuses[idx]
+                        print()
+                        print(render_status_tooltip(status))
+                        input("\nPress Enter to continue...")
+                except ValueError:
+                    pass
+
+                continue
 
         if action == "flee":
             return Action(actor, "flee", None)

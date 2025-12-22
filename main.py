@@ -3,6 +3,40 @@ from game.core.Heroes import Warrior
 from game.world.Gen_Game_World import Game_World
 from game.world.town_logic.town_names import Town_names
 from game.engine.game_engine import GameEngine
+# Missing from the game still:
+
+# Exploration System:  | Safe areas ( rest rooms, save points)  | 
+# Map logic (implicit, discovered, or explicit)      currently using a debug tool to render the map but should expand into an actual part of the game  |
+# Dungeon progression logic (keys, switches, boss gates)
+
+# Combat System: | Player actions:  missing option to defend use differnt attacks and skills/magic  | Enemy AI  | Hit/miss logic |
+
+# Character System:  | Level-up system
+
+# Enemies:  |  Boss-specific mechanics or behaviors  | Enemy intent |  Status immunities / resist tiers  |  Boss-only overrides
+
+# Items & Equipment:  |  Item use out of combat:  like the supposed map mechanic
+
+# Progression & Balance:  |  Resource scarcity tuning (HP, MP, items)  | Grind tolerance (optional but intentional)
+
+# Saving & Persistence:  |  Save system / load system
+
+# Story Framework:   | Intro / setup  | World premise  |  Player motivation  |  Ending(s)
+
+# Worldbuilding: |  Enemy flavor text  | Lore snippets/Environmental storytelling
+
+# NPCs:  | Quest-givers or guides  |  NPCs with conditional dialogue
+
+# Advanced Combat:  | Elemental weaknesses/resistances  |  Multi-target attacks   |  Skill cooldowns or costs
+
+# Class & Build Depth:  |  Skill trees  |  Class-specific equipment
+
+# Quests & Side Content:  | Side quests  |  Optional bosses  |  Rare items
+
+# Meta Systems:  | Bestiary / enemy log   |  Statistics tracking (deaths, clears, etc.)
+
+# Testing
+
 
 
 def main():
@@ -57,7 +91,7 @@ def pick_character_and_name() -> Character:
     
 
 
-        
+
 
 
 if __name__ == "__main__":

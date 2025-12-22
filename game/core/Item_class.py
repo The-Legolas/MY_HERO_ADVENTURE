@@ -235,7 +235,7 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.80,
+        "chance": 0.99, # 0.80
         "status": {
             "id": "poison",
             "magnitude": 2,
@@ -254,11 +254,11 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.45,
+        "chance": 0.96, #0,45
         "status": {
             "id": "weakened",
             "duration": 4,
-            "magnitude": {"damage_mult": 0.8},
+            "magnitude": 0.8,
         }
         }
     ],
@@ -273,10 +273,10 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.70, #0,15
+        "chance": 0.99, #0,15
         "status": {
             "id": "stun",
-            "duration": 1,
+            "duration": 2,
             "magnitude": None,
         }
         }
@@ -292,13 +292,11 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.60,
+        "chance": 0.95, # 0,60
         "status": {
             "id": "strength_up",
             "duration": 2,
-            "magnitude": {
-                "damage_mult": 1.25
-            },
+            "magnitude": 1.25,
             "target": "self"
         }
         }
@@ -362,9 +360,7 @@ ITEM_DEFINITIONS = {
         "status": {
             "id": "strength_up",
             "duration": 2,
-            "magnitude": {
-                "damage_mult": 1.15
-            }
+            "magnitude": 1.15
         }
         }
     ],

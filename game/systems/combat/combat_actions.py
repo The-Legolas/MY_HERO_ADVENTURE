@@ -2,7 +2,7 @@ import random
 from typing import Optional, Any
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
-from game.systems.combat.combat_turn import Status
+from game.core.Status import Status
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
