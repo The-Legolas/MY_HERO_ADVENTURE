@@ -44,7 +44,11 @@ def combat_log_renderer(log: list[dict]) -> str:
         
         if event == "victory":
             flush_turn()
-            lines.append("\nYou are victorious!")
+            start_phase.clear()
+            action_phase.clear()
+            post_action_phase.clear()
+            
+            lines.append("\n--- You are victorious! ---")
             loot = entry.get("loot", {})
             if loot.get("gold"):
                 lines.append(f"Gold gained: {loot['gold']}")
@@ -52,12 +56,14 @@ def combat_log_renderer(log: list[dict]) -> str:
                 lines.append("Items gained:")
                 for item in loot["items"]:
                     lines.append(f" - {item.name}")
-            continue
+
+            lines.append("\n=====================\n")
+            return "\n".join(lines)
 
         if event == "defeat":
             flush_turn()
-            lines.append("\nYou have been defeated.")
-            continue
+            
+            return "\n".join(lines + ["\nYou have been defeated."])
 
         if event == "status_tick":
             status = entry.get("status", "").replace("_", " ").title()
@@ -131,6 +137,31 @@ def combat_log_renderer(log: list[dict]) -> str:
 
                 if died:
                     post_action_phase.append(f"{target} is slain.")
+            continue
+
+        if action == "skill":
+            skill_id = entry.get("extra", {}).get("skill", "unknown_skill")
+            skill_name = skill_id.replace("_", " ").title()
+            dmg = entry.get("damage", 0)
+            blocked = entry.get("blocked", False)
+            died = entry.get("died", False)
+
+            if blocked:
+                action_phase.append(
+                    f"{actor} uses {skill_name} on {target}, but it is blocked."
+                )
+            else:
+                text = f"{actor} uses {skill_name}"
+                if target:
+                    text += f" on {target}"
+                if dmg > 0:
+                    text += f" for {dmg} damage"
+                text += "."
+                action_phase.append(text)
+
+                if died:
+                    post_action_phase.append(f"{target} is slain.")
+
             continue
 
         if action == "item":

@@ -4,3 +4,4 @@ class Status():
         self.remaining_turns = remaining_turns
         self.source = source
         self.magnitude = magnitude
+        self.just_applied = True

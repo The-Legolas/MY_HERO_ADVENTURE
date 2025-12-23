@@ -145,8 +145,8 @@ class Dungeon_Manager():
         if room.room_type not in (Room_Types.ENEMY_ROOM, Room_Types.BOSS_ROOM):
             return
         
-        if len(room.contents["enemies"]) > 0:
-            return room.contents["enemies"][0]
+        if len(room.contents["enemies"]) > 2:
+            return room.contents["enemies"]
         
         depth = self.compute_depth(pos=(room.pos_x, room.pos_y))
 

@@ -11,7 +11,19 @@ def render_status_tooltip(status, entity) -> list[str]:
         lines.append(data["description"])
 
     if status.magnitude is not None:
-        lines.append(f"Effect strength: {status.magnitude}")
+        mag = status.magnitude
+
+        if isinstance(mag, dict):
+            if "damage_mult" in mag:
+                lines.append(f"Effect strength: x{mag['damage_mult']} damage")
+            else:
+                # Fallback for future structured magnitudes
+                for k, v in mag.items():
+                    lines.append(f"Effect strength: {k} = {v}")
+
+        else:
+            # Scalar magnitude (poison, regen, etc.)
+            lines.append(f"Effect strength: {mag}")
 
     if status.remaining_turns >= 0:
         lines.append(f"Turns remaining: {status.remaining_turns}")

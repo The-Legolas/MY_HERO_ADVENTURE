@@ -15,9 +15,10 @@ class Character():
         self.damage = damage
         self.defence = defence
         self.xp = 0
-        self.statuses: list['Status'] = []
 
-        
+        self.statuses: list['Status'] = []
+        self.known_skills: set[str] = set()
+        self.usable_skills: list[str] = []
 
         self.equipment = {
             "weapon": None,
@@ -173,30 +174,7 @@ class Character():
 
 
     def is_alive(self) -> bool:
-        return True if self.hp > 0 else False
-
-    """
-Let's see if this crashes the game
-    def debug_attack(self, other: 'Character') -> str:
-        text_block = ""
-
-        text_block += f"{self.name} is attacking {other.name}"
-
-        temp_damage = self.damage
-        if random.random() >= 0.95:
-            temp_damage *= 2
-
-        if temp_damage > other.defence:
-            damage_dealt = temp_damage - other.defence
-            other.take_damage(damage_dealt)
-            text_block += f" and deals {damage_dealt} damage!\n"
-
-        else:
-            text_block += " but it was blocked!\n"
-
-        return text_block
-"""
-    
+        return True if self.hp > 0 else False  
 
     def attack(self, other: 'Character') -> dict:
         outcome_table = {
@@ -293,6 +271,10 @@ Let's see if this crashes the game
         for status in statuses_sorted:
             data = STATUS_REGISTRY.get(status.id, {})
 
+            if status.just_applied:
+                status.just_applied = False
+                continue
+
             if "on_tick" in data:
                 before_hp = self.hp
 
@@ -384,6 +366,7 @@ Let's see if this crashes the game
         applied = False
 
         if not existing:
+            new_status.just_applied = True
             self.statuses.append(new_status)
             applied = True
         else:
@@ -397,16 +380,17 @@ Let's see if this crashes the game
                 applied = True
 
             elif stacking == "replace":
+                new_status.just_applied = True
                 self.statuses.remove(current)
                 self.statuses.append(new_status)
                 applied = True
 
             elif stacking == "stack":
                 if len(existing) < max_stacks:
+                    new_status.just_applied = True
                     self.statuses.append(new_status)
                     applied = True
                 else:
-                    # refresh strongest / longest
                     current.remaining_turns = max(
                         current.remaining_turns,
                         new_status.remaining_turns
@@ -461,29 +445,4 @@ Let's see if this crashes the game
 
     def __str__(self):
         return f"name:{self.name}, hp:{self.hp}, damage:{self.damage}, level:{self.level}, defence: {self.defence}, equipment: {self.equipment}"
-
-"""
-Let's see if this crashes the game
-def render_attack_text(outcome: dict) -> str:
-
-        text_block = ""
-
-        text_block += "ATTACK RESULT:"
-        text_block += outcome["attacker"] + " attacks " + outcome["target"] + "\n"
-
-        if outcome["critical_hit"] is True:
-            text_block += "critical hit\n"
-
-        if outcome["blocked"] is True:
-            text_block += "The attack was blocked.\n"
-        else:
-            text_block += f"Damage dealt: {outcome["damage"]}\n"
-
-        if outcome["warrior_rage"] == True:
-            text_block += "Warrior enters RAGE and deals extra damage!\n"
-
-        if outcome["died"] == True:
-            text_block += outcome["target"] + " has fallen.\n"
-
-        return text_block"""
-
+    

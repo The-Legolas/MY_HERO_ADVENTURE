@@ -3,20 +3,21 @@ from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy
 from game.world.Dungeon_room_code import Room
 from game.core.Item_class import roll_loot
-from typing import Optional, Any
 from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
 from game.ui.combat_ui import format_status_icons
 import random
+from typing import Optional
 from game.core.Status import Status
 from game.ui.status_ui import render_status_tooltip
 from game.systems.combat.status_registry import STATUS_REGISTRY
+from game.systems.combat.skill_registry import SKILL_REGISTRY
 
 class Combat_State():
     def __init__(self, player: Character, enemy_list: list[Enemy]):
         self.player: Character = player
         self.enemy_list: list[Enemy] = enemy_list
         self.round_number: int = 1
-        self.log: list[dict[str, Any]] = []
+        self.log: list[dict[str, any]] = []
         self.is_running: bool = True
 
     def alive_enemies(self) -> list[Enemy]:
@@ -36,7 +37,7 @@ def show_combat_status(combat: Combat_State):
 
 
 
-def start_encounter(player: Character, room: Room) -> dict[str, Any]:
+def start_encounter(player: Character, room: Room) -> dict[str, any]:
     enemy_list = list(room.contents.get("enemies", []))
 
     combat_state = Combat_State(player, enemy_list)
@@ -59,6 +60,7 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
         for actor in participants_sorted:
             if not combat_state.is_running:
                 break
+
             if not actor.is_alive():
                 continue
 
@@ -100,29 +102,6 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
 
                     player.xp = getattr(player, "xp", 0) + xp_gain
                 
-                print("\n=== VICTORY ===")
-
-                if total_loot["gold"] > 0:
-                    print(f"You gained {total_loot['gold']} gold.")
-                else:
-                    print("You gained no gold.")
-
-                if xp_gain > 0:
-                    print(f"You gained {xp_gain} experience.")
-
-                if total_loot["items"]:
-                    print("\nLoot obtained:")
-                    item_counts = {}
-                    for item in total_loot["items"]:
-                        item_counts[item.name] = item_counts.get(item.name, 0) + 1
-
-                    for name, count in item_counts.items():
-                        print(f"- {name} x{count}")
-                else:
-                    print("\nNo items dropped.")
-
-                print("================\n")
-                
                 combat_state.log.append({"event": "victory", "loot": total_loot})
                 combat_state.is_running = False
                 return {"result": "victory", "log": combat_state.log, "loot": total_loot}
@@ -155,16 +134,24 @@ def start_encounter(player: Character, room: Room) -> dict[str, Any]:
             render_combat_outcome(outcome)
             input()
 
+            if action.type == "flee":
+                return {
+                    "result": "fled",
+                    "log": combat_state.log
+                }
+
+
 
  
             if not player.is_alive():
                 combat_state.log.append({"event": "defeat", "by": [enemy.name for enemy in combat_state.enemy_list]})
                 combat_state.is_running = False
                 return {"result": "defeat", "log": combat_state.log}
+            
         combat_state.round_number += 1
 
     # fallback
-    return {"result": "stopped", "log": combat_state.log}
+    #return {"result": "stopped", "log": combat_state.log}
 
 
 
@@ -174,17 +161,19 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
         print("What do you want to do?")
         print("1. Attack")
-        print("2. Use Item")
-        print("3. Inspect")
-        print("4. Flee")
+        print("2. Skills")
+        print("3. Use Item")
+        print("4. Inspect")
+        print("5. Flee")
 
         choice = input("> ").strip().lower()
 
         aliases = {
             "1": "attack", "attack": "attack", "a": "attack",
-            "2": "item",   "item": "item",   "i": "item",
-            "3": "inspect","inspect": "inspect", "x": "inspect",
-            "4": "flee",   "flee": "flee",   "f": "flee",
+            "2": "skill",  "skills": "skill", "s": "skill",
+            "3": "item",   "item": "item",   "i": "item",
+            "4": "inspect","inspect": "inspect", "x": "inspect",
+            "5": "flee",   "flee": "flee",   "f": "flee",
         }
 
         action = aliases.get(choice)
@@ -199,7 +188,41 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                 continue
             return Action(actor, "attack", target)
         
-        if action == "item":
+        elif action == "skill":
+            skills = actor.usable_skills
+            
+            print() #spaceing
+
+            if not skills:
+                print("You have no skills.")
+                input()
+                continue
+
+            for i, skill_id in enumerate(skills, start=1):
+                skill = SKILL_REGISTRY.get(skill_id)
+                print(f"{i}. {skill.name} — {skill.description}")
+            print("c. Cancel")
+
+            choice = input("> ").strip().lower()
+            if choice in ("c", "back", "cancel"):
+                continue
+
+            idx = int(choice) - 1
+            skill_id = skills[idx]
+            skill = SKILL_REGISTRY.get(skill_id)
+
+            if skill.target == "enemy":
+                enemies = combat.alive_enemies()
+                target = _choose_enemy_target(enemies)
+                if target is None:
+                    continue
+                return Action(actor, "skill", target, skill_id=skill_id)
+
+            elif skill.target == "self":
+                return Action(actor, "skill", actor, skill_id=skill_id)
+
+        
+        elif action == "item":
             inventory_choice = _choose_consumable_from_inventory(actor)
             if inventory_choice is None:
                 continue
@@ -227,6 +250,46 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                 print("Invalid target.")
 
             continue
+
+        if action == "skill":
+            skills = actor.usable_skills
+
+            if not skills:
+                print("You have no usable skills.")
+                input()
+                continue
+
+            print("\nChoose a skill:")
+            for i, skill_id in enumerate(skills, start=1):
+                skill = SKILL_REGISTRY.get(skill_id)
+                if not skill:
+                    continue
+                print(f"{i}. {skill.name} — {skill.description}")
+
+            print("c. Cancel")
+
+            choice = input("> ").strip().lower()
+            if choice in ("c", "back", "cancel"):
+                continue
+
+            if not choice.isdigit():
+                print("Invalid choice.")
+                continue
+
+            idx = int(choice) - 1
+            if idx < 0 or idx >= len(skills):
+                print("Invalid selection.")
+                continue
+
+            selected_skill_id = skills[idx]
+
+            return Action(
+                actor=actor,
+                action_type="skill",
+                target=None,
+                skill_id=selected_skill_id,
+            )
+
 
         if action == "inspect":
             print("\nInspect:")
@@ -323,7 +386,13 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                     if 0 <= idx < len(actor.statuses):
                         status = actor.statuses[idx]
                         print()
-                        print(render_status_tooltip(status))
+                        tooltip_lines = render_status_tooltip(status, actor)
+
+                        for line in tooltip_lines:
+                            print(line)
+                            
+                        print("-" * 30)
+
                         input("\nPress Enter to continue...")
                 except ValueError:
                     pass
@@ -334,34 +403,65 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
             return Action(actor, "flee", None)
 
 def render_combat_outcome(outcome: dict):
-    actor = outcome["actor"]
-    action = outcome["action"]
-    target = outcome["target"]
-    dmg = outcome["damage"]
-    blocked = outcome["blocked"]
-    critical = outcome["critical"]
-    died = outcome["died"]
+    if not outcome:
+        return
+    
+    action = outcome.get("action")
+    actor = outcome.get("actor")
+    target = outcome.get("target")
+
+    damage = outcome.get("damage", 0)
+    blocked = outcome.get("blocked", False)
+    critical = outcome.get("critical", False)
+    died = outcome.get("died", False)
+
     extra = outcome.get("extra", {})
 
     if action == "attack":
         if blocked:
-            print(f"{actor.title()}'s attack was blocked by {target.title()}!")
+            print(f"{actor}'s attack was blocked by {target}!")
         else:
             crit = " CRITICAL HIT!" if critical else ""
-            print(f"{actor.title()} hits {target.title()} for {dmg} damage.{crit}")
+            print(f"{actor} hits {target} for {damage} damage.{crit}")
         if died:
-            print(f"\n{target.title()} has been slain!")
+            print(f"\n{target} has been slain!")
+    
+    elif action == "skill":
+        skill_name = outcome.get("extra", {}).get("skill", "Skill")
+        skill_name = skill_name.replace("_", " ").title()
+
+        missed = outcome.get("extra", {}).get("missed", False)
+
+        if missed:
+            print(f"{actor} uses {skill_name}, but misses!")
+            return
+
+        if blocked:
+            print(f"{actor}'s {skill_name} was blocked by {target}!")
+            return
+
+        text = f"{actor} uses {skill_name}"
+        if target:
+            text += f" on {target}"
+
+        if damage > 0:
+            text += f" for {damage} damage"
+
+        print(text + ".")
+        
+        if died:
+            print(f"{target} has been slain!")
 
     elif action == "item":
-        print(f"{actor.title()} uses an item on {target.title()}.")
+        print(f"{actor} uses an item on {target}.")
 
     elif action == "flee":
         if extra.get("escaped"):
-            print(f"{actor.title()} successfully fled!")
+            print(f"{actor} successfully fled!")
         else:
-            print(f"{actor.title()} failed to flee!")
+            print(f"{actor} failed to flee!")
 
-    print()  # spacing after action
+    print()  # spacing
 
 
 def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':

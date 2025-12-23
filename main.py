@@ -9,7 +9,7 @@ from game.engine.game_engine import GameEngine
 # Map logic (implicit, discovered, or explicit)      currently using a debug tool to render the map but should expand into an actual part of the game  |
 # Dungeon progression logic (keys, switches, boss gates)
 
-# Combat System: | Player actions:  missing option to defend use differnt attacks and skills/magic  | Enemy AI  | Hit/miss logic |
+# Combat System: | Player actions:  missing option to defend use differnt attacks and skills/magic  | Enemy AI
 
 # Character System:  | Level-up system
 
@@ -21,6 +21,9 @@ from game.engine.game_engine import GameEngine
 
 # Saving & Persistence:  |  Save system / load system
 
+
+
+#later
 # Story Framework:   | Intro / setup  | World premise  |  Player motivation  |  Ending(s)
 
 # Worldbuilding: |  Enemy flavor text  | Lore snippets/Environmental storytelling

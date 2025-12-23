@@ -16,6 +16,22 @@ class Warrior(Character):
         self.level = 1
         self.max_hp = self.hp
         self.xp = 0
+
+        self.known_skills = {
+            "attack",
+            "power_strike",
+            "shield_bash",
+            "poison_strike",
+            "war_cry",
+        }
+
+        self.usable_skills = [
+            "attack",
+            "power_strike",
+            "shield_bash",
+            "poison_strike",
+            "war_cry",
+        ]
     
     def take_damage(self, damage: int):
         reduced_damage = int(damage * 0.9)

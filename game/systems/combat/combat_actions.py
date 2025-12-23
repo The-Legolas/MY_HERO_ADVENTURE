@@ -1,8 +1,8 @@
 import random
-from typing import Optional, Any
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.core.Status import Status
+from game.systems.combat.skill_registry import SKILL_REGISTRY
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class Action():
-    def __init__(self, actor: Character, action_type: str, target: Optional[Character], skill_id: Optional[str] = None, item_id:Optional[str] = None):
+    def __init__(self, actor: Character, action_type: str, target: None, skill_id: str | None = None, item_id: str | None = None):
         self.actor = actor
         self.type = action_type
         self.target = target
@@ -20,8 +20,8 @@ class Action():
         self.item_id = item_id
 
 
-def _make_outcome(actor_name: str, action: str, target_name: Optional[str], damage: int = 0,
-                  blocked: bool = False, critical: bool = False, died: bool = False, extra: Optional[dict] = None) -> dict:
+def _make_outcome(actor_name: str, action: str, target_name: str | None = None, damage: int = 0,
+                  blocked: bool = False, critical: bool = False, died: bool = False, extra: dict | None = None) -> dict:
     return {
         "actor": actor_name,
         "action": action,
@@ -34,7 +34,7 @@ def _make_outcome(actor_name: str, action: str, target_name: Optional[str], dama
     }
 
 
-def _choose_enemy_target(enemies: list[Enemy]) -> Optional[Enemy]:
+def _choose_enemy_target(enemies: list[Enemy]) -> Enemy | None:
     if not enemies:
         print("\nThere are no enemies to target.")
         return None
@@ -54,7 +54,7 @@ def _choose_enemy_target(enemies: list[Enemy]) -> Optional[Enemy]:
         print("Invalid selection. Try again.")
 
 
-def _choose_consumable_from_inventory(actor: Character) -> Optional[dict[str, Any]]:
+def _choose_consumable_from_inventory(actor: Character) -> dict[str, any] | None:
     inventory = getattr(actor, "inventory", {}).get("items", {})
     consumables = [entry for entry in inventory.items() if entry[1]["item"].category.name == "CONSUMABLE"]
     if not consumables:
@@ -125,6 +125,58 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         outcome = _make_outcome(attacker_name, "attack", target_name, damage, blocked, critical, died)
         combat_state.log.append(outcome)
         return outcome
+    
+    if action.type == "skill":
+        skill = SKILL_REGISTRY.get(action.skill_id)
+        actor = action.actor
+        target = action.target
+
+        if not skill:
+            outcome = _make_outcome(actor.name, "skill_fail", None)
+            combat_state.log.append(outcome)
+            return outcome
+        
+        # --- Hit chance ---
+        if random.random() > skill.hit_chance:
+            outcome = _make_outcome(
+                actor.name,
+                "skill",
+                getattr(target, "name", None),
+                damage=0,
+                blocked=False,
+                extra={"skill": skill.id, "missed": True}
+            )
+            combat_state.log.append(outcome)
+            return outcome
+
+        # --- Damage via normal attack pipeline ---
+        result = resolve_skill_damage(actor, target, skill)
+
+        # --- Apply status (if any) ---
+        if skill.apply_status and target and not result["blocked"]:
+            if random.random() <= skill.apply_status.get("chance", 1.0):
+                status = Status(
+                    id=skill.apply_status["id"],
+                    remaining_turns=skill.apply_status["duration"],
+                    magnitude=skill.apply_status.get("magnitude"),
+                    source=skill.name,
+                )
+                target.apply_status(status, combat_state.log)
+
+        outcome = _make_outcome(
+            actor.name,
+            "skill",
+            getattr(target, "name", None),
+            damage=result["damage"],
+            blocked=result["blocked"],
+            critical=result["critical"],
+            died=result["died"],
+            extra={"skill": skill.id}
+        )
+
+        combat_state.log.append(outcome)
+        return outcome
+    
 
     if action.type == "item":
         outcome = actor.use_item(action.item_id, action.target)
@@ -161,3 +213,58 @@ def _compute_escape_chance(combat_state: 'Combat_State') -> bool:
     noise = random.uniform(-0.12, 0.12)
     chance = max(0.01, min(0.95, base - behavior_penalty - size_penalty + noise))
     return random.random() < chance
+
+def resolve_skill_damage(actor, target, skill) -> dict:
+
+    dmg_def = skill.damage
+
+    if dmg_def is None or target is None:
+        return {
+            "damage": 0,
+            "blocked": False,
+            "critical": False,
+            "died": False,
+        }
+
+    raw = 0
+
+    # --- Base damage ---
+    if dmg_def["type"] == "flat":
+        raw = dmg_def["amount"]
+
+    elif dmg_def["type"] == "multiplier":
+        stat_val = getattr(actor, dmg_def["stat"], 0)
+        raw = int(stat_val * dmg_def["mult"])
+
+    elif dmg_def["type"] == "hybrid":
+        stat_val = getattr(actor, dmg_def["stat"], 0)
+        raw = int(dmg_def["base"] + stat_val * dmg_def["mult"])
+
+    # --- Status modifiers ---
+    raw = int(raw * actor.get_damage_multiplier())
+
+    # --- Critical ---
+    critical = False
+    if dmg_def.get("can_crit", True):
+        if random.random() >= 0.95:
+            raw *= 2
+            critical = True
+
+    # --- Defense ---
+    if raw <= target.defence:
+        return {
+            "damage": 0,
+            "blocked": True,
+            "critical": critical,
+            "died": False,
+        }
+
+    damage = raw - target.defence
+    target.take_damage(damage)
+
+    return {
+        "damage": damage,
+        "blocked": False,
+        "critical": critical,
+        "died": not target.is_alive(),
+    }

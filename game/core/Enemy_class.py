@@ -4,7 +4,7 @@ import random
 from .Character_class import Character
 
 class Enemy_Rarity(Enum):
-    COMMON = 40 #100
+    COMMON = 10000 #100
     UNCOMMON = 40 #40
     RARE = 20 # 15
     ELITE = 5
@@ -127,7 +127,7 @@ ENEMY_DEFINITIONS = {
         "hp": 14,
         "damage": 2,
         "defence": 5,
-        "rarity": Enemy_Rarity.COMMON,
+        "rarity": Enemy_Rarity.UNCOMMON, #Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.OOZE,
         "xp_reward": 50,
         "gold_reward": 2,
