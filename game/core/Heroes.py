@@ -3,9 +3,9 @@ from .Character_class import Character
 
 class Warrior(Character):
     def __init__(self, name: str):
-        base_hp = 30 # 30
+        base_hp = 70 # 30
         base_damage = 10 # 6
-        base_defence = 30 # 3
+        base_defence = 1 # 3
 
         hp = int(base_hp * 1.2)
         damage = int(base_damage * 0.9)
@@ -18,16 +18,12 @@ class Warrior(Character):
         self.xp = 0
 
         self.known_skills = {
-            "attack",
-            "power_strike",
             "shield_bash",
             "poison_strike",
             "war_cry",
         }
 
         self.usable_skills = [
-            "attack",
-            "power_strike",
             "shield_bash",
             "poison_strike",
             "war_cry",

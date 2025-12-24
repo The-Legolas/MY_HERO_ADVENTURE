@@ -58,6 +58,18 @@ STATUS_REGISTRY = {
         "stacking": "replace",
         "prevents_action": True,
         "description": "Prevents the target from acting.",
+        "interrupts": bool,
+    },
+
+    "defending": {
+        "priority": 90,
+        "icon": "🛡",
+        "stacking": "replace",
+        "max_stacks": 1,
+        "prevents_action": False,
+        "description": "Raises defense and blocks weak attacks for one turn.",
+        "modifiers": {"defence_mult": 2.0},
+        "expires_end_of_turn": True,
     },
 }
 

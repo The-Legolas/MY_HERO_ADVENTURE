@@ -4,14 +4,20 @@ import random
 from .Character_class import Character
 
 class Enemy_Rarity(Enum):
-    COMMON = 10000 #100
+    COMMON = 50000 #100
     UNCOMMON = 40 #40
     RARE = 20 # 15
     ELITE = 5
     MINI_BOSS = 2
     BOSS = 0
 
-class Enemy_sub_type(Enum): #only 1 for don't know how many I'll add
+INTERRUPT_RESISTANCE_BY_RARITY = {
+    Enemy_Rarity.COMMON: 0.0,   # no resistance
+    Enemy_Rarity.ELITE: 0.5,    # 50% chance to resist interrupt
+    Enemy_Rarity.BOSS: 1.0,     # full immunity
+}
+
+class Enemy_sub_type(Enum):
     UNDEAD = "undead"
     HUMANOID = "humanoid"
     OOZE = "ooze"
@@ -57,7 +63,27 @@ class Enemy(Character):
 
         self.is_scaled = False
 
-    
+        self.skill_cooldowns: dict[str, int] = {}
+        self.locked_state = {
+            "state": str,
+            "turns": int,
+            "forced_action": str | None,
+        }
+
+
+
+    def tick_skill_cooldowns(self) -> None:
+        expired = []
+
+        for skill_id, turns in self.skill_cooldowns.items():
+            self.skill_cooldowns[skill_id] -= 1
+            if self.skill_cooldowns[skill_id] <= 0:
+                expired.append(skill_id)
+
+        for skill_id in expired:
+            del self.skill_cooldowns[skill_id]
+
+
     def scale_stats(self, day_counter: int, depth: int) -> None:
         if self.is_scaled == True:
             return
@@ -120,6 +146,11 @@ ENEMY_DEFINITIONS = {
             {"item": "goblin_ear", "chance": 0.60},
             {"item": "small_healing_potion", "chance": 0.10},
         ],
+        "usable_skills": [
+            "dirty_strike",
+            "battle_shout",
+            "shield_wall"
+        ],
         "behavior_tag": Enemy_behavior_tag.NORMAL
     },
     Enemy_type.ENEMY_SLIME: {
@@ -127,7 +158,7 @@ ENEMY_DEFINITIONS = {
         "hp": 14,
         "damage": 2,
         "defence": 5,
-        "rarity": Enemy_Rarity.UNCOMMON, #Enemy_Rarity.COMMON,
+        "rarity": Enemy_Rarity.COMMON, #Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.OOZE,
         "xp_reward": 50,
         "gold_reward": 2,
@@ -135,6 +166,11 @@ ENEMY_DEFINITIONS = {
             {"item": "slime_goop", "chance": 0.70},
             {"item": "small_healing_potion", "chance": 0.10},
             {"item": "explosive_potion", "chance": 0.05},
+        ],
+        "usable_skills": [
+            "engulf",
+            "acid_splash",
+            "corrosive_buildup",
         ],
         "behavior_tag": Enemy_behavior_tag.COWARDLY
     },
@@ -152,6 +188,12 @@ ENEMY_DEFINITIONS = {
             {"item": "small_healing_potion", "chance": 0.13},
             {"item": "medium_healing_potion", "chance": 0.07},
         ],
+        "usable_skills": [
+            "rending_bite",
+            "poison_bite",
+            "pounce",
+            "savage_howl",
+        ],
         "behavior_tag": Enemy_behavior_tag.AGGRESSIVE
     },
     Enemy_type.ENEMY_ORC: {
@@ -167,6 +209,10 @@ ENEMY_DEFINITIONS = {
             {"item": "goblin_ear", "chance": 0.25},
             {"item": "basic_armor", "chance": 0.10},
             {"item": "medium_healing_potion", "chance": 0.20},
+        ],
+        "usable_skills": [
+            "dirty_strike",
+            "battle_shout",
         ],
         "behavior_tag": Enemy_behavior_tag.SLOW
     },
@@ -184,6 +230,11 @@ ENEMY_DEFINITIONS = {
             {"item": "grand_healing_potion", "chance": 0.5},
             {"item": "slime_goop", "chance": 0.001}
         ],
+        "usable_skills": [
+            "flame_breath",
+            "terrifying_roar",
+            "skyward_ascension",
+        ],
         "behavior_tag": Enemy_behavior_tag.HULKING
     }
 }
@@ -197,13 +248,14 @@ def spawn_enemy(enemy_type):
             damage      = template["damage"],
             defence     = template["defence"],
             rarity      = template["rarity"],
-            type        = enemy_type ,
+            type        = enemy_type,
             sub_type    = template["sub_type"],
             xp_reward   = template["xp_reward"],
             gold_reward = template["gold_reward"],
             loot_table  = template["loot_table"],
             behavior_tag= template["behavior_tag"]
         )
+    enemy_obj.usable_skills = template.get("usable_skills", []).copy()
 
     return enemy_obj
 

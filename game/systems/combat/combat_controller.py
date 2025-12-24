@@ -1,6 +1,6 @@
 from game.systems.combat.combat_turn import _get_initiative_value
 from game.core.Character_class import Character
-from game.core.Enemy_class import Enemy
+from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.world.Dungeon_room_code import Room
 from game.core.Item_class import roll_loot
 from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
@@ -10,7 +10,7 @@ from typing import Optional
 from game.core.Status import Status
 from game.ui.status_ui import render_status_tooltip
 from game.systems.combat.status_registry import STATUS_REGISTRY
-from game.systems.combat.skill_registry import SKILL_REGISTRY
+from game.systems.combat.skill_registry import SKILL_REGISTRY, Skill
 
 class Combat_State():
     def __init__(self, player: Character, enemy_list: list[Enemy]):
@@ -32,6 +32,14 @@ def show_combat_status(combat: Combat_State):
     for i, e in enumerate(combat.alive_enemies(), start=1):
         icons = format_status_icons(e)
         print(f"{i}. {e.name} ({e.hp}/{e.max_hp} HP) {icons}")
+        if e.intent:
+            if e.intent["type"] == "charging":
+                print(
+                    f"Intent: {e.intent['text']} "
+                    f"({e.intent['turns']} turns)"
+                )
+            else:
+                print(f"Intent: {e.intent['text']}")
             
     print("=====================\n")
 
@@ -134,15 +142,20 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
             render_combat_outcome(outcome)
             input()
 
+            if isinstance(actor, Enemy):
+                actor.tick_skill_cooldowns()
+            
+            actor.statuses = [
+                s for s in actor.statuses
+                if not getattr(s, "expires_end_of_turn", False)
+            ]
+
             if action.type == "flee":
                 return {
                     "result": "fled",
                     "log": combat_state.log
                 }
 
-
-
- 
             if not player.is_alive():
                 combat_state.log.append({"event": "defeat", "by": [enemy.name for enemy in combat_state.enemy_list]})
                 combat_state.is_running = False
@@ -162,18 +175,20 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
         print("What do you want to do?")
         print("1. Attack")
         print("2. Skills")
-        print("3. Use Item")
-        print("4. Inspect")
-        print("5. Flee")
+        print("3. Defend")
+        print("4. Use Item")
+        print("5. Inspect")
+        print("6. Flee")
 
         choice = input("> ").strip().lower()
 
         aliases = {
             "1": "attack", "attack": "attack", "a": "attack",
             "2": "skill",  "skills": "skill", "s": "skill",
-            "3": "item",   "item": "item",   "i": "item",
-            "4": "inspect","inspect": "inspect", "x": "inspect",
-            "5": "flee",   "flee": "flee",   "f": "flee",
+            "3": "defend", "defend": "defend", "d": "defend",
+            "4": "item",   "item": "item",   "i": "item",
+            "5": "inspect","inspect": "inspect", "x": "inspect",
+            "6": "flee",   "flee": "flee",   "f": "flee",
         }
 
         action = aliases.get(choice)
@@ -188,7 +203,8 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                 continue
             return Action(actor, "attack", target)
         
-        elif action == "skill":
+        
+        if action == "skill":
             skills = actor.usable_skills
             
             print() #spaceing
@@ -200,14 +216,28 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
             for i, skill_id in enumerate(skills, start=1):
                 skill = SKILL_REGISTRY.get(skill_id)
+
+                if not skill:
+                    print(f"{i}. [INVALID SKILL: {skill_id}]")
+                    continue
+
                 print(f"{i}. {skill.name} — {skill.description}")
             print("c. Cancel")
 
             choice = input("> ").strip().lower()
+
+            idx = int(choice) - 1
+            if idx < 0 or idx >= len(skills):
+                print("Invalid selection.")
+                continue
+
             if choice in ("c", "back", "cancel"):
                 continue
 
-            idx = int(choice) - 1
+            if not choice.isdigit():
+                print("Invalid choice.")
+                continue
+
             skill_id = skills[idx]
             skill = SKILL_REGISTRY.get(skill_id)
 
@@ -220,9 +250,17 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
             elif skill.target == "self":
                 return Action(actor, "skill", actor, skill_id=skill_id)
+            
+            else:
+                print("This skill cannot be used right now.")
+                continue
+
+
+        if action == "defend":
+            return Action(actor, "defend", actor)
 
         
-        elif action == "item":
+        if action == "item":
             inventory_choice = _choose_consumable_from_inventory(actor)
             if inventory_choice is None:
                 continue
@@ -251,44 +289,6 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
             continue
 
-        if action == "skill":
-            skills = actor.usable_skills
-
-            if not skills:
-                print("You have no usable skills.")
-                input()
-                continue
-
-            print("\nChoose a skill:")
-            for i, skill_id in enumerate(skills, start=1):
-                skill = SKILL_REGISTRY.get(skill_id)
-                if not skill:
-                    continue
-                print(f"{i}. {skill.name} — {skill.description}")
-
-            print("c. Cancel")
-
-            choice = input("> ").strip().lower()
-            if choice in ("c", "back", "cancel"):
-                continue
-
-            if not choice.isdigit():
-                print("Invalid choice.")
-                continue
-
-            idx = int(choice) - 1
-            if idx < 0 or idx >= len(skills):
-                print("Invalid selection.")
-                continue
-
-            selected_skill_id = skills[idx]
-
-            return Action(
-                actor=actor,
-                action_type="skill",
-                target=None,
-                skill_id=selected_skill_id,
-            )
 
 
         if action == "inspect":
@@ -452,6 +452,9 @@ def render_combat_outcome(outcome: dict):
         if died:
             print(f"{target} has been slain!")
 
+    elif action == "defend":
+        print(f"{actor} braces for impact, raising their defenses.")
+
     elif action == "item":
         print(f"{actor} uses an item on {target}.")
 
@@ -465,10 +468,157 @@ def render_combat_outcome(outcome: dict):
 
 
 def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
-    # Example: if enemy has .max_hp, check low-health behavior (defensive)
-    # special_move = getattr(enemy, "special_move", None)
-    # if special_move and enemy.hp < getattr(enemy, "max_hp", enemy.hp) * 0.5:
-    #     return Action(enemy, "skill", state.player, skill_id=special_move)
+    if enemy.locked_state:
+        enemy.locked_state["turns"] -= 1
+
+        enemy.intent = {
+            "type": "charging",
+            "text": enemy.locked_state["intent_hint"],
+            "turns": enemy.locked_state["turns"]
+        }
+
+        forced = enemy.locked_state.get("forced_action")
+
+        if forced == "attack":
+            return Action(enemy, "attack", combat_state.player)
+        
+        if forced == "skill":
+            return Action(enemy, "attack", combat_state.player)
+        
+        if enemy.locked_state["turns"] <= 0:
+            # Charge complete → execute stored skill
+            skill_id = enemy.locked_state["skill_id"]
+            enemy.locked_state = None
+            return Action(enemy, "skill", combat_state.player, skill_id=skill_id)
+
+        # Still charging → no choice this turn
+        return Action(enemy, "wait", None)
+        
     
-    return Action(enemy, "attack", combat_state.player)
-   
+    skills = get_available_enemy_skills(enemy, combat_state)
+
+    if not skills:
+        enemy.intent = {
+            "type": "attack",
+            "text": "Preparing a basic attack"
+        }
+        return Action(enemy, "attack", combat_state.player)
+
+    
+    behavior = enemy.behavior_tag or Enemy_behavior_tag.NORMAL
+    behavior_weights = BEHAVIOR_WEIGHTS[behavior]
+
+    choices = []
+    weights = []
+
+    for skill_id in skills:
+        skill = SKILL_REGISTRY[skill_id]
+        w = 1.0
+
+        if skill.damage:
+            w *= behavior_weights.get("damage", 1.0)
+
+        if skill.apply_status:
+            if skill.apply_status["id"] in ("stun", "poison", "weakened"):
+                w *= behavior_weights.get("debuff", 1.0)
+            else:
+                w *= behavior_weights.get("buff", 1.0)
+
+        if skill.locks_actor:
+            w *= behavior_weights.get("lock", 1.0)
+
+        choices.append(skill_id)
+        weights.append(w)
+
+    chosen = random.choices(choices, weights=weights, k=1)[0]
+    chosen_skill = SKILL_REGISTRY[chosen]
+
+    if chosen_skill.locks_actor:
+        enemy.locked_state = {
+            "skill_id": chosen_skill.id,
+            "turns": chosen_skill.locks_actor["turns"],
+            "intent_hint": chosen_skill.intent_hint
+        }
+
+        enemy.intent = {
+            "type": "charging",
+            "text": chosen_skill.intent_hint,
+            "turns": chosen_skill.locks_actor["turns"]
+        }
+
+        return Action(enemy, "wait", None)
+
+
+    # --- IMMEDIATE SKILL ---
+    enemy.intent = {
+        "type": "skill",
+        "text": chosen_skill.intent_hint
+    }
+
+    final_target = enemy if chosen_skill.target == "self" else combat_state.player
+
+    return Action(enemy, "skill", final_target, skill_id=chosen)
+
+
+def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
+
+    available = []
+
+    for skill_id in enemy.usable_skills:
+        skill = SKILL_REGISTRY.get(skill_id)
+        if not skill:
+            continue
+
+        if skill_id in enemy.skill_cooldowns:
+            continue
+
+        if enemy.locked_state and not skill.allowed_while_locked:
+            continue
+
+        target = enemy if skill.target == "self" else combat_state.player
+
+        if skill.requires_target_alive and not target.is_alive():
+            continue
+
+        if skill.forbid_if_target_has:
+            if any(target.has_status(s) for s in skill.forbid_if_target_has):
+                continue
+
+        available.append(skill)
+
+    return available
+
+
+BEHAVIOR_WEIGHTS = {
+    Enemy_behavior_tag.AGGRESSIVE: {
+        "damage": 3.0,
+        "debuff": 1.5,
+        "buff": 0.5,
+    },
+    Enemy_behavior_tag.COWARDLY: {
+        "damage": 0.5,
+        "debuff": 2.0,
+        "buff": 2.5,
+    },
+    Enemy_behavior_tag.SLOW: {
+        "damage": 1.5,
+        "debuff": 1.0,
+        "buff": 0.5,
+        "lock": 2.5,
+    },
+    Enemy_behavior_tag.RANGED: {
+        "damage": 2.0,
+        "debuff": 1.5,
+        "buff": 0.5,
+    },
+    Enemy_behavior_tag.HULKING: {
+        "damage": 3.0,
+        "lock": 2.0,
+        "debuff": 0.5,
+    },
+    Enemy_behavior_tag.NORMAL: {
+        "damage": 1.0,
+        "debuff": 1.0,
+        "buff": 1.0,
+    },
+}

@@ -3,6 +3,7 @@ from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.core.Status import Status
 from game.systems.combat.skill_registry import SKILL_REGISTRY
+from game.systems.combat.damage_resolver import resolve_damage
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -87,19 +88,20 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         return outcome
     
     if action.type == "attack":
-        raw = actor.attack(action.target)
+        target = action.target
 
-        attacker_name = raw.get("attacker", getattr(actor, "name", "Unknown"))
-        target_name = raw.get("target", getattr(action.target, "name", None)) if action.target else None
-        damage = raw.get("damage", 0)
-        blocked = raw.get("blocked", False)
-        critical = raw.get("critical_hit", raw.get("critical", False))
-        died = raw.get("died", False)
+        damage_def = {
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 1.0,
+            "can_crit": True,
+        }
+
+        result = resolve_damage(actor, target, damage_def)
+
         
-        if not blocked and damage > 0 and action.target:
-            effects = actor.get_on_hit_effects()
-
-            for effect in effects:
+        if not result["blocked"] and result["damage"] > 0:
+            for effect in actor.get_on_hit_effects():
                 if random.random() > effect.get("chance", 1.0):
                     continue
 
@@ -107,7 +109,7 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                 if not status_data:
                     continue
 
-                target_entity = actor if status_data.get("target") == "self" else action.target
+                target_entity = actor if status_data.get("target") == "self" else target
                 if not target_entity:
                     continue
 
@@ -122,13 +124,12 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
 
 
 
-        outcome = _make_outcome(attacker_name, "attack", target_name, damage, blocked, critical, died)
+        outcome = _make_outcome(actor.name, "attack", target.name if target else None, result["damage"], result["blocked"], result["critical"], result["died"])
         combat_state.log.append(outcome)
         return outcome
     
     if action.type == "skill":
         skill = SKILL_REGISTRY.get(action.skill_id)
-        actor = action.actor
         target = action.target
 
         if not skill:
@@ -141,16 +142,18 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
             outcome = _make_outcome(
                 actor.name,
                 "skill",
-                getattr(target, "name", None),
+                target.name if target else None,
                 damage=0,
                 blocked=False,
+                critical=False,
+                died=False,
                 extra={"skill": skill.id, "missed": True}
             )
             combat_state.log.append(outcome)
             return outcome
 
         # --- Damage via normal attack pipeline ---
-        result = resolve_skill_damage(actor, target, skill)
+        result = resolve_damage(actor, target, skill.damage)
 
         # --- Apply status (if any) ---
         if skill.apply_status and target and not result["blocked"]:
@@ -163,20 +166,42 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                 )
                 target.apply_status(status, combat_state.log)
 
-        outcome = _make_outcome(
-            actor.name,
-            "skill",
-            getattr(target, "name", None),
-            damage=result["damage"],
-            blocked=result["blocked"],
-            critical=result["critical"],
-            died=result["died"],
-            extra={"skill": skill.id}
-        )
+        if isinstance(actor, Enemy) and skill.locks_actor:
+            actor.locked_state = {
+                "state": skill.locks_actor["state"],
+                "turns": skill.locks_actor["turns"],
+                "forced_action": skill.locks_actor.get("forced_action"),
+            }
 
+            combat_state.log.append({
+                "event": "actor_locked",
+                "actor": actor.name,
+                "state": actor.locked_state["state"],
+                "turns": actor.locked_state["turns"],
+            })
+
+        outcome = _make_outcome(actor.name, "skill", target.name if target else None, result["damage"], result["blocked"], result["critical"], result["died"], extra={"skill": skill.id})
         combat_state.log.append(outcome)
+
+        if isinstance(actor, Enemy):
+            if skill.cooldown_turns:
+                actor.skill_cooldowns[skill.id] = skill.cooldown_turns
+
         return outcome
     
+    if action.type == "defend":
+        status = Status(
+            id="defending",
+            remaining_turns=1,
+            magnitude=None,
+            source=actor.name
+        )
+        actor.apply_status(status, combat_state.log)
+
+        outcome = _make_outcome(actor.name, "defend", actor.name)
+        combat_state.log.append(outcome)
+        return outcome
+
 
     if action.type == "item":
         outcome = actor.use_item(action.item_id, action.target)
@@ -185,15 +210,16 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
 
     if action.type == "flee":
         success = _compute_escape_chance(combat_state)
+
+        outcome = _make_outcome(actor.name, "flee", None, extra={"escaped": success})
+
         if success:
-            outcome = _make_outcome(actor.name, "flee", None, 0, False, False, False, extra={"escaped": True})
             combat_state.is_running = False
-        else:
-            outcome = _make_outcome(actor.name, "flee", None, 0, False, False, False, extra={"escaped": False})
+
         combat_state.log.append(outcome)
         return outcome
 
-
+    # FALLBACK
     outcome = _make_outcome(actor.name, "noop", None)
     combat_state.log.append(outcome)
     return outcome
@@ -251,7 +277,9 @@ def resolve_skill_damage(actor, target, skill) -> dict:
             critical = True
 
     # --- Defense ---
-    if raw <= target.defence:
+    effective_defence = target.get_effective_defence()
+
+    if raw <= effective_defence:
         return {
             "damage": 0,
             "blocked": True,
@@ -259,7 +287,7 @@ def resolve_skill_damage(actor, target, skill) -> dict:
             "died": False,
         }
 
-    damage = raw - target.defence
+    damage = raw - effective_defence
     target.take_damage(damage)
 
     return {

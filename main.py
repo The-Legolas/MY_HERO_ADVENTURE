@@ -9,8 +9,6 @@ from game.engine.game_engine import GameEngine
 # Map logic (implicit, discovered, or explicit)      currently using a debug tool to render the map but should expand into an actual part of the game  |
 # Dungeon progression logic (keys, switches, boss gates)
 
-# Combat System: | Player actions:  missing option to defend use differnt attacks and skills/magic  | Enemy AI
-
 # Character System:  | Level-up system
 
 # Enemies:  |  Boss-specific mechanics or behaviors  | Enemy intent |  Status immunities / resist tiers  |  Boss-only overrides
@@ -40,6 +38,14 @@ from game.engine.game_engine import GameEngine
 
 # Testing
 
+
+"""
+note 1: fleeing is succesful no matter what is displayed to the user.
+note 2: Statuses should have a chance to apply even if the attack is blocked. (or makeing it so if defence is more than the attack (and not defending) only doing halve dmg)
+note 3: Make it so more than 1 enemy can spawn at a time.
+note 4: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
+note 5: add Skill priority overrides per enemy type, Multi-enemy coordination behaviors
+"""
 
 
 def main():

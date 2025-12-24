@@ -2,8 +2,8 @@ import random
 from game.core.Item_class import Item_Type, Items, make_outcome
 from game.systems.combat.status_evaluator import evaluate_status_magnitude
 from game.systems.combat.status_registry import STATUS_REGISTRY
-
-from typing import TYPE_CHECKING
+from game.systems.combat.damage_resolver import resolve_damage
+from game.core.Enemy_class import INTERRUPT_RESISTANCE_BY_RARITY
 
 from game.core.Status import Status
 
@@ -177,33 +177,13 @@ class Character():
         return True if self.hp > 0 else False  
 
     def attack(self, other: 'Character') -> dict:
-        outcome_table = {
-            "attacker": self.name,
-            "target": other.name,
-            "damage": 0,
-            "critical_hit": False,
-            "blocked": False,
-            "died": False
+        damage_def = {
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 1.0,
+            "can_crit": True,
         }
-
-        temp_damage = int(self.damage * self.get_damage_multiplier())
-
-        if random.random() >= 0.95:
-            temp_damage *= 2
-            outcome_table["critical_hit"] = True
-        
-        if temp_damage > other.defence:
-            damage_dealt = temp_damage - other.defence
-            outcome_table["damage"] = damage_dealt
-            other.take_damage(damage_dealt)
-        
-        else:
-            outcome_table["blocked"] = True
-        
-        if not other.is_alive():
-            outcome_table["died"] = True
-        
-        return outcome_table
+        return resolve_damage(self, other, damage_def)
     
     def get_damage_multiplier(self) -> float:
         mult = 1.0
@@ -212,6 +192,16 @@ class Character():
             mult *= modifiers.get("damage_mult", 1.0)
         return mult
     
+    def get_effective_defence(self) -> int:
+        defence = self.defence
+
+        for status in self.statuses:
+            modifiers = STATUS_REGISTRY.get(status.id, {}).get("modifiers", {})
+            defence = int(defence * modifiers.get("defence_mult", 1.0))
+
+        return defence
+
+
     def can_act(self) -> bool:
         statuses_sorted = sorted(
             self.statuses,
@@ -404,6 +394,41 @@ class Character():
                 "target": self.name,
                 "source": new_status.source
             })
+        
+        data = STATUS_REGISTRY.get(new_status.id, {})
+
+        if (applied and data.get("interrupts")
+            and hasattr(self, "locked_state")
+            and self.locked_state
+        ):
+            # Determine resistance
+            rarity = getattr(self, "rarity", None)
+            resist_chance = 0.0
+
+            if rarity is not None:
+                resist_chance = INTERRUPT_RESISTANCE_BY_RARITY.get(rarity, 0.0)
+
+            if random.random() < resist_chance:
+                # Interrupt resisted
+                if combat_log is not None:
+                    combat_log.append({
+                        "event": "interrupt_resisted",
+                        "target": self.name,
+                        "status": new_status.id,
+                        "state": self.locked_state["state"],
+                    })
+            else:
+                # Interrupt succeeds
+                interrupted_state = self.locked_state["state"]
+                self.locked_state = None
+
+                if combat_log is not None:
+                    combat_log.append({
+                        "event": "interrupt",
+                        "target": self.name,
+                        "status": new_status.id,
+                        "interrupted_state": interrupted_state,
+                    })
 
         return applied
         

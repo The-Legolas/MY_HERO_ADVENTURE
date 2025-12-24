@@ -87,6 +87,20 @@ def combat_log_renderer(log: list[dict]) -> str:
             start_phase.append(f"{status} on {entry['target']} wears off.")
             continue
 
+        if event == "status_applied":
+            status = entry.get("status", "").replace("_", " ").title()
+            post_action_phase.append(f"{entry['target']} is afflicted with {status}.")
+            continue
+        
+        if event == "interrupt":
+            status = entry["status"].replace("_", " ").title()
+            state = entry["interrupted_state"]
+
+            post_action_phase.append(
+                f"{entry['target']}'s {state} is interrupted by {status}!"
+            )
+            continue
+
         if event == "status_prevented_action":
             action_phase.append(f"{entry['target']} is unable to act!")
             continue
@@ -106,14 +120,18 @@ def combat_log_renderer(log: list[dict]) -> str:
                 )
             continue
 
-        if event == "status_applied":
-            status = entry.get("status", "").replace("_", " ").title()
-            post_action_phase.append(f"{entry['target']} is afflicted with {status}.")
-            continue
-
         if event == "status_resisted":
             status = entry.get("status", "").replace("_", " ").title()
             post_action_phase.append(f"{entry['target']} resists {status}.")
+            continue
+
+        if event == "interrupt_resisted":
+            status = entry["status"].replace("_", " ").title()
+            state = entry["state"]
+
+            post_action_phase.append(
+                f"{entry['target']} resists the interruption and continues {state}!"
+            )
             continue
 
         if event == "death":
@@ -147,6 +165,8 @@ def combat_log_renderer(log: list[dict]) -> str:
             died = entry.get("died", False)
 
             if blocked:
+                action_phase.append(f"{target} blocks the attack with a defensive stance.")
+
                 action_phase.append(
                     f"{actor} uses {skill_name} on {target}, but it is blocked."
                 )
@@ -163,6 +183,10 @@ def combat_log_renderer(log: list[dict]) -> str:
                     post_action_phase.append(f"{target} is slain.")
 
             continue
+
+        if action == "defend":
+            action_phase.append(f"{actor} takes a defensive stance.")
+
 
         if action == "item":
             action_phase.append(f"{actor} uses an item on {target}.")
