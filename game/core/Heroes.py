@@ -4,7 +4,7 @@ from .Character_class import Character
 class Warrior(Character):
     def __init__(self, name: str):
         base_hp = 70 # 30
-        base_damage = 10 # 6
+        base_damage = 6 # 6
         base_defence = 1 # 3
 
         hp = int(base_hp * 1.2)

@@ -3,7 +3,7 @@ from game.core.Item_class import Item_Type, Items, make_outcome
 from game.systems.combat.status_evaluator import evaluate_status_magnitude
 from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.systems.combat.damage_resolver import resolve_damage
-from game.core.Enemy_class import INTERRUPT_RESISTANCE_BY_RARITY
+from game.core.Status import INTERRUPT_RESISTANCE_BY_RARITY
 
 from game.core.Status import Status
 
@@ -408,6 +408,8 @@ class Character():
             if rarity is not None:
                 resist_chance = INTERRUPT_RESISTANCE_BY_RARITY.get(rarity, 0.0)
 
+            interrupted_skill = self.locked_state.get("skill_id")
+
             if random.random() < resist_chance:
                 # Interrupt resisted
                 if combat_log is not None:
@@ -415,11 +417,10 @@ class Character():
                         "event": "interrupt_resisted",
                         "target": self.name,
                         "status": new_status.id,
-                        "state": self.locked_state["state"],
+                        "skill": interrupted_skill,
                     })
             else:
                 # Interrupt succeeds
-                interrupted_state = self.locked_state["state"]
                 self.locked_state = None
 
                 if combat_log is not None:
@@ -427,7 +428,7 @@ class Character():
                         "event": "interrupt",
                         "target": self.name,
                         "status": new_status.id,
-                        "interrupted_state": interrupted_state,
+                        "skill": interrupted_skill,
                     })
 
         return applied

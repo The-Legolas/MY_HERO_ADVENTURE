@@ -45,6 +45,7 @@ note 2: Statuses should have a chance to apply even if the attack is blocked. (o
 note 3: Make it so more than 1 enemy can spawn at a time.
 note 4: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
 note 5: add Skill priority overrides per enemy type, Multi-enemy coordination behaviors
+note 6: in the code base search for #fix to find things to remove before final game release
 """
 
 

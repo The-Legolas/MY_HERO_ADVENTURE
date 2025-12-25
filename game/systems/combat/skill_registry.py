@@ -13,7 +13,7 @@ class Skill:
                  hit_chance: float = 1.0, apply_status: dict | None = None,
                  trigger: Literal["immediate", "on_turn_start"] = "immediate", cost: dict | None = None,
                  forbid_if_target_has: list[str] = None, cooldown_turns: int = None, locks_actor: dict[str, str|int] = None,
-                 allowed_while_locked: bool = None, requires_target_alive: bool = None):
+                 allowed_while_locked: bool = None, requires_target_alive: bool = None, intent_hint: str = None):
         
         self.id = id
         self.name = name
@@ -32,6 +32,7 @@ class Skill:
         self.locks_actor = locks_actor
         self.allowed_while_locked = allowed_while_locked if allowed_while_locked is not None else False
         self.requires_target_alive = requires_target_alive if requires_target_alive is not None else True
+        self.intent_hint = intent_hint if intent_hint is not None else None
 """
 dmg types
 damage = {
@@ -217,6 +218,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="shield_wall",
         name="Shield Wall",
         description="The enemy braces behind its shield.",
+        intent_hint="missing: shield wall",
         target="self",
         damage=None,
         apply_status={
@@ -239,6 +241,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="acid_splash",
         name="Acid Splash",
         description="Corrosive acid burns through armor.",
+        intent_hint="missing: acid splash",
         target="enemy",
         damage={
             "type": "flat",
@@ -258,6 +261,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="engulf",
         name="Engulf",
         description="The ooze engulfs its prey, immobilizing them.",
+        intent_hint="missing: engulf",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -280,6 +284,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="corrosive_buildup",
         name="Corrosive Build-Up",
         description="The ooze thickens with burning acid.",
+        intent_hint="missing: Corrosive Build-Up",
         target="enemy",
         damage=None,
         apply_status={

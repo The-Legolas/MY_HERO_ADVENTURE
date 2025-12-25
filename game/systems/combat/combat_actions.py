@@ -166,20 +166,6 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                 )
                 target.apply_status(status, combat_state.log)
 
-        if isinstance(actor, Enemy) and skill.locks_actor:
-            actor.locked_state = {
-                "state": skill.locks_actor["state"],
-                "turns": skill.locks_actor["turns"],
-                "forced_action": skill.locks_actor.get("forced_action"),
-            }
-
-            combat_state.log.append({
-                "event": "actor_locked",
-                "actor": actor.name,
-                "state": actor.locked_state["state"],
-                "turns": actor.locked_state["turns"],
-            })
-
         outcome = _make_outcome(actor.name, "skill", target.name if target else None, result["damage"], result["blocked"], result["critical"], result["died"], extra={"skill": skill.id})
         combat_state.log.append(outcome)
 
@@ -218,9 +204,20 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
 
         combat_state.log.append(outcome)
         return outcome
-
-    # FALLBACK
-    outcome = _make_outcome(actor.name, "noop", None)
+    
+    if action.type == "wait":
+        outcome = {
+        "action": "wait",
+        "actor": action.actor.name,
+        "target": None,
+        "damage": 0,
+        "blocked": False,
+        "critical": False,
+        "died": False,
+        "extra": {
+            "state": getattr(action, "state", None)
+        }
+    }
     combat_state.log.append(outcome)
     return outcome
 

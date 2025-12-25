@@ -1,21 +1,11 @@
 from __future__ import annotations
 from enum import Enum
 import random
-from .Character_class import Character
+from game.core.Status import Enemy_Rarity
+from typing import TYPE_CHECKING
 
-class Enemy_Rarity(Enum):
-    COMMON = 50000 #100
-    UNCOMMON = 40 #40
-    RARE = 20 # 15
-    ELITE = 5
-    MINI_BOSS = 2
-    BOSS = 0
+from game.core.Character_class import Character
 
-INTERRUPT_RESISTANCE_BY_RARITY = {
-    Enemy_Rarity.COMMON: 0.0,   # no resistance
-    Enemy_Rarity.ELITE: 0.5,    # 50% chance to resist interrupt
-    Enemy_Rarity.BOSS: 1.0,     # full immunity
-}
 
 class Enemy_sub_type(Enum):
     UNDEAD = "undead"
@@ -64,11 +54,9 @@ class Enemy(Character):
         self.is_scaled = False
 
         self.skill_cooldowns: dict[str, int] = {}
-        self.locked_state = {
-            "state": str,
-            "turns": int,
-            "forced_action": str | None,
-        }
+        self.locked_state: dict | None = None
+
+        self.intent: dict | None = None
 
 
 

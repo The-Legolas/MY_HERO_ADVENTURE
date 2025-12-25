@@ -34,9 +34,10 @@ def show_combat_status(combat: Combat_State):
         print(f"{i}. {e.name} ({e.hp}/{e.max_hp} HP) {icons}")
         if e.intent:
             if e.intent["type"] == "charging":
+                turns = e.intent['turns']
                 print(
                     f"Intent: {e.intent['text']} "
-                    f"({e.intent['turns']} turns)"
+                    f"({turns - 1} turns)"
                 )
             else:
                 print(f"Intent: {e.intent['text']}")
@@ -64,6 +65,10 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
             "turn": combat_state.round_number
         })
 
+        for enemy in combat_state.alive_enemies():
+            if isinstance(enemy, Enemy) and enemy.locked_state:
+                enemy.locked_state["turns"] -= 1
+            plan_enemy_intent(enemy, combat_state)
 
         for actor in participants_sorted:
             if not combat_state.is_running:
@@ -457,6 +462,16 @@ def render_combat_outcome(outcome: dict):
 
     elif action == "item":
         print(f"{actor} uses an item on {target}.")
+    
+    elif action == "wait":
+        print("hell")
+        state = outcome.get("extra", {}).get("state")
+
+        if state:
+            print(f"{actor} is {state.replace('_', ' ')}.")
+        else:
+            print(f"{actor} is gathering power.")
+        return
 
     elif action == "flee":
         if extra.get("escaped"):
@@ -468,96 +483,57 @@ def render_combat_outcome(outcome: dict):
 
 
 def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
+    player = combat_state.player
+
     if enemy.locked_state:
         enemy.locked_state["turns"] -= 1
 
-        enemy.intent = {
-            "type": "charging",
-            "text": enemy.locked_state["intent_hint"],
-            "turns": enemy.locked_state["turns"]
-        }
-
         forced = enemy.locked_state.get("forced_action")
-
         if forced == "attack":
-            return Action(enemy, "attack", combat_state.player)
+            return Action(enemy, "attack", player)
+        if forced == "defend":
+            return Action(enemy, "defend", enemy)
         
-        if forced == "skill":
-            return Action(enemy, "attack", combat_state.player)
+        if enemy.locked_state["turns"] > 0:
+            return Action(enemy, "wait", None)
         
-        if enemy.locked_state["turns"] <= 0:
-            # Charge complete → execute stored skill
-            skill_id = enemy.locked_state["skill_id"]
-            enemy.locked_state = None
-            return Action(enemy, "skill", combat_state.player, skill_id=skill_id)
+        skill_id = enemy.locked_state.get("skill_id")
+        enemy.locked_state = None
 
-        # Still charging → no choice this turn
-        return Action(enemy, "wait", None)
-        
-    
-    skills = get_available_enemy_skills(enemy, combat_state)
+        skill = SKILL_REGISTRY.get(skill_id)
+        if not skill:
+            return Action(enemy, "attack", player)
 
-    if not skills:
-        enemy.intent = {
-            "type": "attack",
-            "text": "Preparing a basic attack"
-        }
-        return Action(enemy, "attack", combat_state.player)
+        target = enemy if skill.target == "self" else player
+        return Action(enemy, "skill", target, skill_id=skill_id)
 
-    
-    behavior = enemy.behavior_tag or Enemy_behavior_tag.NORMAL
-    behavior_weights = BEHAVIOR_WEIGHTS[behavior]
+    intent = enemy.intent
+    enemy.intent = None
 
-    choices = []
-    weights = []
+    if not intent:
+        return Action(enemy, "attack", player)
 
-    for skill_id in skills:
-        skill = SKILL_REGISTRY[skill_id]
-        w = 1.0
+    if intent["type"] == "attack":
+        return Action(enemy, "attack", player)
 
-        if skill.damage:
-            w *= behavior_weights.get("damage", 1.0)
+    if intent["type"] == "skill":
+        skill = SKILL_REGISTRY.get(intent["skill_id"])
+        if not skill:
+            return Action(enemy, "attack", player)
 
-        if skill.apply_status:
-            if skill.apply_status["id"] in ("stun", "poison", "weakened"):
-                w *= behavior_weights.get("debuff", 1.0)
-            else:
-                w *= behavior_weights.get("buff", 1.0)
+        target = enemy if skill.target == "self" else player
+        return Action(enemy, "skill", target, skill_id=skill.id)
 
-        if skill.locks_actor:
-            w *= behavior_weights.get("lock", 1.0)
-
-        choices.append(skill_id)
-        weights.append(w)
-
-    chosen = random.choices(choices, weights=weights, k=1)[0]
-    chosen_skill = SKILL_REGISTRY[chosen]
-
-    if chosen_skill.locks_actor:
+    if intent["type"] == "charging":
         enemy.locked_state = {
-            "skill_id": chosen_skill.id,
-            "turns": chosen_skill.locks_actor["turns"],
-            "intent_hint": chosen_skill.intent_hint
+            "skill_id": intent["skill_id"],
+            "turns": intent["turns"],
+            "forced_action": intent.get("forced_action"),
+            "intent_hint": intent["text"],
         }
-
-        enemy.intent = {
-            "type": "charging",
-            "text": chosen_skill.intent_hint,
-            "turns": chosen_skill.locks_actor["turns"]
-        }
-
         return Action(enemy, "wait", None)
-
-
-    # --- IMMEDIATE SKILL ---
-    enemy.intent = {
-        "type": "skill",
-        "text": chosen_skill.intent_hint
-    }
-
-    final_target = enemy if chosen_skill.target == "self" else combat_state.player
-
-    return Action(enemy, "skill", final_target, skill_id=chosen)
+    
+    return Action(enemy, "attack", player)
 
 
 def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
@@ -587,6 +563,78 @@ def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
         available.append(skill)
 
     return available
+
+def plan_enemy_intent(enemy: Enemy, combat_state: Combat_State) -> None:
+#fix
+    if enemy.locked_state:
+        enemy.intent = {
+            "type": "charging",
+            "skill_id": enemy.locked_state["skill_id"],
+            "turns": enemy.locked_state["turns"],
+            "forced_action": enemy.locked_state.get("forced_action"),
+            "text": enemy.locked_state.get("intent_hint", "Gathering power lin 561"),
+        }
+        return
+
+    skills = get_available_enemy_skills(enemy, combat_state)
+    
+    if not skills:
+        enemy.intent = {
+            "type": "attack",
+            "skill_id": None,
+            "turns": None,
+            "forced_action": None,
+            "text": "Preparing a basic attack",
+        }
+        return
+    
+    chosen_skill = weighted_pick_enemy_skill(enemy, skills)
+
+    if chosen_skill.locks_actor:
+        enemy.intent = {
+            "type": "charging",
+            "skill_id": chosen_skill.id,
+            "turns": chosen_skill.locks_actor["turns"],
+            "forced_action": chosen_skill.locks_actor.get("forced_action"),
+            "text": chosen_skill.intent_hint,
+        }
+        return
+
+    enemy.intent = {
+        "type": "skill",
+        "skill_id": chosen_skill.id,
+        "turns": None,
+        "forced_action": None,
+        "text": chosen_skill.intent_hint,
+    }
+
+def weighted_pick_enemy_skill(enemy: Enemy, skills: list[Skill]) -> Skill:
+    behavior = enemy.behavior_tag or Enemy_behavior_tag.NORMAL
+    behavior_weights = BEHAVIOR_WEIGHTS[behavior]
+
+    choices = []
+    weights = []
+
+    for skill in skills:
+        w = 1.0
+
+        if skill.damage:
+            w *= behavior_weights.get("damage", 1.0)
+
+        if skill.apply_status:
+            if skill.apply_status["id"] in ("stun", "poison", "weakened"):
+                w *= behavior_weights.get("debuff", 1.0)
+            else:
+                w *= behavior_weights.get("buff", 1.0)
+
+        if skill.locks_actor:
+            w *= behavior_weights.get("lock", 1.0)
+
+        choices.append(skill)
+        weights.append(w)
+
+    chosen_skill = random.choices(choices, weights=weights, k=1)[0]
+    return chosen_skill
 
 
 BEHAVIOR_WEIGHTS = {

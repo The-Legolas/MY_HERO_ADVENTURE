@@ -94,7 +94,7 @@ def combat_log_renderer(log: list[dict]) -> str:
         
         if event == "interrupt":
             status = entry["status"].replace("_", " ").title()
-            state = entry["interrupted_state"]
+            state = entry.get("interrupted_state", "action")
 
             post_action_phase.append(
                 f"{entry['target']}'s {state} is interrupted by {status}!"
@@ -122,17 +122,32 @@ def combat_log_renderer(log: list[dict]) -> str:
 
         if event == "status_resisted":
             status = entry.get("status", "").replace("_", " ").title()
-            post_action_phase.append(f"{entry['target']} resists {status}.")
+            skill = entry.get("skill")
+
+            if skill:
+                skill_name = skill.replace("_", " ").title()
+                post_action_phase.append(
+                    f"{entry['target']}'s {skill_name} is interrupted by {status}!"
+                )
+            else:
+                post_action_phase.append(
+                    f"{entry['target']}'s action is interrupted by {status}!"
+                )
             continue
 
         if event == "interrupt_resisted":
             status = entry["status"].replace("_", " ").title()
-            state = entry["state"]
+            state = entry.get("state", "action")
 
             post_action_phase.append(
                 f"{entry['target']} resists the interruption and continues {state}!"
             )
             continue
+
+        if event == "wait":
+            action_phase.append(f"{entry['actor']} is gathering power.")
+            continue
+
 
         if event == "death":
             post_action_phase.append(f"{entry['target']} collapses.")
@@ -199,6 +214,7 @@ def combat_log_renderer(log: list[dict]) -> str:
             else:
                 action_phase.append(f"{actor} tries to flee, but fails.")
             continue
+
     
     flush_turn()
     lines.append("\n=====================\n")
