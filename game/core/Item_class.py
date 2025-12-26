@@ -1,6 +1,8 @@
 from __future__ import annotations
 from enum import Enum
 import random
+from game.core.Status import Status
+from game.ui.status_ui import describe_status
 
 
 
@@ -61,9 +63,23 @@ class Items():
 
 
         if isinstance(self.effect, dict):
+            if "apply_status" in self.effect:
+                lines.append("Use: Applies status effects.")
+
             for effect, amount in self.effect.items():
-                verb = effect.replace("_", " ").title()
-                lines.append(f"Use: {verb} {amount}")
+                if effect == "apply_status":
+                    status_id = amount.get("id", "")
+                    duration = amount.get("duration")
+                    status_name = status_id.replace("_", " ").title()
+
+                    if duration:
+                        lines.append(f"  • {status_name} for {duration} turns")
+                    else:
+                        lines.append(f"  • {status_name}")
+
+                else:
+                    verb = effect.replace("_", " ").title()
+                    lines.append(f"Use: {verb} {amount}")
 
 
 
@@ -75,15 +91,15 @@ class Items():
 
                 if not status:
                     continue
-
-                status_name = status["id"].replace("_", " ").title()
-                duration = status.get("duration")
-                magnitude = status.get("magnitude")
-
-                if magnitude is not None:
-                    effect_text = f"{status_name} x{magnitude}"
-                else:
-                    effect_text = status_name
+                
+                fake_status = Status(
+                    id=status["id"],
+                    remaining_turns=status.get("duration", 0),
+                    magnitude=status.get("magnitude"),
+                    source=None,
+                )
+                effect_text = describe_status(fake_status)
+                duration = 1111 #fix
 
                 if trigger == "on_hit":
                     lines.append(
@@ -115,32 +131,135 @@ class Items():
             return make_outcome(player.name, "use_item_fail", getattr(target, "name", None),
                                 extra={"reason": "no_effect", "item": self.name})
         
+        did_something = False        
 
         total_damage = 0
         total_heal = 0
         details = []
 
-        for effect_type, amount in self.effect.items():
-            action = EFFECT_ACTIONS.get(effect_type)
-            if not action:
-                details.append({"effect": effect_type, "skipped": True})
-                continue
+        if isinstance(self.effect, dict):
+            for effect_type, amount in self.effect.items():
+                if effect_type in ("heal", "damage"):
+                    action = EFFECT_ACTIONS.get(effect_type)
+                    if not action:
+                        continue
 
-            action(target, amount)
+                    action(target, amount)
 
-            if effect_type == "damage":
-                total_damage += amount
-            elif effect_type == "heal":
-                total_heal += amount
+                    details.append({
+                        "effect": effect_type,
+                        "amount": amount
+                    })
 
-            details.append({"effect": effect_type, "amount": amount})
+                    did_something = True
+                    continue
 
-        extra = {"item": self.name, "details": details}
-        died = not target.is_alive() if hasattr(target, "is_alive") else False
-        outcome = make_outcome(player.name, "use_item", getattr(target, "name", None),
-                               damage=total_damage, blocked=False, critical=False, died=died, extra=extra)
+                # ─── APPLY STATUS ──────────────────────────────
+                if effect_type == "apply_status":
+                    status = Status(
+                        id=amount["id"],
+                        remaining_turns=amount["duration"],
+                        magnitude=amount.get("magnitude"),
+                        source=self.name
+                    )
 
-        return outcome
+                    result = target.apply_status(status)
+
+                    details.append({
+                        "effect": "apply_status",
+                        "status": status.id,
+                        "applied": result
+                    })
+
+                    if result:
+                        did_something = True
+                    continue
+
+                # ─── REMOVE STATUS ─────────────────────────────
+                if effect_type == "remove_status":
+                    success = apply_remove_status(target, amount)
+
+                    details.append({
+                        "effect": "remove_status",
+                        "status": amount,
+                        "success": success
+                    })
+
+                    if success:
+                        did_something = True
+                    continue
+
+            if not did_something:
+                return make_outcome(
+                    player.name,
+                    "use_item_fail",
+                    getattr(target, "name", None),
+                    extra={"reason": "no_effect", "item": self.name}
+                )
+
+            return make_outcome(
+                player.name,
+                "use_item",
+                getattr(target, "name", None),
+                extra={
+                    "item": self.name,
+                    "details": details
+                }
+            )
+
+        # CASE 2 — status effects
+        elif isinstance(self.effect, list):
+            for entry in self.effect:
+                if entry.get("type") != "status":
+                    continue
+
+                status_data = entry.get("status")
+                if not status_data:
+                    continue
+
+                status = Status(
+                    id=status_data["id"],
+                    remaining_turns=status_data["duration"],
+                    magnitude=status_data.get("magnitude"),
+                    source=self.name
+                )
+
+                result = target.apply_status(status)
+                if result:
+                    did_something = True
+
+                details.append({
+                    "effect": "status",
+                    "status": status.id,
+                    "applied": result
+                })
+
+        if did_something:
+            died = hasattr(target, "is_alive") and not target.is_alive()
+
+            return make_outcome(
+                player.name,
+                "use_item",
+                getattr(target, "name", None),
+                damage=total_damage,
+                blocked=False,
+                critical=False,
+                died=died,
+                extra={
+                    "item": self.name,
+                    "details": details
+                }
+            )
+
+        return make_outcome(
+            player.name,
+            "use_item_fail",
+            getattr(target, "name", None),
+            extra={
+                "reason": "no_effect",
+                "item": self.name
+            }
+        )
         
 
 
@@ -152,6 +271,25 @@ def apply_heal(target, amount):
 def apply_damage(target, amount):
     target.hp -= amount
 
+def apply_status_effect(target, status_data):
+    status = Status(
+        id=status_data["id"],
+        remaining_turns=status_data["duration"],
+        magnitude=status_data.get("magnitude"),
+        source="item"
+    )
+    target.apply_status(status, None)
+
+def apply_remove_status(target, status_id):
+    if not hasattr(target, "statuses"):
+        return False
+
+    before = len(target.statuses)
+    target.statuses = [s for s in target.statuses if s.id != status_id]
+    after = len(target.statuses)
+
+    return before != after
+
 EFFECT_VERBS = {
     "heal": "healed",
     "damage": "damaged",
@@ -160,6 +298,8 @@ EFFECT_VERBS = {
 EFFECT_ACTIONS = {
     "heal": apply_heal,
     "damage": apply_damage,
+    "apply_status": apply_status_effect,
+    "remove_status": apply_remove_status,
 }
 
 
@@ -401,6 +541,121 @@ ITEM_DEFINITIONS = {
         "stats": None,
         "effect": {"damage": 25},
         "value": 25
+    },
+    "lesser_fortitude_draught": {
+        "name": "Lesser Fortitude Draught",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "apply_status": {
+                "id": "defending",
+                "duration": 2,
+                "magnitude": None
+            }
+        },
+        "value": 20
+    },
+    "elixir_of_battle_focus": {
+        "name": "Elixir of Battle Focus",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "apply_status": {
+                "id": "strength_up",
+                "duration": 3,
+                "magnitude": None
+            }
+        },
+        "value": 35
+    },
+    "antivenom_vial": {
+        "name": "Antivenom Vial",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "remove_status": "poison"
+        },
+        "value": 30
+    },
+    "volatile_concoction": {
+        "name": "Volatile Concoction",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "apply_status": {
+                "id": "strength_up",
+                "duration": 2,
+                "magnitude": None
+            },
+            "damage": 5
+        },
+        "value": 40
+    },
+    "sluggish_brew": {
+        "name": "Sluggish Brew",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "apply_status": {
+                "id": "weakened",
+                "duration": 2,
+                "magnitude": None
+            }
+        },
+        "value": 25
+    },
+    "poison_flask": {
+        "name": "Poison Flask",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "apply_status": {
+                "id": "poison",
+                "duration": 3,
+                "magnitude": 1
+            }
+        },
+        "value": 30
+    },
+    "strength_elixir": {
+        "name": "Strength Elixir",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "effect": {
+            "apply_status": {
+                "id": "strength_up",
+                "duration": 3,
+                "magnitude": None
+            }
+        },
+        "value": 30
+    },
+    "regeneration_draught": {
+        "name": "Regeneration Draught",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "effect": {
+            "apply_status": {
+                    "id": "regen",
+                    "duration": 3,
+                    "magnitude": 2
+            }
+        },
+        "value": 40
     },
     "wolf_tooth": {
         "name": "Wolf Tooth",

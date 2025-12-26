@@ -6,14 +6,11 @@ from game.engine.game_engine import GameEngine
 # Missing from the game still:
 
 # Exploration System:  | Safe areas ( rest rooms, save points)  | 
-# Map logic (implicit, discovered, or explicit)      currently using a debug tool to render the map but should expand into an actual part of the game  |
 # Dungeon progression logic (keys, switches, boss gates)
 
-# Character System:  | Level-up system
+# Character System:  | Level-up system and add a debug xp and debug level menu
 
-# Enemies:  |  Boss-specific mechanics or behaviors  | Enemy intent |  Status immunities / resist tiers  |  Boss-only overrides
-
-# Items & Equipment:  |  Item use out of combat:  like the supposed map mechanic
+# Enemies:  |  Boss-specific mechanics or behaviors  |  Boss-only overrides
 
 # Progression & Balance:  |  Resource scarcity tuning (HP, MP, items)  | Grind tolerance (optional but intentional)
 
@@ -46,6 +43,12 @@ note 3: Make it so more than 1 enemy can spawn at a time.
 note 4: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
 note 5: add Skill priority overrides per enemy type, Multi-enemy coordination behaviors
 note 6: in the code base search for #fix to find things to remove before final game release
+note 7: Gold aquired from monters aren't corectly put into the player inventory
+note 8: Add category sorting (Weapons → Potions → Others)
+note 9: Add dynamic merchant dialogue (based on demand, discounts, etc.)
+
+# Items & Equipment:  done but maybe the supposed map mechanic
+
 """
 
 
@@ -94,7 +97,19 @@ def pick_character_and_name() -> Character:
             break
 
     #if hero_choice: #hero_choice == "warrior":
-    player_hero = Warrior(hero_name)
+    player_hero = Warrior(hero_name, starting_items={
+        "grand_healing_potion": 1,
+        "medium_healing_potion": 1,
+        "explosive_potion": 1,
+        "elixir_of_battle_focus": 1,
+        "lesser_fortitude_draught": 1,
+        "antivenom_vial": 1,
+        "volatile_concoction": 1,
+        "sluggish_brew": 1,
+        "poison_flask": 1,
+        "strength_elixir": 1,
+        "regeneration_draught": 1,
+    })
     
     return player_hero
 
@@ -106,3 +121,59 @@ def pick_character_and_name() -> Character:
 
 if __name__ == "__main__":
     main()
+
+"""
+--- Use Item ---
+1. Antivenom Vial x1
+        Use: Remove Status poison
+2. Elixir of Battle Focus x1
+        Use: Applies status effects.
+  • Strength Up for 3 turns
+3. Explosive Potion x1
+        Use: Damage 25
+4. Grand Healing Potion x1
+        Use: Heal 150
+5. Lesser Fortitude Draught x1
+        Use: Applies status effects.
+  • Defending for 2 turns
+6. Medium Healing Potion x1
+        Use: Heal 70
+7. Poison Flask x1
+        Use: Applies status effects.
+  • Poison for 3 turns
+8. Regeneration Draught x1
+9. Sluggish Brew x1
+        Use: Applies status effects.
+  • Weakened for 2 turns
+10. Strength Elixir x1
+11. Volatile Concoction x1
+        Use: Applies status effects.
+  • Strength Up for 2 turns
+Use: Damage 5
+
+=== PLAYER STATUS ===
+HP: 59/84
+Active effects:
+ - Strength Up: Increases outgoing damage. (3 turns)
+ - Defending: Raises defense and blocks weak attacks for one turn. (2 turns)
+ - Poison: Deals damage at the start of each turn. (3 turns)
+ - Regen: Restores health at the start of each turn. (3 turns)
+ - Weakened: Reduces outgoing damage. (2 turns)
+ - Strength Up: Increases outgoing damage. (3 turns)
+ - Strength Up: Increases outgoing damage. (2 turns)
+
+ 
+ Inspect:
+1. Enemies
+2. y's statuses
+c. Cancel
+> 2
+
+1. Strength Up
+2. Defending
+3. Poison
+4. Regen
+5. Weakened
+6. Strength Up
+7. Strength Up
+"""

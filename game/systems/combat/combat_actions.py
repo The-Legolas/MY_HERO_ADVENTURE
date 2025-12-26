@@ -44,6 +44,7 @@ def _choose_enemy_target(enemies: list[Enemy]) -> Enemy | None:
         print(f"{i}. {e.name} (HP: {e.hp})")
     while True:
         choice = input("Choose target number (or 'c' to cancel): ").strip().lower()
+        print()
         if choice == "c":
             return None
         try:
@@ -164,9 +165,28 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                     magnitude=skill.apply_status.get("magnitude"),
                     source=skill.name,
                 )
-                target.apply_status(status, combat_state.log)
+                status_feedback = None
+                status_result = target.apply_status(status, combat_state.log)
+                
+                if isinstance(status_result, dict):
+                    if not status_result.get("applied"):
+                        status_feedback = {
+                            "status": status_result["status"],
+                            "result": status_result["reason"],
+                        }
+
+                    else:
+                        affinity = status_result.get("affinity")
+                        if affinity in ("resistant", "vulnerable"):
+                            status_feedback = {
+                                "status": status_result["status"],
+                                "result": affinity,
+                            }
 
         outcome = _make_outcome(actor.name, "skill", target.name if target else None, result["damage"], result["blocked"], result["critical"], result["died"], extra={"skill": skill.id})
+        if status_feedback:
+            outcome["status_feedback"] = status_feedback
+
         combat_state.log.append(outcome)
 
         if isinstance(actor, Enemy):

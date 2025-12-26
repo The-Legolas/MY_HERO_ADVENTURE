@@ -2,17 +2,16 @@ import random
 from .Character_class import Character
 
 class Warrior(Character):
-    def __init__(self, name: str):
+    def __init__(self, name: str, starting_items: dict[str, int] | None = None, gold: int = 0):
         base_hp = 70 # 30
-        base_damage = 6 # 6
+        base_damage = 9 # 6
         base_defence = 1 # 3
 
         hp = int(base_hp * 1.2)
         damage = int(base_damage * 0.9)
         defence = int(base_defence * 1.2)
 
-        super().__init__(name, hp, damage, defence)
-
+        super().__init__(name, hp, damage, defence, starting_items=starting_items, gold=gold)
         self.level = 1
         self.max_hp = self.hp
         self.xp = 0

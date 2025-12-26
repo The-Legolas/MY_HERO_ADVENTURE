@@ -4,13 +4,14 @@ from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.world.Dungeon_room_code import Room
 from game.core.Item_class import roll_loot
 from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
-from game.ui.combat_ui import format_status_icons
+from game.ui.status_ui import format_status_icons
 import random
 from typing import Optional
 from game.core.Status import Status
 from game.ui.status_ui import render_status_tooltip
 from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.systems.combat.skill_registry import SKILL_REGISTRY, Skill
+from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait
 
 class Combat_State():
     def __init__(self, player: Character, enemy_list: list[Enemy]):
@@ -34,13 +35,20 @@ def show_combat_status(combat: Combat_State):
         print(f"{i}. {e.name} ({e.hp}/{e.max_hp} HP) {icons}")
         if e.intent:
             if e.intent["type"] == "charging":
-                turns = e.intent['turns']
-                print(
-                    f"Intent: {e.intent['text']} "
-                    f"({turns - 1} turns)"
-                )
+                turns = e.intent["turns"]
+
+                if turns > 1:
+                    print(
+                        f"Intent: {e.intent['text']} "
+                        f"({turns - 1} turns)"
+                    )
+                elif turns == 1:
+                    print(
+                        f"Intent: {e.intent['text']} "
+                        f"(imminent)"
+                    )
             else:
-                print(f"Intent: {e.intent['text']}")
+                print(f"Intent: {e.intent['text']} ")
             
     print("=====================\n")
 
@@ -419,41 +427,15 @@ def render_combat_outcome(outcome: dict):
     blocked = outcome.get("blocked", False)
     critical = outcome.get("critical", False)
     died = outcome.get("died", False)
-
     extra = outcome.get("extra", {})
 
     if action == "attack":
-        if blocked:
-            print(f"{actor}'s attack was blocked by {target}!")
-        else:
-            crit = " CRITICAL HIT!" if critical else ""
-            print(f"{actor} hits {target} for {damage} damage.{crit}")
+        print(describe_attack(actor, target, damage, blocked, critical))
         if died:
-            print(f"\n{target} has been slain!")
-    
+            print(f"{target} has been slain!")
+
     elif action == "skill":
-        skill_name = outcome.get("extra", {}).get("skill", "Skill")
-        skill_name = skill_name.replace("_", " ").title()
-
-        missed = outcome.get("extra", {}).get("missed", False)
-
-        if missed:
-            print(f"{actor} uses {skill_name}, but misses!")
-            return
-
-        if blocked:
-            print(f"{actor}'s {skill_name} was blocked by {target}!")
-            return
-
-        text = f"{actor} uses {skill_name}"
-        if target:
-            text += f" on {target}"
-
-        if damage > 0:
-            text += f" for {damage} damage"
-
-        print(text + ".")
-        
+        print(describe_skill(actor, target, extra, damage, blocked))
         if died:
             print(f"{target} has been slain!")
 
@@ -462,24 +444,31 @@ def render_combat_outcome(outcome: dict):
 
     elif action == "item":
         print(f"{actor} uses an item on {target}.")
-    
-    elif action == "wait":
-        print("hell")
-        state = outcome.get("extra", {}).get("state")
 
-        if state:
-            print(f"{actor} is {state.replace('_', ' ')}.")
-        else:
-            print(f"{actor} is gathering power.")
-        return
+    elif action == "wait":
+        print(f"{actor} {describe_wait(extra)}.")
 
     elif action == "flee":
         if extra.get("escaped"):
             print(f"{actor} successfully fled!")
         else:
             print(f"{actor} failed to flee!")
+    
+    feedback = outcome.get("status_feedback")
+    if feedback:
+        status = feedback["status"].replace("_", " ").title()
+        result = feedback["result"]
 
-    print()  # spacing
+        if result == "immune":
+            print(f"{target} is immune to {status}.")
+        elif result == "resisted":
+            print(f"{target} resists the effects of {status}.")
+        elif result == "vulnerable":
+            print(f"{status} takes hold more strongly!")
+        elif result == "resistant":
+            print(f"{status} has reduced effect on {target}.")
+
+    print()  # spacing only
 
 
 def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':

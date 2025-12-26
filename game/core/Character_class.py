@@ -1,5 +1,5 @@
 import random
-from game.core.Item_class import Item_Type, Items, make_outcome
+from game.core.Item_class import Item_Type, Items, make_outcome, ITEM_DEFINITIONS
 from game.systems.combat.status_evaluator import evaluate_status_magnitude
 from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.systems.combat.damage_resolver import resolve_damage
@@ -8,7 +8,7 @@ from game.core.Status import INTERRUPT_RESISTANCE_BY_RARITY
 from game.core.Status import Status
 
 class Character():
-    def __init__(self, name: str, hp: int, damage: int, defence: int):
+    def __init__(self, name: str, hp: int, damage: int, defence: int, starting_items: dict[str, int] | None = None, gold: int = 0):
         self.name = name
         self.hp = hp
         self.max_hp = self.hp
@@ -29,8 +29,31 @@ class Character():
 
         self.inventory = {
             "items": {},
-            "gold": 0
+            "gold": gold
         }
+
+        if starting_items:
+            for item_id, count in starting_items.items():
+                data = ITEM_DEFINITIONS.get(item_id)
+                if not data:
+                    raise ValueError(f"Unknown item ID: {item_id}")
+                
+                item = Items(
+                name=data["name"],
+                category=data["category"],
+                stackable=data.get("stackable", False),
+                unique=data.get("unique", False),
+                stats=data.get("stats"),
+                effect=data.get("effect"),
+                passive_modifiers=data.get("passive_modifiers"),
+                on_hit_status=data.get("on_hit_status"),
+                value=data.get("value", 0),
+            )
+
+                self.inventory["items"][item_id] = {
+                    "item": item,
+                    "count": count
+                }
     
     def add_item(self, item: Items, amount:int = 1) -> None:
         if item.name not in self.inventory["items"]:
@@ -337,6 +360,49 @@ class Character():
 
 
     def apply_status(self, new_status: 'Status', combat_log: list[dict] | None = None) -> bool:
+        data = STATUS_REGISTRY.get(new_status.id, {})
+        affinity = getattr(self, "status_affinities", {}).get(new_status.id, "normal")
+
+        if affinity == "immune":
+            if combat_log is not None:
+                combat_log.append({
+                    "event": "status_immune",
+                    "status": new_status.id,
+                    "target": self.name,
+                })
+            return {
+                "applied": False,
+                "reason": "immune",
+                "status": new_status.id,
+            }
+        
+        chance = data.get("chance", 1.0)
+        duration = new_status.remaining_turns
+
+        if affinity == "resistant":
+            chance *= 0.5
+            duration = max(1, duration - 1)
+            if combat_log is not None:
+                combat_log.append({
+                    "event": "status_weakened",
+                    "status": new_status.id,
+                    "target": self.name,
+                })
+
+
+        elif affinity == "vulnerable":
+            chance = min(1.0, chance * 1.5)
+            duration += 1
+            if combat_log is not None:
+                combat_log.append({
+                    "event": "status_exploited",
+                    "status": new_status.id,
+                    "target": self.name,
+                })
+
+
+        new_status.remaining_turns = duration
+
         resist = self.get_status_resistance(new_status.id)
         if resist > 0 and random.random() < resist:
             if combat_log is not None:
@@ -346,8 +412,13 @@ class Character():
                     "target": self.name
                 })
             return False
+        if random.random() > chance:
+            return {
+                "applied": False,
+                "reason": "resisted",
+                "status": new_status.id,
+            }
 
-        data = STATUS_REGISTRY.get(new_status.id, {})
         stacking = data.get("stacking", "replace")
         max_stacks = data.get("max_stacks", 1)
 
@@ -431,7 +502,11 @@ class Character():
                         "skill": interrupted_skill,
                     })
 
-        return applied
+        return {
+            "applied": True,
+            "status": new_status.id,
+            "affinity": affinity,  # normal / resistant / vulnerable
+        }
         
     def get_status_resistance(self, status_id: str) -> float:
         resist = 0.0

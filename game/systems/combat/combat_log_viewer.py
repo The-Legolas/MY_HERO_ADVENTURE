@@ -1,3 +1,4 @@
+from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait, format_skill_name
 
 def combat_log_renderer(log: list[dict]) -> str:
     lines: list[str] = []
@@ -145,9 +146,31 @@ def combat_log_renderer(log: list[dict]) -> str:
             continue
 
         if event == "wait":
-            action_phase.append(f"{entry['actor']} is gathering power.")
+            action_phase.append(
+                f"{entry['actor']} {describe_wait(entry.get('extra', {}))}."
+            )
+            continue
+        
+        if event == "status_immune":
+            status = entry["status"].replace("_", " ").title()
+            post_action_phase.append(
+                f"{entry['target']} is immune to {status}."
+            )
+            continue
+            
+        if event == "status_exploited":
+            status = entry["status"].replace("_", " ").title()
+            post_action_phase.append(
+                f"{status} hits especially hard!"
+            )
             continue
 
+        if event == "status_weakened":
+            status = entry["status"].replace("_", " ").title()
+            post_action_phase.append(
+                f"{status} has reduced effect."
+            )
+            continue
 
         if event == "death":
             post_action_phase.append(f"{entry['target']} collapses.")
@@ -160,43 +183,25 @@ def combat_log_renderer(log: list[dict]) -> str:
             crit = entry.get("critical", False)
             died = entry.get("died", False)
 
-            if blocked:
-                action_phase.append(f"{actor} attacks {target}, but the blow is blocked.")
-            else:
-                text = f"{actor} strikes {target} for {dmg} damage"
-                if crit:
-                    text += " (CRITICAL HIT)"
-                action_phase.append(text + ".")
+            action_phase.append(
+                describe_attack(actor, target, dmg, blocked, crit)
+            )
 
-                if died:
-                    post_action_phase.append(f"{target} is slain.")
+            if died:
+                post_action_phase.append(f"{target} is slain.")
             continue
 
         if action == "skill":
-            skill_id = entry.get("extra", {}).get("skill", "unknown_skill")
-            skill_name = skill_id.replace("_", " ").title()
             dmg = entry.get("damage", 0)
             blocked = entry.get("blocked", False)
             died = entry.get("died", False)
 
-            if blocked:
-                action_phase.append(f"{target} blocks the attack with a defensive stance.")
+            action_phase.append(
+                describe_skill(actor, target, entry.get("extra", {}), dmg, blocked)
+            )
 
-                action_phase.append(
-                    f"{actor} uses {skill_name} on {target}, but it is blocked."
-                )
-            else:
-                text = f"{actor} uses {skill_name}"
-                if target:
-                    text += f" on {target}"
-                if dmg > 0:
-                    text += f" for {dmg} damage"
-                text += "."
-                action_phase.append(text)
-
-                if died:
-                    post_action_phase.append(f"{target} is slain.")
-
+            if died:
+                post_action_phase.append(f"{target} is slain.")
             continue
 
         if action == "defend":

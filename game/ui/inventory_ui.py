@@ -1,16 +1,26 @@
 from game.core.Character_class import Character
-from game.core.Item_class import Items, Item_Type, ITEM_DEFINITIONS
+from game.core.Item_class import Items, Item_Type
+from game.ui.status_ui import describe_status
 
-
+ITEM_TYPE_ORDER = [
+    Item_Type.CONSUMABLE,
+    Item_Type.WEAPON,
+    Item_Type.ARMOR,
+    Item_Type.RING,
+    Item_Type.SCRAP,
+]
 
 def run_inventory_menu(player: Character):
    while True:
+        render_player_status(player)
+
         print("\n--- BACKPACK ---")
         print("1. View equipped items")
         print("2. View inventory")
         print("3. Equip item")
         print("4. Unequip item")
-        print("5. Back")
+        print("5. Use Item")
+        print("6. Back")
 
         choice = input("> ").strip()
 
@@ -23,6 +33,8 @@ def run_inventory_menu(player: Character):
         elif choice == "4":
             _unequip_flow(player)
         elif choice == "5":
+            _use_item_flow(player)
+        elif choice == "6":
             return
         else:
             print("Invalid option.")
@@ -41,21 +53,31 @@ def _show_equipped_items(player: Character) -> None:
         print(f"{idx}. {slot.title()}: {item.name}")
 
 
-
-def _show_inventory_items(player: Character, equippable_only: bool) -> list[tuple[str, Items, int]]:
-    
+def _show_inventory_items(player: Character, equippable_only: bool):
     items = get_inventory_items(player, equippable_only)
+    
     print("\n--- Inventory ---")
 
     if not items:
         print("Inventory is empty.")
         return []
 
+    current_category = None
+    category_counts = {}
+
+    for _, item, count in items:
+        category_counts[item.category] = category_counts.get(item.category, 0) + count
 
     for idx, (_, item, count) in enumerate(items, start=1):
-            print(f"{idx}. {item.name} x{count}  ({item.category.value})")
-            print(f"\t{item.get_tooltip()}\n")
-    
+        if item.category != current_category:
+            current_category = item.category
+            total = category_counts[current_category]
+            print(f"\n--- {current_category.value.title()} ({total}) ---")
+
+        print(f"{idx}. {item.name} x{count}")
+        tooltip = item.get_tooltip()
+        if tooltip:
+            print(f"\t{tooltip}\n")
 
     return items
 
@@ -128,14 +150,13 @@ def get_equipped_items(player: Character) -> list[tuple[str, Items]]:
     return equipped
 
 
-def get_inventory_items(
-        player: Character, equippable_only: bool = False
-        ) -> list[tuple[str, Items, int]]:
+def get_inventory_items(player: Character, equippable_only: bool = False) -> list[tuple[str, Items, int]]:
 
     results = []
 
     for item_id, entry in player.inventory["items"].items():
         item = entry["item"]
+        assert isinstance(item, Items), f"Inventory item for {item_id} is not Items"
         count = entry["count"]
 
         if equippable_only:
@@ -143,5 +164,142 @@ def get_inventory_items(
                 continue
 
         results.append((item_id, item, count))
+    
+     # --- automatic sorting ---
+    def sort_key(entry):
+        _, item, _ = entry
+        type_index = ITEM_TYPE_ORDER.index(item.category)
+        name_key = item.name.lower()
+        return (type_index, name_key)
+
+    results.sort(key=sort_key)
 
     return results
+
+def _use_item_flow(player: Character):
+    items = get_inventory_items(player, equippable_only=False)
+
+    consumables = [
+        (key, item, count)
+        for (key, item, count) in items
+        if item.category == Item_Type.CONSUMABLE
+    ]
+
+    if not consumables:
+        print("\nYou have no usable consumables.")
+        input("Press Enter to continue...")
+        return
+
+    print("\n--- Use Item ---")
+    for idx, (_, item, count) in enumerate(consumables, start=1):
+        print(f"{idx}. {item.name} x{count}")
+        tooltip = item.get_tooltip()
+        if tooltip:
+            print(f"\t{tooltip}")
+    print("c. Cancel")
+
+    choice = input("> ").strip().lower()
+    if choice in ("c", "cancel", "back"):
+        return
+
+    if not choice.isdigit():
+        print("Invalid choice.")
+        return
+
+    idx = int(choice) - 1
+    if idx < 0 or idx >= len(consumables):
+        print("Invalid selection.")
+        return
+
+    inv_key, item, _ = consumables[idx]
+
+    outcome = item.use(player, player)
+
+    _render_inventory_item_outcome(outcome)
+
+
+    if outcome and outcome.get("action") == "use_item":
+        player.remove_item(inv_key, amount=1)
+
+    input("\nPress Enter to continue...")
+
+def _render_inventory_item_outcome(outcome: dict):
+    if not outcome:
+        print("Nothing happens.")
+        return
+
+    action = outcome.get("action")
+    target = outcome.get("target")
+    extra = outcome.get("extra", {})
+
+    if action == "use_item":
+        item_name = extra.get("item", "item")
+        details = extra.get("details", [])
+
+        print(f"\nYou use {item_name}.")
+
+        for d in details:
+            effect = d.get("effect")
+
+            if effect == "heal":
+                print(f"You recover {d['amount']} HP.")
+
+            elif effect == "damage":
+                print(f"It deals {d['amount']} damage.")
+
+            elif effect == "apply_status":
+                status = d["status"].replace("_", " ").title()
+                if d.get("applied"):
+                    print(f"{status} is applied.")
+                else:
+                    print(f"{status} has no effect.")
+
+            elif effect == "remove_status":
+                status = d["status"].replace("_", " ").title()
+                if d.get("success"):
+                    print(f"{status} is cured.")
+                else:
+                    print(f"No {status} to remove.")
+
+    elif action == "use_item_fail":
+        reason = extra.get("reason", "unknown")
+        item = extra.get("item", "item")
+
+        if reason == "not_consumable":
+            print(f"{item} cannot be used outside of combat.")
+        elif reason == "no_effect":
+            print(f"{item} has no effect right now.")
+        else:
+            print("Nothing happens.")
+    
+
+    else:
+        print("Nothing happens.")
+"""
+def render_player_status(player: Character):
+    print("\n--- PLAYER STATUS ---")
+    print(f"HP: {player.hp} / {player.max_hp}")
+
+    if player.statuses:
+        parts = []
+        for s in player.statuses:
+            name = s.id.replace("_", " ").title()
+            turns = s.remaining_turns
+            parts.append(f"{name} ({turns})")
+        print("Statuses:", ", ".join(parts))
+    else:
+        print("Statuses: None")
+
+    print("---------------------")
+"""
+
+def render_player_status(player: Character):
+    print("\n=== PLAYER STATUS ===")
+    print(f"HP: {player.hp}/{player.max_hp}")
+
+    if player.statuses:
+        print("Active effects:")
+        for status in player.statuses:
+            print(f" - {describe_status(status)}")
+    else:
+        print("No active effects.")

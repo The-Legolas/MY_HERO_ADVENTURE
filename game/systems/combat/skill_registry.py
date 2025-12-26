@@ -104,12 +104,12 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "mult": 0.5,
             "can_crit": True,
         },
-        hit_chance=0.9, #0.9
+        hit_chance=1.0, #0.9
         apply_status={
             "id": "poison",
             "duration": 3,
             "magnitude": 2,
-            "chance": 0.8,
+            "chance": 1.0, #0.8
         },
         trigger="on_turn_start",
     ),
@@ -251,7 +251,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         apply_status={
             "id": "weakened",
             "duration": 2,
-            "magnitude": None,
+            "magnitude": None, 
             "chance": 0.5,
         },
         forbid_if_target_has=["weakened"],
@@ -290,7 +290,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         apply_status={
             "id": "poison",
             "duration": 4,
-            "magnitude": 3,
+            "magnitude": 4, #3
             "chance": 1.0,
         },
         locks_actor={

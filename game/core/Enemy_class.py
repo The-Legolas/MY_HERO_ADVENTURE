@@ -57,6 +57,7 @@ class Enemy(Character):
         self.locked_state: dict | None = None
 
         self.intent: dict | None = None
+        self.status_affinities: dict[str, str] = {}
 
 
 
@@ -160,6 +161,11 @@ ENEMY_DEFINITIONS = {
             "acid_splash",
             "corrosive_buildup",
         ],
+        "status_affinities": {
+            "poison": "immune",
+            "bleed": "immune",
+            "acid": "vulnerable",
+        },
         "behavior_tag": Enemy_behavior_tag.COWARDLY
     },
     Enemy_type.ENEMY_WOLF:  {
@@ -244,6 +250,7 @@ def spawn_enemy(enemy_type):
             behavior_tag= template["behavior_tag"]
         )
     enemy_obj.usable_skills = template.get("usable_skills", []).copy()
+    enemy_obj.status_affinities = template.get("status_affinities", {}).copy()
 
     return enemy_obj
 

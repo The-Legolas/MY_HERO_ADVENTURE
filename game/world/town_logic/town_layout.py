@@ -1,16 +1,3 @@
-# Tasks to do
-# 
-# 2. Create a basic game loop so I can playtest the game and add reasonable curve to everything
-
-#
-# Add a details page (show item stats before buying/selling)
-# Add category sorting (Weapons → Potions → Others)
-# Add dynamic merchant dialogue (based on demand, discounts, etc.)
-# Engine simplification
-
-# 3. Homestretch everything which has to be made, is, so now it's just for fun and adding interesting things to the game
-# afterwards
-
 from .town_creation import Town_Actions, TownGraph, Location, Location_Type
 from .town_names import Town_names
 

@@ -100,8 +100,6 @@ class GameEngine:
                 self.run_town_mode()
             elif self.state == "dungeon":
                 self.run_dungeon_mode()
-            elif self.state == "combat":
-                self.run_combat_mode()
 
 
     def run_dungeon_mode(self) -> None:
