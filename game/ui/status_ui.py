@@ -71,13 +71,52 @@ def format_status_icons(entity) -> str:
 
     return " ".join(icons)
 
-def describe_status(status: Status) -> str:
+def describe_status_compact(status: Status) -> str:
+    data = STATUS_REGISTRY.get(status.id, {})
+    icon = data.get("icon", "")
     name = status.id.replace("_", " ").title()
     turns = status.remaining_turns
 
-    data = STATUS_REGISTRY.get(status.id, {})
-    desc = data.get("description")
+    if turns is not None:
+        return f"{icon} {name}: {turns} turns"
+    return f"{icon} {name}"
 
-    if desc:
-        return f"{name}: {desc} ({turns} turns)"
-    return f"{name} ({turns} turns)"
+def sort_statuses_by_priority(statuses: list[Status]) -> list[Status]:
+    return sorted(
+        statuses,
+        key=lambda s: STATUS_REGISTRY.get(s.id, {}).get("priority", 0),
+        reverse=True
+    )
+
+def inspect_entity_statuses(entity):
+    statuses = sort_statuses_by_priority(entity.statuses)
+    if not statuses:
+        print("\nNo active statuses.")
+        input("\nPress Enter to continue...")
+        return
+    while True:
+        print()
+        for i, s in enumerate(statuses, start=1):
+            print(f"{i}. {s.id.replace('_', ' ').title()}")
+        print("c. Cancel")
+
+        choice = input("> ").strip().lower()
+
+        if choice in ("c", "cancel", "back"):
+            return
+
+        if not choice.isdigit():
+            continue
+
+        idx = int(choice) - 1
+        if not (0 <= idx < len(statuses)):
+            continue
+
+        status = statuses[idx]
+
+        print()
+        for line in render_status_tooltip(status, entity):
+            print(line)
+
+        print("-" * 30)
+        input("\nPress Enter to continue...")

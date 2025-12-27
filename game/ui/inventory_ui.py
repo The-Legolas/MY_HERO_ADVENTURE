@@ -1,6 +1,7 @@
 from game.core.Character_class import Character
 from game.core.Item_class import Items, Item_Type
-from game.ui.status_ui import describe_status
+from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
+from game.systems.combat.status_registry import STATUS_REGISTRY
 
 ITEM_TYPE_ORDER = [
     Item_Type.CONSUMABLE,
@@ -17,10 +18,11 @@ def run_inventory_menu(player: Character):
         print("\n--- BACKPACK ---")
         print("1. View equipped items")
         print("2. View inventory")
-        print("3. Equip item")
-        print("4. Unequip item")
-        print("5. Use Item")
-        print("6. Back")
+        print("3. Inspect status")
+        print("4. Equip item")
+        print("5. Unequip item")
+        print("6. Use Item")
+        print("7. Back")
 
         choice = input("> ").strip()
 
@@ -29,12 +31,14 @@ def run_inventory_menu(player: Character):
         elif choice == "2":
             _show_inventory_items(player, equippable_only=False)
         elif choice == "3":
-            _equip_flow(player)
+            _inspect_player_statuses(player)
         elif choice == "4":
-            _unequip_flow(player)
+            _equip_flow(player)
         elif choice == "5":
-            _use_item_flow(player)
+            _unequip_flow(player)
         elif choice == "6":
+            _use_item_flow(player)
+        elif choice == "7":
             return
         else:
             print("Invalid option.")
@@ -196,6 +200,7 @@ def _use_item_flow(player: Character):
         tooltip = item.get_tooltip()
         if tooltip:
             print(f"\t{tooltip}")
+        print() #spacing
     print("c. Cancel")
 
     choice = input("> ").strip().lower()
@@ -236,7 +241,7 @@ def _render_inventory_item_outcome(outcome: dict):
         item_name = extra.get("item", "item")
         details = extra.get("details", [])
 
-        print(f"\nYou use {item_name}.")
+        print(f"\nYou used {item_name}.")
 
         for d in details:
             effect = d.get("effect")
@@ -250,14 +255,14 @@ def _render_inventory_item_outcome(outcome: dict):
             elif effect == "apply_status":
                 status = d["status"].replace("_", " ").title()
                 if d.get("applied"):
-                    print(f"{status} is applied.")
+                    print(f"{status} is now applied.")
                 else:
                     print(f"{status} has no effect.")
 
             elif effect == "remove_status":
                 status = d["status"].replace("_", " ").title()
                 if d.get("success"):
-                    print(f"{status} is cured.")
+                    print(f"{status} is now cured.")
                 else:
                     print(f"No {status} to remove.")
 
@@ -275,23 +280,6 @@ def _render_inventory_item_outcome(outcome: dict):
 
     else:
         print("Nothing happens.")
-"""
-def render_player_status(player: Character):
-    print("\n--- PLAYER STATUS ---")
-    print(f"HP: {player.hp} / {player.max_hp}")
-
-    if player.statuses:
-        parts = []
-        for s in player.statuses:
-            name = s.id.replace("_", " ").title()
-            turns = s.remaining_turns
-            parts.append(f"{name} ({turns})")
-        print("Statuses:", ", ".join(parts))
-    else:
-        print("Statuses: None")
-
-    print("---------------------")
-"""
 
 def render_player_status(player: Character):
     print("\n=== PLAYER STATUS ===")
@@ -299,7 +287,16 @@ def render_player_status(player: Character):
 
     if player.statuses:
         print("Active effects:")
-        for status in player.statuses:
-            print(f" - {describe_status(status)}")
+        for status in sort_statuses_by_priority(player.statuses):
+            print(f" - {describe_status_compact(status)}")
     else:
         print("No active effects.")
+
+def _inspect_player_statuses(player: Character):
+    if not player.statuses:
+        print("\nNo active statuses.")
+        input("\nPress Enter to continue...")
+        return
+    while True:
+        print("\n--- Your Status Effects ---")
+        inspect_entity_statuses(player)

@@ -44,10 +44,12 @@ note 4: add burn to flame_breath skill, add bleed to rending_bite, add armor_dow
 note 5: add Skill priority overrides per enemy type, Multi-enemy coordination behaviors
 note 6: in the code base search for #fix to find things to remove before final game release
 note 7: Gold aquired from monters aren't corectly put into the player inventory
-note 8: Add category sorting (Weapons → Potions → Others)
-note 9: Add dynamic merchant dialogue (based on demand, discounts, etc.)
+note 8: Add dynamic merchant dialogue (based on demand, discounts, etc.)
+note 9: No item use text in battle report and combat rendere
+note 10: No 'victorious!' screen at the end of combat
 
 # Items & Equipment:  done but maybe the supposed map mechanic
+
 
 """
 
@@ -121,59 +123,3 @@ def pick_character_and_name() -> Character:
 
 if __name__ == "__main__":
     main()
-
-"""
---- Use Item ---
-1. Antivenom Vial x1
-        Use: Remove Status poison
-2. Elixir of Battle Focus x1
-        Use: Applies status effects.
-  • Strength Up for 3 turns
-3. Explosive Potion x1
-        Use: Damage 25
-4. Grand Healing Potion x1
-        Use: Heal 150
-5. Lesser Fortitude Draught x1
-        Use: Applies status effects.
-  • Defending for 2 turns
-6. Medium Healing Potion x1
-        Use: Heal 70
-7. Poison Flask x1
-        Use: Applies status effects.
-  • Poison for 3 turns
-8. Regeneration Draught x1
-9. Sluggish Brew x1
-        Use: Applies status effects.
-  • Weakened for 2 turns
-10. Strength Elixir x1
-11. Volatile Concoction x1
-        Use: Applies status effects.
-  • Strength Up for 2 turns
-Use: Damage 5
-
-=== PLAYER STATUS ===
-HP: 59/84
-Active effects:
- - Strength Up: Increases outgoing damage. (3 turns)
- - Defending: Raises defense and blocks weak attacks for one turn. (2 turns)
- - Poison: Deals damage at the start of each turn. (3 turns)
- - Regen: Restores health at the start of each turn. (3 turns)
- - Weakened: Reduces outgoing damage. (2 turns)
- - Strength Up: Increases outgoing damage. (3 turns)
- - Strength Up: Increases outgoing damage. (2 turns)
-
- 
- Inspect:
-1. Enemies
-2. y's statuses
-c. Cancel
-> 2
-
-1. Strength Up
-2. Defending
-3. Poison
-4. Regen
-5. Weakened
-6. Strength Up
-7. Strength Up
-"""

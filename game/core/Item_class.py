@@ -2,7 +2,6 @@ from __future__ import annotations
 from enum import Enum
 import random
 from game.core.Status import Status
-from game.ui.status_ui import describe_status
 
 
 
@@ -61,64 +60,55 @@ class Items():
                 name = k.replace("_", " ").replace("resist", "Resist").title()
                 lines.append(f"{name}: +{int(v * 100)}%")
 
+        
+        # CONSUMABLE EFFECTS
+        if not isinstance(self.effect, dict):
+            return "\n".join(lines)
+        
+        summary_parts = []
+        detail_lines = []
 
-        if isinstance(self.effect, dict):
-            if "apply_status" in self.effect:
-                lines.append("Use: Applies status effects.")
+        # Status application
+        status_data = self.effect.get("apply_status")
+        if status_data:
+            status_name = status_data["id"].replace("_", " ").title()
+            duration = status_data.get("duration")
+            summary_parts.append(f"applies {status_name.lower()}")
 
-            for effect, amount in self.effect.items():
-                if effect == "apply_status":
-                    status_id = amount.get("id", "")
-                    duration = amount.get("duration")
-                    status_name = status_id.replace("_", " ").title()
+            if duration:
+                detail_lines.append(f"\t• {status_name} for {duration} turns")
+            else:
+                detail_lines.append(f"\t• {status_name}")
 
-                    if duration:
-                        lines.append(f"  • {status_name} for {duration} turns")
-                    else:
-                        lines.append(f"  • {status_name}")
+        # Healing
+        if "heal" in self.effect:
+            amount = self.effect["heal"]
+            summary_parts.append("restores health")
+            detail_lines.append(f"\t• Heals {amount} HP")
 
-                else:
-                    verb = effect.replace("_", " ").title()
-                    lines.append(f"Use: {verb} {amount}")
+        # Damage
+        if "damage" in self.effect:
+            amount = self.effect["damage"]
+            summary_parts.append("deals damage")
+            detail_lines.append(f"\t• Deals {amount} damage")
 
+        # Remove status
+        if "remove_status" in self.effect:
+            status = self.effect["remove_status"].replace("_", " ").title()
+            summary_parts.append(f"cures {status.lower()}")
+            detail_lines.append(f"\t• Removes {status}")
 
+        # ─── RENDER ────────────────────────────────────────
+        if summary_parts:
+            summary = " and ".join(summary_parts)
+            lines.append(f"Use: {summary.capitalize()}")
 
-        elif isinstance(self.effect, list):
-            for entry in self.effect:
-                trigger = entry.get("trigger")
-                chance = entry.get("chance", 1.0)
-                status = entry.get("status")
+            # Only show bullets if more than one effect
+            if detail_lines:
+                for line in detail_lines:
+                    lines.append(f"  {line}")
 
-                if not status:
-                    continue
-                
-                fake_status = Status(
-                    id=status["id"],
-                    remaining_turns=status.get("duration", 0),
-                    magnitude=status.get("magnitude"),
-                    source=None,
-                )
-                effect_text = describe_status(fake_status)
-                duration = 1111 #fix
-
-                if trigger == "on_hit":
-                    lines.append(
-                        f"\tOn hit: {int(chance * 100)}% chance to apply "
-                        f"{effect_text} for {duration} turns"
-                    )
-
-                elif trigger == "on_turn":
-                    lines.append(
-                        f"Each turn: {int(chance * 100)}% chance to gain "
-                        f"{effect_text} for for {duration} turns"
-                    )
-
-                elif trigger == "on_equip":
-                    lines.append(
-                        f"On equip: gain {effect_text}"
-                    )
-
-        return "\n".join(lines) if lines else ""
+        return "\n".join(lines)
 
 
 
@@ -291,8 +281,8 @@ def apply_remove_status(target, status_id):
     return before != after
 
 EFFECT_VERBS = {
-    "heal": "healed",
-    "damage": "damaged",
+    "heal": "heals",
+    "damage": "damages",
 }
 
 EFFECT_ACTIONS = {

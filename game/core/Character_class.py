@@ -361,8 +361,12 @@ class Character():
 
     def apply_status(self, new_status: 'Status', combat_log: list[dict] | None = None) -> bool:
         data = STATUS_REGISTRY.get(new_status.id, {})
+        stacking = data.get("stacking", "replace")
+        max_stacks = data.get("max_stacks", 1)
+
         affinity = getattr(self, "status_affinities", {}).get(new_status.id, "normal")
 
+        # IMMUNITY
         if affinity == "immune":
             if combat_log is not None:
                 combat_log.append({
@@ -376,6 +380,7 @@ class Character():
                 "status": new_status.id,
             }
         
+        # AFFINITY MODIFIERS
         chance = data.get("chance", 1.0)
         duration = new_status.remaining_turns
 
@@ -403,6 +408,7 @@ class Character():
 
         new_status.remaining_turns = duration
 
+        # RESISTANCE ROLL
         resist = self.get_status_resistance(new_status.id)
         if resist > 0 and random.random() < resist:
             if combat_log is not None:
@@ -419,45 +425,49 @@ class Character():
                 "status": new_status.id,
             }
 
-        stacking = data.get("stacking", "replace")
-        max_stacks = data.get("max_stacks", 1)
-
-        existing = [s for s in self.statuses if s.id == new_status.id]
+        # FIND EXISTING STATUS
+        current = next((s for s in self.statuses if s.id == new_status.id), None)
         
         applied = False
 
-        if not existing:
+        # STACKING LOGIC
+        if not current:
             new_status.just_applied = True
             self.statuses.append(new_status)
             applied = True
-        else:
-            current = existing[0]
 
-            if stacking == "refresh":
+        elif stacking == "replace":
+            self.statuses.remove(current)
+            new_status.just_applied = True
+            self.statuses.append(new_status)
+            applied = True
+
+        elif stacking == "refresh":
+            new_mag = new_status.magnitude or 0
+            cur_mag = current.magnitude or 0
+
+            if new_mag > cur_mag:
+                self.statuses.remove(current)
+                new_status.just_applied = True
+                self.statuses.append(new_status)
+                applied = True
+
+            elif new_mag == cur_mag:
                 current.remaining_turns = max(
                     current.remaining_turns,
                     new_status.remaining_turns
                 )
                 applied = True
 
-            elif stacking == "replace":
-                new_status.just_applied = True
-                self.statuses.remove(current)
-                self.statuses.append(new_status)
-                applied = True
-
-            elif stacking == "stack":
-                if len(existing) < max_stacks:
-                    new_status.just_applied = True
-                    self.statuses.append(new_status)
-                    applied = True
-                else:
-                    current.remaining_turns = max(
-                        current.remaining_turns,
-                        new_status.remaining_turns
-                    )
-                    applied = True
+        elif stacking == "stack":
+            added_stacks = new_status.remaining_turns
+            current.remaining_turns = min(
+                current.remaining_turns + added_stacks,
+                max_stacks
+            )
+            applied = True
         
+        # LOG APPLICATION
         if applied and combat_log is not None:
             combat_log.append({
                 "event": "status_applied",
@@ -466,23 +476,14 @@ class Character():
                 "source": new_status.source
             })
         
-        data = STATUS_REGISTRY.get(new_status.id, {})
 
-        if (applied and data.get("interrupts")
-            and hasattr(self, "locked_state")
-            and self.locked_state
-        ):
-            # Determine resistance
+        # INTERRUPTS
+        if applied and data.get("interrupts") and hasattr(self, "locked_state") and self.locked_state:
             rarity = getattr(self, "rarity", None)
-            resist_chance = 0.0
-
-            if rarity is not None:
-                resist_chance = INTERRUPT_RESISTANCE_BY_RARITY.get(rarity, 0.0)
-
+            resist_chance = INTERRUPT_RESISTANCE_BY_RARITY.get(rarity, 0.0) if rarity else 0.0
             interrupted_skill = self.locked_state.get("skill_id")
 
             if random.random() < resist_chance:
-                # Interrupt resisted
                 if combat_log is not None:
                     combat_log.append({
                         "event": "interrupt_resisted",
@@ -491,9 +492,7 @@ class Character():
                         "skill": interrupted_skill,
                     })
             else:
-                # Interrupt succeeds
                 self.locked_state = None
-
                 if combat_log is not None:
                     combat_log.append({
                         "event": "interrupt",
@@ -505,7 +504,7 @@ class Character():
         return {
             "applied": True,
             "status": new_status.id,
-            "affinity": affinity,  # normal / resistant / vulnerable
+            "affinity": affinity,
         }
         
     def get_status_resistance(self, status_id: str) -> float:

@@ -8,7 +8,7 @@ from game.ui.status_ui import format_status_icons
 import random
 from typing import Optional
 from game.core.Status import Status
-from game.ui.status_ui import render_status_tooltip
+from game.ui.status_ui import render_status_tooltip, inspect_entity_statuses
 from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.systems.combat.skill_registry import SKILL_REGISTRY, Skill
 from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait
@@ -319,18 +319,21 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                 enemies = combat.alive_enemies()
                 if not enemies:
                     print("There is nothing to inspect.")
-                    input()
+                    input("\nPress Enter to continue...")
                     continue
-                
-                print()
-                for i, enemy in enumerate(enemies, start=1):
-                    print(f"{i}. {enemy.name}")
-                print("c. Cancel")
+                while True:       
+                    print()
+                    for i, enemy in enumerate(enemies, start=1):
+                        print(f"{i}. {enemy.name}")
+                    print("c. Cancel")
 
-                choice = input("> ").strip().lower()
-                if choice in ("c", "back", "cancel"):
-                    continue
-                try:
+                    choice = input("> ").strip().lower()
+                    if choice in ("c", "back", "cancel"):
+                        break
+
+                    if not choice.isdigit():
+                        break
+                
                     idx = int(choice) - 1
                     if not (0 <= idx < len(enemies)):
                         continue
@@ -352,10 +355,6 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                         continue
 
                     print("Statuses:")
-                    for s in enemy.statuses:
-                        icon = STATUS_REGISTRY.get(s.id, {}).get("icon", "?")
-                        print(f" - {icon} {s.id.replace('_', ' ').title()} ({s.remaining_turns})")
-
                     print("\nInspect enemy statuses?")
                     print("1. Yes")
                     print("2. Back")
@@ -364,19 +363,8 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                     if sub_choice != "1":
                         continue
 
-                    print()
-                    tooltip_lines = render_status_tooltip(s, enemy)
+                    inspect_entity_statuses(enemy)
 
-                    for line in tooltip_lines:
-                        print(line)
-                        
-                    print("-" * 30)
-
-                    input("\nPress Enter to continue...")
-
-                except ValueError:
-                    pass
-                continue
 
             if sub in ("2", "statuses", "status"):
 
@@ -386,30 +374,7 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                     continue
 
                 print()
-                for i, s in enumerate(actor.statuses, start=1):
-                    print(f"{i}. {s.id.replace('_', ' ').title()}")
-                print("c. Cancel")
-
-                choice = input("> ").strip().lower()
-                if choice in ("c", "back", "cancel"):
-                    continue
-
-                try:
-                    idx = int(choice) - 1
-                    if 0 <= idx < len(actor.statuses):
-                        status = actor.statuses[idx]
-                        print()
-                        tooltip_lines = render_status_tooltip(status, actor)
-
-                        for line in tooltip_lines:
-                            print(line)
-                            
-                        print("-" * 30)
-
-                        input("\nPress Enter to continue...")
-                except ValueError:
-                    pass
-
+                inspect_entity_statuses(actor)
                 continue
 
         if action == "flee":
