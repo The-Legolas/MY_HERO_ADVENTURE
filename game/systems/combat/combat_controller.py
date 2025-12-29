@@ -10,7 +10,8 @@ from typing import Optional
 from game.core.Status import Status
 from game.ui.status_ui import render_status_tooltip, inspect_entity_statuses
 from game.systems.combat.status_registry import STATUS_REGISTRY
-from game.systems.combat.skill_registry import SKILL_REGISTRY, Skill
+from game.core.Skill_class import Skill
+from game.core.class_progression import SKILL_REGISTRY
 from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait
 
 class Combat_State():
@@ -111,21 +112,28 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
             if not combat_state.alive_enemies():
                 killed = [enemy for enemy in enemy_list if not enemy.is_alive()]
                 total_loot = {"gold": 0, "items": []}
+                total_xp = 0
                 for dead in killed:
                     loot = roll_loot(dead)
                     total_loot["gold"] += loot.get("gold", 0)
+                    total_xp = getattr(dead, "xp_reward", 0)
 
-                    xp_gain = 0
                     for item in loot.get("items", []):
                         total_loot["items"].append(item)
                         player.add_item(item)
-                        xp_gain += getattr(dead, "xp_reward", 0)
 
-                    player.xp = getattr(player, "xp", 0) + xp_gain
+                if total_xp > 0:
+                    level_ups = player.gain_xp(total_xp)
+
+                for level_data in level_ups:
+                    player.render_level_up_screen(level_data)
+
+                if total_loot["gold"] > 0:
+                    player.inventory["gold"] += total_loot["gold"]
                 
-                combat_state.log.append({"event": "victory", "loot": total_loot})
+                combat_state.log.append({"event": "victory", "loot": total_loot, "xp": total_xp})
                 combat_state.is_running = False
-                return {"result": "victory", "log": combat_state.log, "loot": total_loot}
+                return {"result": "victory", "log": combat_state.log, "loot": total_loot, "xp": total_xp}
 
 
             if not actor.is_alive():
@@ -239,17 +247,14 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
             choice = input("> ").strip().lower()
 
+            if not choice.isdigit():
+                continue
+
             idx = int(choice) - 1
             if idx < 0 or idx >= len(skills):
                 print("Invalid selection.")
                 continue
 
-            if choice in ("c", "back", "cancel"):
-                continue
-
-            if not choice.isdigit():
-                print("Invalid choice.")
-                continue
 
             skill_id = skills[idx]
             skill = SKILL_REGISTRY.get(skill_id)
@@ -407,8 +412,32 @@ def render_combat_outcome(outcome: dict):
     elif action == "defend":
         print(f"{actor} braces for impact, raising their defenses.")
 
-    elif action == "item":
-        print(f"{actor} uses an item on {target}.")
+    elif action == "use_item":
+        item = extra.get("item", "item")
+        details = extra.get("details", [])
+
+        print(f"{actor} uses {item}.")
+
+        for d in details:
+            effect = d.get("effect")
+
+            if effect == "heal":
+                print(f"{target} recovers {d['amount']} HP.")
+            elif effect == "damage":
+                print(f"{target} takes {d['amount']} damage.")
+            elif effect == "apply_status":
+                status = d["status"].replace("_", " ").title()
+                if d.get("applied"):
+                    print(f"{target} is affected by {status}.")
+                else:
+                    print(f"{target} is not affected by {status}.")
+            elif effect == "remove_status":
+                status = d["status"].replace("_", " ").title()
+                if d.get("success"):
+                    print(f"{status} is removed.")
+                else:
+                    print(f"{target} had no {status}.")
+
 
     elif action == "wait":
         print(f"{actor} {describe_wait(extra)}.")

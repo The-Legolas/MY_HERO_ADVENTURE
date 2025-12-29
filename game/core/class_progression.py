@@ -1,38 +1,6 @@
-from typing import Literal
-
-SkillTarget = Literal[
-    "self",
-    "enemy",
-    "all_enemies",
-    "random_enemy"
-]
+from game.core.Skill_class import Skill
 
 
-class Skill:
-    def __init__(self, id: str, name: str, description: str, target: SkillTarget, damage: dict | None = None,
-                 hit_chance: float = 1.0, apply_status: dict | None = None,
-                 trigger: Literal["immediate", "on_turn_start"] = "immediate", cost: dict | None = None,
-                 forbid_if_target_has: list[str] = None, cooldown_turns: int = None, locks_actor: dict[str, str|int] = None,
-                 allowed_while_locked: bool = None, requires_target_alive: bool = None, intent_hint: str = None):
-        
-        self.id = id
-        self.name = name
-        self.description = description
-        self.target = target
-
-        self.damage = damage
-        self.hit_chance = hit_chance
-
-        self.apply_status = apply_status
-        self.trigger = trigger
-        self.cost = cost
-
-        self.forbid_if_target_has = forbid_if_target_has or []
-        self.cooldown_turns = cooldown_turns
-        self.locks_actor = locks_actor
-        self.allowed_while_locked = allowed_while_locked if allowed_while_locked is not None else False
-        self.requires_target_alive = requires_target_alive if requires_target_alive is not None else True
-        self.intent_hint = intent_hint if intent_hint is not None else None
 """
 dmg types
 damage = {
@@ -55,7 +23,6 @@ damage = {
 }
 
 """
-
 SKILL_REGISTRY: dict[str, Skill] = {
     # PLAYER SKILLS
     "shield_bash": Skill(
@@ -433,3 +400,80 @@ SKILL_REGISTRY: dict[str, Skill] = {
     ),
 }
 
+
+
+CLASS_PROGRESSION = {
+    "warrior": {
+        "level_cap": 10,
+        "xp_curve": "linear",
+        "xp_per_level": [
+            0,    # level 1
+            100,  # level 2
+            200,
+            300,
+            400,
+            500,
+            600,
+            700,
+            800,
+            900,  # level 10
+        ],
+        "level_rewards": {
+            2: {
+                "stats": {"hp": +10, "damage": +2},
+            },
+            3: {
+                "stats": {"hp": +10, "damage": +2},
+                "skills": ["shield_bash"],
+            },
+            4: {
+                "stats": {"defence": +1},
+                "passives": ["stun_mastery_1"],
+            },
+            6: {
+                "passives": ["stun_mastery_2"],
+            },
+            6: {
+                "skills": ["war_cry"],
+            },
+        },
+    },
+
+    "wizard": {
+        "level_cap": 10,
+        "xp_curve": "exponential",
+        "xp_per_level": [
+            0,
+            150,
+            350,
+            700,
+            1300,
+            2200,
+            3600,
+            5600,
+            8300,
+            12000,
+        ],
+        "level_rewards": {
+            2: {"skills": ["arcane_bolt"]},
+            4: {"skills": ["toxic_cloud"]},
+            5: {"passives": ["potent_poison"]},
+        },
+    },
+}
+
+PASSIVE_REGISTRY = {
+    "stun_mastery": {
+        "description": "Increases stun application chance.",
+        "modifiers": {
+            "stun_chance_bonus": 0.15
+        }
+    },
+
+    "poison_expertise": {
+        "description": "Poison effects last longer.",
+        "modifiers": {
+            "poison_duration_bonus": 1
+        }
+    },
+}

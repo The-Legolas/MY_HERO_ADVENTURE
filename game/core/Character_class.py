@@ -4,17 +4,37 @@ from game.systems.combat.status_evaluator import evaluate_status_magnitude
 from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.systems.combat.damage_resolver import resolve_damage
 from game.core.Status import INTERRUPT_RESISTANCE_BY_RARITY
+from game.core.class_progression import CLASS_PROGRESSION, PASSIVE_REGISTRY, SKILL_REGISTRY
 
 from game.core.Status import Status
+
+STAT_VALUE_GETTERS = {
+    "hp": lambda c: c.max_hp,
+    "damage": lambda c: c.damage,
+    "defence": lambda c: c.defence,
+}
+
 
 class Character():
     def __init__(self, name: str, hp: int, damage: int, defence: int, starting_items: dict[str, int] | None = None, gold: int = 0):
         self.name = name
+        self.base_hp = hp
         self.hp = hp
-        self.max_hp = self.hp
-        self.damage = damage
-        self.defence = defence
+
+        self.base_damage = damage
+        self.base_defence = defence
+
+        self.level = 1
         self.xp = 0
+        self.class_id:str | None = None
+        self.level_bonuses: dict[str, int] = {
+            "hp": 0,
+            "damage": 0,
+            "defence": 0,
+        }
+
+        self.passives: set[str] = set()
+        self.skills: dict[str, dict] = {}
 
         self.statuses: list['Status'] = []
         self.known_skills: set[str] = set()
@@ -54,7 +74,21 @@ class Character():
                     "item": item,
                     "count": count
                 }
-    
+    @property
+    def max_hp(self) -> int:
+        return self.base_hp + self.level_bonuses.get("hp", 0)
+
+
+    @property
+    def damage(self) -> int:
+        return self.base_damage + self.level_bonuses.get("damage", 0)
+
+
+    @property
+    def defence(self) -> int:
+        return self.base_defence + self.level_bonuses.get("defence", 0)
+
+
     def add_item(self, item: Items, amount:int = 1) -> None:
         if item.name not in self.inventory["items"]:
             self.inventory["items"][item.name] = {
@@ -85,27 +119,22 @@ class Character():
         else:
             del items[item_id]
 
-    def use_item(self, item: Items, target: 'Character') -> None:
-        if isinstance(item, str):
-            entry = self.inventory["items"].get(item)
-            if not entry:
-                return make_outcome(self.name, "use_item_fail", getattr(target, "name", None),
-                                    extra={"reason": "item_key_missing", "item_key": item})
-            item_obj = entry["item"]
-        else:
-            item_obj = item
+    def use_item(self, item_id: str, target: 'Character') -> None:
+        entry = self.inventory["items"].get(item_id)
+        if not entry:
+            return make_outcome(
+                self.name,
+                "use_item_fail",
+                getattr(target, "name", None),
+                extra={"reason": "missing_item", "item": item_id}
+            )
 
-        outcome = item_obj.use(self, target)
+        item = entry["item"]
+        outcome = item.use(self, target)
 
-        inventory = self.inventory["items"]
-        if item_obj.name in inventory:
-            entry = inventory[item_obj.name]
-            if item_obj.stackable:
-                entry["count"] -= 1
-                if entry["count"] <= 0:
-                    del inventory[item_obj.name]
-            else:
-                del inventory[item_obj.name]
+        # Consume item only on success
+        if outcome and outcome.get("action") == "use_item":
+            self.remove_item(item_id, amount=1)
 
         return outcome
         
@@ -193,7 +222,7 @@ class Character():
         self.hp = max(0, self.hp - int(damage))
     
     def heal(self, amount: int) -> None:
-        self.hp = min(self.max_hp, self.hp + int(amount))
+        self.hp = min(self.max_hp, self.hp + amount)
 
 
     def is_alive(self) -> bool:
@@ -235,13 +264,158 @@ class Character():
         for status in statuses_sorted:
             if STATUS_REGISTRY.get(status.id, {}).get("prevents_action"):
                 return False
-        return True
+        return True    
 
-
+    def gain_xp(self, amount: int) -> list[dict]:
+        if self.class_id is None:
+            return []
     
+        progression = CLASS_PROGRESSION[self.class_id]
+        xp_table = progression["xp_per_level"]
+        level_cap = progression["level_cap"]
 
-    def level_up(self) -> None:
-        pass
+        self.xp += amount
+        level_ups: list[dict] = []
+        
+        while self.level < level_cap:
+            next_level = self.level + 1
+
+            if next_level >= len(xp_table):
+                break
+
+            if self.xp < xp_table[next_level]:
+                break
+
+            self.level = next_level
+            reward_data = self.apply_level_rewards(self.level)
+
+            if reward_data:
+                level_ups.append(reward_data)
+
+        return level_ups
+        
+    def apply_level_rewards(self, level: int) -> dict | None:
+        progression = CLASS_PROGRESSION[self.class_id]
+        rewards = progression["level_rewards"].get(level)
+
+        if not rewards:
+            return
+        
+        result = {
+            "level": level,
+            "stats": {},
+            "skills": [],
+            "passives": [],
+        }
+        
+        for stat, value in rewards.get("stats", {}).items():
+            if stat not in self.level_bonuses:
+                raise ValueError(f"Unknown stat bonus: {stat}")
+            
+            getter = STAT_VALUE_GETTERS[stat]
+
+            old_value = getter(self)
+            self.level_bonuses[stat] += value
+            new_value = getter(self)
+
+            if stat == "hp":
+                self.hp = new_value
+
+
+            result["stats"][stat] = {
+                "old": old_value,
+                "new": new_value,
+            }
+
+        for skill_id in rewards.get("skills", []):
+            self.unlock_skill(skill_id)
+            result["skills"].append(skill_id)
+
+        for passive_id in rewards.get("passives", []):
+            self.add_passive(passive_id)
+            result["passives"].append(passive_id)
+
+        return result
+
+    def get_passive_modifier(self, key: str) -> float | int:
+        total = 0
+        for passive_id in self.passives:
+            data = PASSIVE_REGISTRY.get(passive_id, {})
+            total += data.get("modifiers", {}).get(key, 0)
+        return total
+    
+    def unlock_skill(self, skill_id: str) -> None:
+        if skill_id in self.known_skills:
+            return
+
+        self.known_skills.add(skill_id)
+        self.usable_skills.append(skill_id)
+
+    def add_passive(self, passive_id: str) -> None:
+        self.passives.add(passive_id)
+
+    def reset_progression(self) -> None:
+        self.level = 1
+        self.xp = 0
+
+        self.level_bonuses = {
+            "hp": 0,
+            "damage": 0,
+            "defence": 0,
+        }
+
+        self.passives.clear()
+        self.known_skills.clear()
+        self.usable_skills.clear()
+
+        self.apply_level_rewards(1)
+
+        self.hp = min(self.hp, self.max_hp)
+
+    def set_level(self, target_level: int) -> None:
+        progression = CLASS_PROGRESSION[self.class_id]
+        level_cap = progression["level_cap"]
+
+        target_level = max(1, min(target_level, level_cap))
+
+        self.reset_progression()
+
+        for lvl in range(2, target_level + 1):
+            self.level = lvl
+            self.apply_level_rewards(lvl)
+
+        self.xp = progression["xp_per_level"][self.level]
+
+        self.hp = min(self.hp, self.max_hp)
+
+    def render_level_up_screen(self, level_data: dict) -> None:
+        print("\n" + "=" * 30)
+        print(f"LEVEL UP!  →  Level {level_data['level']}")
+        print("=" * 30)
+
+        if level_data["stats"]:
+            print("\nStats increased:")
+            for stat, values in level_data["stats"].items():
+                name = stat.replace("_", " ").title()
+                print(f" - {name}: {values['old']} → {values['new']}")
+
+        if level_data["skills"]:
+            print("\nNew skills unlocked:")
+            for skill_id in level_data["skills"]:
+                skill = SKILL_REGISTRY.get(skill_id)
+                name = skill.name if skill else skill_id
+                print(f" - {name}")
+
+        if level_data["passives"]:
+            print("\nNew passives gained:")
+            for passive_id in level_data["passives"]:
+                passive = PASSIVE_REGISTRY.get(passive_id, {})
+                desc = passive.get("description", "")
+                print(f" - {passive_id.replace('_', ' ').title()}")
+                if desc:
+                    print(f"   {desc}")
+
+        input("\nPress Enter to continue...")
 
 
     def remove_status(self, status_id: str) -> None:

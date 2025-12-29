@@ -12,6 +12,7 @@ from game.world.Dungeon_room_code import Room, Room_Types
 from game.world.dungeon_manager import Dungeon_Manager
 from game.systems.combat.combat_controller import start_encounter
 from game.systems.combat.combat_log_viewer import combat_log_renderer
+from game.ui.combat_ui import render_victory_summary
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -133,8 +134,12 @@ class GameEngine:
                 self.last_combat_result = result.get("result")
 
                 if result["result"] == "victory":
-                    print("\nYou survived the fight.")
-                    print("1. View battle report")
+                    victory_entry = next(e for e in self.last_combat_log if e.get("event") == "victory")
+
+                    for line in render_victory_summary(victory_entry):
+                      print(line)
+
+                    print("\n1. View battle report")
                     print("2. Continue")
 
                     room.cleared = True
@@ -305,25 +310,6 @@ class GameEngine:
         else:
             print("2. Inspect")
             print("3. Leave Dungeon")
-
-    def show_move_menu(self, dungeon: Dungeon_Manager) -> dict[int, str]:
-        moves = dungeon.get_available_moves()
-
-        print("\n--- Move ---")
-        print("\nWhere do you want to go?")
-
-        menu_map = {}
-        idx = 1
-
-        for direction in ("north", "east", "south", "west"):
-            if direction in moves:
-                print(f"{idx}. Go {direction.title()}")
-                menu_map[idx] = direction
-                idx += 1
-
-        print(f"{idx}. Cancel")
-
-        return menu_map
 
     def run_town_mode(self) -> None:
         game_town = self.world.get_town()
@@ -545,17 +531,24 @@ class GameEngine:
             print("\n=== DEBUG MENU ===")
             print("1. Add Gold")
             print("2. Add Item")
-            print("3. Exit Debug Menu")
+            print("3. Add XP")
+            print("4. Set Level")
+            print("c. Exit Debug Menu")
 
             choice = input("> ").strip()
 
+            if not choice.isdigit():
+                print("\nExiting debug menu.")
+                return
+
             if choice == "1":
-                amount = input("\nHow much gold to add? ")
+                amount = input("\nHow much gold to add? ").strip()
                 if amount.isdigit():
-                    self.player.inventory["gold"] += int(amount)
-                    print(f"\nAdded {amount} gold.")
+                    amt = int(amount)
+                    self.player.inventory["gold"] += int(amt)
+                    print(f"\nAdded {amt} gold.")
                 else:
-                    print("\nInvalid amount.")
+                    print("\nInvalid input.")
 
             elif choice == "2":
                 item_id = input("\nEnter item ID to give player: ").strip()
@@ -563,11 +556,31 @@ class GameEngine:
                     item_obj = spawn_item(item_id)
                     self.player.add_item(item_obj)
                     print(f"\nGave player: {item_obj.name}")
-                except:
+                except Exception:
                     print("\nInvalid item ID.")
 
             elif choice == "3":
-                print("\nExiting debug menu.")
+                amount = input("\nHow much xp to add? ").strip()
+                if amount.isdigit():
+                    amt = int(amount)
+                    level_ups = self.player.gain_xp(amt)
+
+                    for data in level_ups:
+                        self.player.render_level_up_screen(data)
+
+                    print(f"\nAdded {amt} XP.")
+                else:
+                    print("\nInvalid input.")
+                return
+            
+            elif choice == "4":
+                amount = input("\nSet Level to: ").strip()
+                if amount.isdigit():
+                    lvl = int(amount)
+                    self.player.set_level(lvl)
+                    print(f"\nLevel is set to: {self.player.level}.")
+                else:
+                    print("\nInvalid input.")
                 return
 
             else:

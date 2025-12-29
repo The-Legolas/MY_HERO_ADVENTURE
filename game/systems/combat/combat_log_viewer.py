@@ -1,4 +1,5 @@
 from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait, format_skill_name
+from game.ui.combat_ui import render_victory_summary
 
 def combat_log_renderer(log: list[dict]) -> str:
     lines: list[str] = []
@@ -49,15 +50,7 @@ def combat_log_renderer(log: list[dict]) -> str:
             action_phase.clear()
             post_action_phase.clear()
             
-            lines.append("\n--- You are victorious! ---")
-            loot = entry.get("loot", {})
-            if loot.get("gold"):
-                lines.append(f"Gold gained: {loot['gold']}")
-            if loot.get("items"):
-                lines.append("Items gained:")
-                for item in loot["items"]:
-                    lines.append(f" - {item.name}")
-
+            lines.extend(render_victory_summary(entry))
             lines.append("\n=====================\n")
             return "\n".join(lines)
 
@@ -145,7 +138,7 @@ def combat_log_renderer(log: list[dict]) -> str:
             )
             continue
 
-        if event == "wait":
+        if action == "wait":
             action_phase.append(
                 f"{entry['actor']} {describe_wait(entry.get('extra', {}))}."
             )
@@ -175,6 +168,27 @@ def combat_log_renderer(log: list[dict]) -> str:
         if event == "death":
             post_action_phase.append(f"{entry['target']} collapses.")
             continue
+
+        if event == "item":
+            outcome = entry["outcome"]
+            item = outcome["extra"]["item"]
+            actor = entry["actor"]
+            target = entry["target"]
+
+            lines.append(f"{actor} uses {item} on {target}.")
+
+            for d in outcome["extra"]["details"]:
+                if d["effect"] == "heal":
+                    lines.append(f"{target} recovers {d['amount']} HP.")
+                elif d["effect"] == "damage":
+                    lines.append(f"{target} takes {d['amount']} damage.")
+                elif d["effect"] == "apply_status":
+                    status = d["status"].replace("_", " ").title()
+                    if d["applied"]:
+                        lines.append(f"{target} is afflicted with {status}.")
+                    else:
+                        lines.append(f"{status} has no effect on {target}.")
+
 
 
         if action == "attack":
@@ -206,11 +220,9 @@ def combat_log_renderer(log: list[dict]) -> str:
 
         if action == "defend":
             action_phase.append(f"{actor} takes a defensive stance.")
-
-
-        if action == "item":
-            action_phase.append(f"{actor} uses an item on {target}.")
             continue
+
+
 
         if action == "flee":
             escaped = entry.get("extra", {}).get("escaped", False)

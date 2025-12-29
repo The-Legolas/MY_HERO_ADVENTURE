@@ -43,13 +43,37 @@ note 3: Make it so more than 1 enemy can spawn at a time.
 note 4: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
 note 5: add Skill priority overrides per enemy type, Multi-enemy coordination behaviors
 note 6: in the code base search for #fix to find things to remove before final game release
-note 7: Gold aquired from monters aren't corectly put into the player inventory
-note 8: Add dynamic merchant dialogue (based on demand, discounts, etc.)
-note 9: No item use text in battle report and combat rendere
-note 10: No 'victorious!' screen at the end of combat
+note 7: Add dynamic merchant dialogue (based on demand, discounts, etc.)
+
 
 # Items & Equipment:  done but maybe the supposed map mechanic
 
+Interrupt severity tiers:
+Option A — Keep only Cancel (simplest)
+Best if you want tight, punishing combat
+Less code, fewer edge cases
+
+Option B — Add Cancel + Delay
+Best balance
+Very common in roguelikes and RPGs
+
+Option C — Full Cancel + Delay + Weaken
+Most expressive
+Best for bosses and late-game design
+
+
+Goblin
+HP: 14
+Type: goblin
+Behavior: normal
+Statuses:
+
+Inspect enemy statuses?
+1. Yes
+2. Back
+> 1
+
+here the enemies should show with icons what statuses they have and if they don't have any it should say none.
 
 """
 
@@ -116,7 +140,9 @@ def pick_character_and_name() -> Character:
     return player_hero
 
     
-
+"""
+Make a level up screen and code the passive upgrades into the game
+"""
 
 
 

@@ -7,26 +7,13 @@ class Warrior(Character):
         base_damage = 9 # 6
         base_defence = 1 # 3
 
-        hp = int(base_hp * 1.2)
-        damage = int(base_damage * 0.9)
-        defence = int(base_defence * 1.2)
+        scaled_hp = int(base_hp * 1.2)
+        scaled_damage = int(base_damage * 0.9)
+        scaled_defence = int(base_defence * 1.2)
 
-        super().__init__(name, hp, damage, defence, starting_items=starting_items, gold=gold)
-        self.level = 1
-        self.max_hp = self.hp
-        self.xp = 0
-
-        self.known_skills = {
-            "shield_bash",
-            "poison_strike",
-            "war_cry",
-        }
-
-        self.usable_skills = [
-            "shield_bash",
-            "poison_strike",
-            "war_cry",
-        ]
+        super().__init__(name,  hp=scaled_hp, damage=scaled_damage, defence=scaled_defence, starting_items=starting_items, gold=gold)
+        self.class_id = "warrior"
+        self.usable_skills = []
     
     def take_damage(self, damage: int):
         reduced_damage = int(damage * 0.9)
@@ -48,32 +35,4 @@ class Warrior(Character):
                     outcome["died"] = True
 
         return outcome
-
-    def level_up(self): #this method should be called exp_up but I don't want to implement it before I know how hard to make the enemies
-        if self.level == 10:
-            return "Cannot increase to more than 10" # should be reworked when xp have been implemented so the xp just go up and level doesn't change
-        temp_level = self.level
-                
-        #add xp gain later for now I will just increase level by 1 when this method is called
-        self.level += 1
-
-        if self.level > temp_level:
-            if self.level <= 5:
-                self.defence *= 1.3
-                self.hp *= 1.3
-                self.damage *= 1.2
-            
-            elif self.level <= 8:
-                self.defence *= 1.4
-                self.hp *= 1.5
-                self.damage *= 1.3
-            
-            elif self.level == 9:
-                self.defence *= 1.6
-                self.hp *= 1.7
-                self.damage *= 1.4
-            
-            elif self.level == 10:
-                self.defence *= 1.8
-                self.hp *= 1.9
-                self.damage *= 1.6
+    

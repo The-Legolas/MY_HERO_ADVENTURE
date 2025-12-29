@@ -102,11 +102,8 @@ def inspect_entity_statuses(entity):
 
         choice = input("> ").strip().lower()
 
-        if choice in ("c", "cancel", "back"):
-            return
-
         if not choice.isdigit():
-            continue
+            return
 
         idx = int(choice) - 1
         if not (0 <= idx < len(statuses)):

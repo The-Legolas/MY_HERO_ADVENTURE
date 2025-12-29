@@ -2,7 +2,7 @@ import random
 from game.core.Character_class import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.core.Status import Status
-from game.systems.combat.skill_registry import SKILL_REGISTRY
+from game.core.class_progression import SKILL_REGISTRY
 from game.systems.combat.damage_resolver import resolve_damage
 from typing import TYPE_CHECKING
 
@@ -83,6 +83,7 @@ def _choose_consumable_from_inventory(actor: Character) -> dict[str, any] | None
 
 def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
     actor = action.actor
+    status_feedback = None
     if not actor.is_alive():
         outcome = _make_outcome(getattr(actor, "name", "Unknown"), "noop", None)
         combat_state.log.append(outcome)
@@ -211,7 +212,12 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
 
     if action.type == "item":
         outcome = actor.use_item(action.item_id, action.target)
-        combat_state.log.append(outcome)
+        combat_state.log.append({
+            "event": "item",
+            "actor": actor.name,
+            "target": getattr(action.target, "name", None),
+            "outcome": outcome,
+        })
         return outcome
 
     if action.type == "flee":

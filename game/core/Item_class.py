@@ -136,6 +136,11 @@ class Items():
 
                     action(target, amount)
 
+                    if effect_type == "heal":
+                        total_heal += amount
+                    elif effect_type == "damage":
+                        total_damage += amount
+
                     details.append({
                         "effect": effect_type,
                         "amount": amount
@@ -191,6 +196,10 @@ class Items():
                 player.name,
                 "use_item",
                 getattr(target, "name", None),
+                damage=total_damage,
+                blocked=False,
+                critical=False,
+                died=hasattr(target, "is_alive") and not target.is_alive(),
                 extra={
                     "item": self.name,
                     "details": details
@@ -225,8 +234,6 @@ class Items():
                 })
 
         if did_something:
-            died = hasattr(target, "is_alive") and not target.is_alive()
-
             return make_outcome(
                 player.name,
                 "use_item",
@@ -234,7 +241,7 @@ class Items():
                 damage=total_damage,
                 blocked=False,
                 critical=False,
-                died=died,
+                died=hasattr(target, "is_alive") and not target.is_alive(),
                 extra={
                     "item": self.name,
                     "details": details
@@ -256,7 +263,6 @@ class Items():
 
 def apply_heal(target, amount):
     target.heal(amount)
-    #target.hp += amount   #old version
 
 def apply_damage(target, amount):
     target.hp -= amount

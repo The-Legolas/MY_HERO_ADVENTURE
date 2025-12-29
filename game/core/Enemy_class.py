@@ -38,7 +38,6 @@ class Enemy(Character):
                  type: Enemy_type, sub_type: Enemy_sub_type, xp_reward: int, gold_reward: int, loot_table: list[dict[str, any]],
                  behavior_tag: Enemy_behavior_tag | None = None):
         super().__init__(name, hp, damage, defence)
-        self.base_hp = hp
         self.type = type
         self.sub_type = sub_type
         self.rarity = rarity
@@ -90,11 +89,11 @@ class Enemy(Character):
         depth_scaling = 1 + (depth / 50)
 
         scaled_hp = max(1, int(self.base_hp * day_counter_scaling))
-        self.max_hp = scaled_hp
         self.hp = scaled_hp
+        self.base_hp = scaled_hp
 
-        self.defence = max(0, int(self.defence * day_counter_scaling))
-        self.damage = max(1, int(self.damage * depth_scaling))
+        self.base_defence = max(0, int(self.defence * day_counter_scaling))
+        self.base_damage = max(1, int(self.damage * depth_scaling))
         
         after_stats = {
         "hp": self.hp,
