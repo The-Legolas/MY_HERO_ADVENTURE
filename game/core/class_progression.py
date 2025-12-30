@@ -463,11 +463,33 @@ CLASS_PROGRESSION = {
 }
 
 PASSIVE_REGISTRY = {
-    "stun_mastery": {
+    "stun_mastery_1": {
         "description": "Increases stun application chance.",
         "modifiers": {
-            "stun_chance_bonus": 0.15
-        }
+            "stun_chance_bonus": 0.15,
+        },
+    },
+
+    "stun_mastery_2": {
+        "description": "Greatly increases stun application chance.",
+        "modifiers": {
+            "stun_chance_bonus": 0.30,
+        },
+    },
+
+    "iron_skin": {
+        "description": "Permanently increases defence.",
+        "modifiers": {
+            "defence_bonus": 2,
+        },
+    },
+
+    "rage": {
+        "description": "Deal increased damage when below 50% HP.",
+        "modifiers": {
+            "rage_damage_mult": 1.25,
+            "rage_threshold": 0.5,
+        },
     },
 
     "poison_expertise": {

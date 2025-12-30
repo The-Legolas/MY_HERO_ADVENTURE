@@ -88,6 +88,13 @@ class Character():
     def defence(self) -> int:
         return self.base_defence + self.level_bonuses.get("defence", 0)
 
+    def get_defence(self) -> int:
+        base = self.base_defence + self.level_bonuses["defence"]
+
+        passive_bonus = self.get_passive_modifiers().get("defence_bonus", 0)
+
+        return base + passive_bonus
+
 
     def add_item(self, item: Items, amount:int = 1) -> None:
         if item.name not in self.inventory["items"]:
@@ -240,8 +247,20 @@ class Character():
     def get_damage_multiplier(self) -> float:
         mult = 1.0
         for status in self.statuses:
-            modifiers = STATUS_REGISTRY.get(status.id, {}).get("modifiers", {})
-            mult *= modifiers.get("damage_mult", 1.0)
+            data = STATUS_REGISTRY.get(status.id, {})
+            mods = data.get("modifiers", {})
+            if "damage_mult" in mods:
+                mult *= mods["damage_mult"]
+
+        passive_mods = self.get_passive_modifiers()
+
+        rage_mult = passive_mods.get("rage_damage_mult")
+        rage_threshold = passive_mods.get("rage_threshold")
+
+        if rage_mult and rage_threshold is not None:
+            if self.hp / self.max_hp <= rage_threshold:
+                mult *= rage_mult
+
         return mult
     
     def get_effective_defence(self) -> int:
@@ -337,11 +356,15 @@ class Character():
 
         return result
 
-    def get_passive_modifier(self, key: str) -> float | int:
-        total = 0
+    def get_passive_modifiers(self) -> dict[str, float]:
+        total = {}
+
         for passive_id in self.passives:
             data = PASSIVE_REGISTRY.get(passive_id, {})
-            total += data.get("modifiers", {}).get(key, 0)
+            for key, value in data.get("modifiers", {}).items():
+                if isinstance(value, (int, float)):
+                    total[key] = total.get(key, 0) + value
+
         return total
     
     def unlock_skill(self, skill_id: str) -> None:
@@ -556,7 +579,25 @@ class Character():
         
         # AFFINITY MODIFIERS
         chance = data.get("chance", 1.0)
+
+        mods = {}
+
+        mods = new_status.get_passive_modifiers()
+
+        # ── Stun mastery ─────────────────────────────
+        if new_status.id == "stun":
+            chance += mods.get("stun_chance_bonus", 0.0)
+
+        chance = min(chance, 1.0)
+
+        # ── Duration modifiers ───────────────────────
         duration = new_status.remaining_turns
+
+        if new_status.id == "poison":
+            duration += mods.get("poison_duration_bonus", 0)
+
+        new_status.remaining_turns = duration
+
 
         if affinity == "resistant":
             chance *= 0.5

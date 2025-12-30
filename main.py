@@ -141,7 +141,7 @@ def pick_character_and_name() -> Character:
 
     
 """
-Make a level up screen and code the passive upgrades into the game
+code the passive upgrades into the game, add current xp and level to inventory screen
 """
 
 
