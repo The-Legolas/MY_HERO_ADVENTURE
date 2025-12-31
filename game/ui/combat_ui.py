@@ -1,3 +1,4 @@
+
 def render_victory_summary(entry: dict) -> list[str]:
     lines = []
     lines.append("\n--- You are victorious! ---")

@@ -172,7 +172,7 @@ ENEMY_DEFINITIONS = {
         "hp": 23,
         "damage": 5,
         "defence": 3,
-        "rarity": Enemy_Rarity.UNCOMMON,
+        "rarity": Enemy_Rarity.MINI_BOSS, #Enemy_Rarity.UNCOMMON,
         "sub_type": Enemy_sub_type.BEAST,
         "xp_reward": 60,
         "gold_reward": 3,
@@ -194,7 +194,7 @@ ENEMY_DEFINITIONS = {
         "hp": 50,
         "damage": 7,
         "defence": 5,
-        "rarity": Enemy_Rarity.RARE,
+        "rarity": Enemy_Rarity.MINI_BOSS, #Rare
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 100,
         "gold_reward": 20,
@@ -254,17 +254,21 @@ def spawn_enemy(enemy_type):
     return enemy_obj
 
 
-
 class Enemy_Spawner:
-    
-    def build_weight_table():
+
+    @staticmethod
+    def build_weight_table(forbid_rarities: set[Enemy_Rarity] | None = None):
         weight_table = []
 
-        for (enemy_type, data) in ENEMY_DEFINITIONS.items():
+        for enemy_type, data in ENEMY_DEFINITIONS.items():
             rarity = data["rarity"]
+
+            if forbid_rarities and rarity in forbid_rarities:
+                continue
+
             weight = rarity.value
 
-            if weight == 0:
+            if weight <= 0:
                 continue
 
             weight_table.append((enemy_type, weight))
@@ -272,19 +276,27 @@ class Enemy_Spawner:
         return weight_table
 
     @staticmethod
-    def get_random_template_weighted():
-        weight_table = Enemy_Spawner.build_weight_table()
+    def get_random_template_weighted(forbid_rarities: set[Enemy_Rarity] | None = None):
+        weight_table = Enemy_Spawner.build_weight_table(forbid_rarities)
 
         total_weight = sum(weight for _, weight in weight_table)
-
         rnd_roll = random.uniform(0, total_weight)
-        running_sum = 0
 
+        running_sum = 0
         for enemy_type, weight in weight_table:
             running_sum += weight
-
             if rnd_roll <= running_sum:
                 return enemy_type
         
         return weight_table[-1][0]
+    
+    @staticmethod
+    def get_random_miniboss_template():
+        minibosses = [
+            enemy_type
+            for enemy_type, data in ENEMY_DEFINITIONS.items()
+            if data["rarity"] == Enemy_Rarity.MINI_BOSS
+        ]
+        return random.choice(minibosses)
+
 

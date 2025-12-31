@@ -259,8 +259,6 @@ class Items():
         )
         
 
-
-
 def apply_heal(target, amount):
     target.heal(amount)
 

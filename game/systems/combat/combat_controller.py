@@ -8,7 +8,7 @@ from game.ui.status_ui import format_status_icons
 import random
 from typing import Optional
 from game.core.Status import Status
-from game.ui.status_ui import render_status_tooltip, inspect_entity_statuses
+from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
 from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.core.Skill_class import Skill
 from game.core.class_progression import SKILL_REGISTRY
@@ -40,16 +40,16 @@ def show_combat_status(combat: Combat_State):
 
                 if turns > 1:
                     print(
-                        f"Intent: {e.intent['text']} "
+                        f"\tIntent: {e.intent['text']} "
                         f"({turns - 1} turns)"
                     )
                 elif turns == 1:
                     print(
-                        f"Intent: {e.intent['text']} "
+                        f"\tIntent: {e.intent['text']} "
                         f"(imminent)"
                     )
             else:
-                print(f"Intent: {e.intent['text']} ")
+                print(f"\tIntent: {e.intent['text']} ")
             
     print("=====================\n")
 
@@ -116,7 +116,7 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 for dead in killed:
                     loot = roll_loot(dead)
                     total_loot["gold"] += loot.get("gold", 0)
-                    total_xp = getattr(dead, "xp_reward", 0)
+                    total_xp += getattr(dead, "xp_reward", 0)
 
                     for item in loot.get("items", []):
                         total_loot["items"].append(item)
@@ -171,7 +171,7 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 if not getattr(s, "expires_end_of_turn", False)
             ]
 
-            if action.type == "flee":
+            if action.type == "flee" and not combat_state.is_running:
                 return {
                     "result": "fled",
                     "log": combat_state.log
@@ -360,6 +360,9 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                         continue
 
                     print("Statuses:")
+                    for status in sort_statuses_by_priority(enemy.statuses):
+                        print(f" - {describe_status_compact(status)}")
+
                     print("\nInspect enemy statuses?")
                     print("1. Yes")
                     print("2. Back")

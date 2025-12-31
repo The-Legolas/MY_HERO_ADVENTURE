@@ -6,11 +6,6 @@ from game.engine.game_engine import GameEngine
 # Missing from the game still:
 
 # Exploration System:  | Safe areas ( rest rooms, save points)  | 
-# Dungeon progression logic (keys, switches, boss gates)
-
-# Character System:  | Level-up system and add a debug xp and debug level menu
-
-# Enemies:  |  Boss-specific mechanics or behaviors  |  Boss-only overrides
 
 # Progression & Balance:  |  Resource scarcity tuning (HP, MP, items)  | Grind tolerance (optional but intentional)
 
@@ -27,53 +22,24 @@ from game.engine.game_engine import GameEngine
 
 # Advanced Combat:  | Elemental weaknesses/resistances  |  Multi-target attacks   |  Skill cooldowns or costs
 
-# Class & Build Depth:  |  Skill trees  |  Class-specific equipment
 
-# Quests & Side Content:  | Side quests  |  Optional bosses  |  Rare items
-
-# Meta Systems:  | Bestiary / enemy log   |  Statistics tracking (deaths, clears, etc.)
 
 # Testing
 
 
 """
-note 1: fleeing is succesful no matter what is displayed to the user.
-note 2: Statuses should have a chance to apply even if the attack is blocked. (or makeing it so if defence is more than the attack (and not defending) only doing halve dmg)
-note 3: Make it so more than 1 enemy can spawn at a time.
-note 4: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
-note 5: add Skill priority overrides per enemy type, Multi-enemy coordination behaviors
-note 6: in the code base search for #fix to find things to remove before final game release
-note 7: Add dynamic merchant dialogue (based on demand, discounts, etc.)
+Bugs:
 
 
+
+Like to have:
+note 1: Statuses should have a chance to apply even if the attack is blocked. (or makeing it so if defence is more than the attack (and not defending) only doing halve dmg)
+note 2: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
+note 3: add Skill priority overrides per enemy type, Multi-enemy coordination behaviors
+note 4: in the code base search for #fix to find things to remove before final game release
+note 5: Add dynamic merchant dialogue (based on demand, discounts, etc.)
+note 6: update shop and tressure inventory to hold some of the new items
 # Items & Equipment:  done but maybe the supposed map mechanic
-
-Interrupt severity tiers:
-Option A — Keep only Cancel (simplest)
-Best if you want tight, punishing combat
-Less code, fewer edge cases
-
-Option B — Add Cancel + Delay
-Best balance
-Very common in roguelikes and RPGs
-
-Option C — Full Cancel + Delay + Weaken
-Most expressive
-Best for bosses and late-game design
-
-
-Goblin
-HP: 14
-Type: goblin
-Behavior: normal
-Statuses:
-
-Inspect enemy statuses?
-1. Yes
-2. Back
-> 1
-
-here the enemies should show with icons what statuses they have and if they don't have any it should say none.
 
 """
 
@@ -139,10 +105,6 @@ def pick_character_and_name() -> Character:
     
     return player_hero
 
-    
-"""
-code the passive upgrades into the game, add current xp and level to inventory screen
-"""
 
 
 

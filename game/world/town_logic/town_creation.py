@@ -40,11 +40,11 @@ class Location():
 
 
 class TownGraph():
-    def __init__(self):
+    def __init__(self, castle_unlocked: bool):
         self.locations: dict[str, Location] = {}
         self.player_location: str | None = None
 
-        self.castle_unlocked: bool = False
+        self.castle_unlocked = castle_unlocked
 
 
     def current_location(self) -> Location:

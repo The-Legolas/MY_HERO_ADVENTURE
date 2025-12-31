@@ -13,6 +13,7 @@ from game.world.dungeon_manager import Dungeon_Manager
 from game.systems.combat.combat_controller import start_encounter
 from game.systems.combat.combat_log_viewer import combat_log_renderer
 from game.ui.combat_ui import render_victory_summary
+from game.core.Status import Enemy_Rarity
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -138,6 +139,12 @@ class GameEngine:
 
                     for line in render_victory_summary(victory_entry):
                       print(line)
+
+                    for enemy in room.contents["enemies"]:
+                        if enemy.rarity == Enemy_Rarity.MINI_BOSS:
+                            self.world.unlock_castle()
+                            dungeon.miniboss_defeated = True
+                            break
 
                     print("\n1. View battle report")
                     print("2. Continue")
@@ -380,11 +387,7 @@ class GameEngine:
         print("1. Talk")
         if name == Town_names.SHOP_INTERIOR.value:
             print("2. Menu (Buy/Sell)")
-        elif name == Town_names.INN_INTERIOR.value:
-            print("2. Rest")
-        elif name == Town_names.TAVERN_INTERIOR.value:
-            print("2. Buy Beer")
-        print("3. Leave Building")
+            print("3. Leave Building")
         
 
     def get_town_input(self, location: Location) -> str | None:
@@ -571,7 +574,6 @@ class GameEngine:
                     print(f"\nAdded {amt} XP.")
                 else:
                     print("\nInvalid input.")
-                return
             
             elif choice == "4":
                 amount = input("\nSet Level to: ").strip()
@@ -581,7 +583,6 @@ class GameEngine:
                     print(f"\nLevel is set to: {self.player.level}.")
                 else:
                     print("\nInvalid input.")
-                return
 
             else:
                 print("\nInvalid choice.")

@@ -225,7 +225,7 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
 
         outcome = _make_outcome(actor.name, "flee", None, extra={"escaped": success})
 
-        if success:
+        if success == True:
             combat_state.is_running = False
 
         combat_state.log.append(outcome)

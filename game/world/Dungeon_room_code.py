@@ -23,6 +23,8 @@ class Room():
         self.visited: bool = False
         self.cleared: bool = False
         self.treasure_opened: bool = False
+        self.is_miniboss_room = False
+
 
         match room_type:
             case Room_Types.TREASURE_ROOM:

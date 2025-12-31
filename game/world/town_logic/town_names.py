@@ -10,3 +10,4 @@ class Town_names(Enum):
     SHOP_INTERIOR   = "Shop Interior"
     INN_INTERIOR    = "Inn Interior"
     TAVERN_INTERIOR = "Tavern Interior"
+    

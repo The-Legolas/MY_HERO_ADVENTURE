@@ -4,7 +4,7 @@ from game.systems.combat.status_evaluator import evaluate_status_magnitude
 from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.systems.combat.damage_resolver import resolve_damage
 from game.core.Status import INTERRUPT_RESISTANCE_BY_RARITY
-from game.core.class_progression import CLASS_PROGRESSION, PASSIVE_REGISTRY, SKILL_REGISTRY
+from game.core.class_progression import CLASS_PROGRESSION, SKILL_REGISTRY
 
 from game.core.Status import Status
 
@@ -26,6 +26,7 @@ class Character():
 
         self.level = 1
         self.xp = 0
+        self.STAT_VALUE_GETTERS = 0
         self.class_id:str | None = None
         self.level_bonuses: dict[str, int] = {
             "hp": 0,
@@ -33,7 +34,7 @@ class Character():
             "defence": 0,
         }
 
-        self.passives: set[str] = set()
+
         self.skills: dict[str, dict] = {}
 
         self.statuses: list['Status'] = []
@@ -87,13 +88,6 @@ class Character():
     @property
     def defence(self) -> int:
         return self.base_defence + self.level_bonuses.get("defence", 0)
-
-    def get_defence(self) -> int:
-        base = self.base_defence + self.level_bonuses["defence"]
-
-        passive_bonus = self.get_passive_modifiers().get("defence_bonus", 0)
-
-        return base + passive_bonus
 
 
     def add_item(self, item: Items, amount:int = 1) -> None:
@@ -247,20 +241,8 @@ class Character():
     def get_damage_multiplier(self) -> float:
         mult = 1.0
         for status in self.statuses:
-            data = STATUS_REGISTRY.get(status.id, {})
-            mods = data.get("modifiers", {})
-            if "damage_mult" in mods:
-                mult *= mods["damage_mult"]
-
-        passive_mods = self.get_passive_modifiers()
-
-        rage_mult = passive_mods.get("rage_damage_mult")
-        rage_threshold = passive_mods.get("rage_threshold")
-
-        if rage_mult and rage_threshold is not None:
-            if self.hp / self.max_hp <= rage_threshold:
-                mult *= rage_mult
-
+            modifiers = STATUS_REGISTRY.get(status.id, {}).get("modifiers", {})
+            mult *= modifiers.get("damage_mult", 1.0)
         return mult
     
     def get_effective_defence(self) -> int:
@@ -302,7 +284,7 @@ class Character():
             if next_level >= len(xp_table):
                 break
 
-            if self.xp < xp_table[next_level]:
+            if self.xp < xp_table[self.level]:
                 break
 
             self.level = next_level
@@ -312,6 +294,7 @@ class Character():
                 level_ups.append(reward_data)
 
         return level_ups
+    
         
     def apply_level_rewards(self, level: int) -> dict | None:
         progression = CLASS_PROGRESSION[self.class_id]
@@ -324,7 +307,6 @@ class Character():
             "level": level,
             "stats": {},
             "skills": [],
-            "passives": [],
         }
         
         for stat, value in rewards.get("stats", {}).items():
@@ -350,22 +332,7 @@ class Character():
             self.unlock_skill(skill_id)
             result["skills"].append(skill_id)
 
-        for passive_id in rewards.get("passives", []):
-            self.add_passive(passive_id)
-            result["passives"].append(passive_id)
-
         return result
-
-    def get_passive_modifiers(self) -> dict[str, float]:
-        total = {}
-
-        for passive_id in self.passives:
-            data = PASSIVE_REGISTRY.get(passive_id, {})
-            for key, value in data.get("modifiers", {}).items():
-                if isinstance(value, (int, float)):
-                    total[key] = total.get(key, 0) + value
-
-        return total
     
     def unlock_skill(self, skill_id: str) -> None:
         if skill_id in self.known_skills:
@@ -374,8 +341,6 @@ class Character():
         self.known_skills.add(skill_id)
         self.usable_skills.append(skill_id)
 
-    def add_passive(self, passive_id: str) -> None:
-        self.passives.add(passive_id)
 
     def reset_progression(self) -> None:
         self.level = 1
@@ -387,7 +352,6 @@ class Character():
             "defence": 0,
         }
 
-        self.passives.clear()
         self.known_skills.clear()
         self.usable_skills.clear()
 
@@ -428,15 +392,6 @@ class Character():
                 skill = SKILL_REGISTRY.get(skill_id)
                 name = skill.name if skill else skill_id
                 print(f" - {name}")
-
-        if level_data["passives"]:
-            print("\nNew passives gained:")
-            for passive_id in level_data["passives"]:
-                passive = PASSIVE_REGISTRY.get(passive_id, {})
-                desc = passive.get("description", "")
-                print(f" - {passive_id.replace('_', ' ').title()}")
-                if desc:
-                    print(f"   {desc}")
 
         input("\nPress Enter to continue...")
 
@@ -579,25 +534,7 @@ class Character():
         
         # AFFINITY MODIFIERS
         chance = data.get("chance", 1.0)
-
-        mods = {}
-
-        mods = new_status.get_passive_modifiers()
-
-        # ── Stun mastery ─────────────────────────────
-        if new_status.id == "stun":
-            chance += mods.get("stun_chance_bonus", 0.0)
-
-        chance = min(chance, 1.0)
-
-        # ── Duration modifiers ───────────────────────
         duration = new_status.remaining_turns
-
-        if new_status.id == "poison":
-            duration += mods.get("poison_duration_bonus", 0)
-
-        new_status.remaining_turns = duration
-
 
         if affinity == "resistant":
             chance *= 0.5

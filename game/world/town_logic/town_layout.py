@@ -1,8 +1,8 @@
 from .town_creation import Town_Actions, TownGraph, Location, Location_Type
 from .town_names import Town_names
 
-def build_town_graph() -> TownGraph:
-    town = TownGraph()
+def build_town_graph(castle_unlocked: bool) -> TownGraph:
+    town = TownGraph(castle_unlocked)
 
     town_gate = _build_town_gate()
     

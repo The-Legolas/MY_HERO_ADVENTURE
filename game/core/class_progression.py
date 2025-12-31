@@ -274,8 +274,15 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="poison_bite",
         name="Poison Bite",
         description="A vicious bite that injects poison.",
+        intent_hint="missing: poison_bite",
         target="enemy",
-        damage=3,
+        damage={
+            "type": "hybrid",
+            "base": 3,
+            "stat": "damage",
+            "mult": 0.9,
+            "can_crit": True,
+        },
         hit_chance=0.9,
         apply_status={
             "id": "poison",
@@ -290,6 +297,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="rending_bite",
         name="Rending Bite",
         description="A vicious bite that tears flesh.",
+        intent_hint="missing: rending_bite",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -303,6 +311,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="pounce",
         name="Pounce",
         description="A sudden leap that overwhelms the target.",
+        intent_hint="missing: pounce",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -325,6 +334,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="savage_howl",
         name="Savage Howl",
         description="The beast howls, stirring its bloodlust.",
+        intent_hint="missing: savage_howl",
         target="self",
         damage=None,
         apply_status={
@@ -335,7 +345,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
         locks_actor={
             "state": "howling",
-            "turns": 1,
+            "turns": 2,
             "forced_action": None,
         },
         cooldown_turns=3,
@@ -416,9 +426,11 @@ CLASS_PROGRESSION = {
             600,
             700,
             800,
-            900,  # level 10
+            900,
+            1000,  # level 10
         ],
         "level_rewards": {
+
             2: {
                 "stats": {"hp": +10, "damage": +2},
             },
@@ -428,10 +440,6 @@ CLASS_PROGRESSION = {
             },
             4: {
                 "stats": {"defence": +1},
-                "passives": ["stun_mastery_1"],
-            },
-            6: {
-                "passives": ["stun_mastery_2"],
             },
             6: {
                 "skills": ["war_cry"],
@@ -457,45 +465,6 @@ CLASS_PROGRESSION = {
         "level_rewards": {
             2: {"skills": ["arcane_bolt"]},
             4: {"skills": ["toxic_cloud"]},
-            5: {"passives": ["potent_poison"]},
         },
-    },
-}
-
-PASSIVE_REGISTRY = {
-    "stun_mastery_1": {
-        "description": "Increases stun application chance.",
-        "modifiers": {
-            "stun_chance_bonus": 0.15,
-        },
-    },
-
-    "stun_mastery_2": {
-        "description": "Greatly increases stun application chance.",
-        "modifiers": {
-            "stun_chance_bonus": 0.30,
-        },
-    },
-
-    "iron_skin": {
-        "description": "Permanently increases defence.",
-        "modifiers": {
-            "defence_bonus": 2,
-        },
-    },
-
-    "rage": {
-        "description": "Deal increased damage when below 50% HP.",
-        "modifiers": {
-            "rage_damage_mult": 1.25,
-            "rage_threshold": 0.5,
-        },
-    },
-
-    "poison_expertise": {
-        "description": "Poison effects last longer.",
-        "modifiers": {
-            "poison_duration_bonus": 1
-        }
     },
 }

@@ -1,6 +1,8 @@
 import random
 from game.world.Dungeon_room_code import Room, Room_Types
-from game.core.Enemy_class import Enemy_Spawner, spawn_enemy
+from game.core.Enemy_class import Enemy_Spawner, spawn_enemy, Enemy_type, Enemy
+from game.core.Status import Enemy_Rarity
+
 
 class Dungeon_Manager():
     def __init__(self, day_counter: int, dungeon_type: str):
@@ -10,34 +12,66 @@ class Dungeon_Manager():
         self.player_starting_pos = (0,0)
         self.player_current_pos = (0,0)
         self.current_depth = 0
-        self.generate_dungeon()
 
+        self.miniboss_room_pos: tuple[int, int] | None = None
+        self.miniboss_defeated: bool = False
+
+        self.generate_dungeon()
     
     def generate_dungeon(self):
+        MAX_ATTEMPTS = 10
+
+        for _ in range(MAX_ATTEMPTS):
+            self._generate_layout()
+
+            if self.assign_miniboss_room():
+                return
+
+        raise RuntimeError("Failed to generate dungeon with a valid miniboss room.")
+
+    def _generate_layout(self):
         self.dungeon_rooms = {}
+        self.miniboss_room_pos = None
 
         start_x, start_y = self.player_starting_pos
         starting_room = Room(Room_Types.EMPTY, start_x, start_y, day_counter=self.day_counter)
-        self.dungeon_rooms[start_x, start_y] = starting_room
+        self.dungeon_rooms[(start_x, start_y)] = starting_room
 
-        base_size = 20
-        dungeon_room_count = base_size + int(self.day_counter * 0.2)
+        base_size = 4
+        dungeon_room_count = base_size + int(self.day_counter * 1.2)
 
-        current_pos = (0, 0)
+        current_pos = (start_x, start_y)
 
         for _ in range(dungeon_room_count):
             next_pos = pick_random_adjacent(current_pos)
 
             if next_pos not in self.dungeon_rooms:
                 x, y = next_pos
-
                 room_type = roll_room_type(self.day_counter)
-                new_room = Room(room_type, x, y, day_counter=self.day_counter)
-
-                self.dungeon_rooms[next_pos] = new_room
-
+                self.dungeon_rooms[next_pos] = Room(
+                    room_type, x, y, day_counter=self.day_counter
+                )
                 current_pos = next_pos
-    
+
+    def assign_miniboss_room(self) -> bool:
+        enemy_rooms = [
+            pos for pos, room in self.dungeon_rooms.items()
+            if room.room_type == Room_Types.ENEMY_ROOM
+            and pos != self.player_starting_pos
+        ]
+
+        if not enemy_rooms:
+            return False
+
+        for room in self.dungeon_rooms.values():
+            room.is_miniboss_room = False
+
+        chosen_pos = random.choice(enemy_rooms)
+        self.miniboss_room_pos = chosen_pos
+        self.dungeon_rooms[chosen_pos].is_miniboss_room = True
+
+        return True
+
     def direction_to_offset(self, direction: str) -> tuple:
         direction = direction.lower()
         
@@ -135,34 +169,52 @@ class Dungeon_Manager():
 
         if room.room_type == Room_Types.BOSS_ROOM and not room.cleared:
             boss = self.spawn_boss_for_room(room)
-            encounter["spawned_enemies"].append(boss)
+            encounter["spawned_enemies"].extend(boss)
         
         return encounter
 
 
 
-    def spawn_enemy_for_room(self, room: Room):
+    def spawn_enemy_for_room(self, room: Room) -> list:
         if room.room_type not in (Room_Types.ENEMY_ROOM, Room_Types.BOSS_ROOM):
-            return
+            return []
         
-        if len(room.contents["enemies"]) > 0:
-            return room.contents["enemies"][0]
+        if room.contents["enemies"]:
+            return room.contents["enemies"]
         
-        depth = self.compute_depth(pos=(room.pos_x, room.pos_y))
+        depth = self.compute_depth((room.pos_x, room.pos_y))
 
-        enemy_type  = Enemy_Spawner.get_random_template_weighted()
+        if getattr(room, "is_miniboss_room", False):
+            template = Enemy_Spawner.get_random_miniboss_template()
+            enemy = spawn_enemy(template)
+            enemy.scale_stats(self.day_counter, depth)
 
-        enemy_obj = spawn_enemy(enemy_type)
-        
-        enemy_obj.scale_stats(self.day_counter, depth)
+            room.contents["enemies"] = [enemy]
+            return room.contents["enemies"]
 
-        room.contents["enemies"].append(enemy_obj)
+        enemy_count = roll_enemy_count()
+        enemies = []
 
-        return enemy_obj
+        first_template = Enemy_Spawner.get_random_template_weighted(forbid_rarities={Enemy_Rarity.MINI_BOSS})
+        first_enemy = spawn_enemy(first_template)
+        first_enemy.scale_stats(self.day_counter, depth)
+        enemies.append(first_enemy)
+
+        while len(enemies) < enemy_count:
+            candidate_template = Enemy_Spawner.get_random_template_weighted(forbid_rarities={Enemy_Rarity.MINI_BOSS})
+            candidate_enemy = spawn_enemy(candidate_template)
+
+            if not self._is_enemy_allowed(candidate_enemy, enemies):
+                continue
+
+            candidate_enemy.scale_stats(self.day_counter, depth)
+            enemies.append(candidate_enemy)
+
+        room.contents["enemies"] = enemies
+        return enemies
+           
 
     def spawn_boss_for_room(self, room):
-        from game.core.Enemy_class import Enemy_type
-
         depth = self.compute_depth((room.pos_x, room.pos_y))
 
         boss = spawn_enemy(Enemy_type.ENEMY_BOSS_DRAGON)
@@ -170,6 +222,28 @@ class Dungeon_Manager():
 
         room.contents["enemies"].append(boss)
         return boss
+    
+    def _is_enemy_allowed(self, candidate: Enemy, existing: list[Enemy]) -> bool:
+        first = existing[0]
+
+        if candidate.rarity in (Enemy_Rarity.BOSS,):
+            return False
+
+        if first.rarity == Enemy_Rarity.MINI_BOSS:
+            return False
+
+        if first.rarity == Enemy_Rarity.ELITE:
+            return candidate.rarity == Enemy_Rarity.COMMON
+
+        if first.rarity == Enemy_Rarity.RARE:
+            if candidate.rarity in (Enemy_Rarity.COMMON, Enemy_Rarity.UNCOMMON):
+                return True
+            return (
+                candidate.rarity == Enemy_Rarity.RARE
+                and candidate.name == first.name
+            )
+
+        return candidate.rarity != Enemy_Rarity.BOSS
 
 
     def room_exists(self, x: int, y: int) -> dict[str, any]:
@@ -393,6 +467,15 @@ def boss_tier(distance: int) -> str:
 
 def pick_flavor(dungeon: str, category: str, tier: str) -> str:
     return random.choice(FLAVOR_TEXT[dungeon][category][tier])
+
+def roll_enemy_count() -> int:
+        rnd = random.random()
+        if rnd < 0.55:
+            return 1
+        elif rnd < 0.95:
+            return 2
+        else:
+            return 3
 
 
 FLAVOR_TEXT = {

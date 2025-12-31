@@ -1,7 +1,7 @@
 from game.core.Character_class import Character
 from game.core.Item_class import Items, Item_Type
 from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
-from game.systems.combat.status_registry import STATUS_REGISTRY
+from game.core.class_progression import CLASS_PROGRESSION
 
 ITEM_TYPE_ORDER = [
     Item_Type.CONSUMABLE,
@@ -26,6 +26,9 @@ def run_inventory_menu(player: Character):
 
         choice = input("> ").strip()
 
+        if not choice.isdigit() or choice == "7":
+            return
+
         if choice == "1":
             _show_equipped_items(player)
         elif choice == "2":
@@ -38,8 +41,6 @@ def run_inventory_menu(player: Character):
             _unequip_flow(player)
         elif choice == "6":
             _use_item_flow(player)
-        elif choice == "7":
-            return
         else:
             print("Invalid option.")
 
@@ -283,6 +284,16 @@ def _render_inventory_item_outcome(outcome: dict):
 
 def render_player_status(player: Character):
     print("\n=== PLAYER STATUS ===")
+
+    xp, xp_needed, at_cap = get_xp_progress(player)
+
+    if at_cap:
+        print(f"Level: {player.level} (MAX)")
+        print(f"XP: {xp} / {xp_needed}")
+    else:
+        print(f"Level: {player.level}")
+        print(f"XP: {xp} / {xp_needed}")
+
     print(f"HP: {player.hp}/{player.max_hp}")
 
     if player.statuses:
@@ -300,3 +311,19 @@ def _inspect_player_statuses(player: Character):
     while True:
         print("\n--- Your Status Effects ---")
         inspect_entity_statuses(player)
+
+def get_xp_progress(player: Character) -> tuple[int, int, bool]:
+    """
+    Returns (current_xp, xp_required, at_cap)
+    """
+    if player.class_id is None:
+        return (0, 0, True)
+
+    prog = CLASS_PROGRESSION[player.class_id]
+    xp_table = prog["xp_per_level"]
+    level_cap = prog["level_cap"]
+
+    if player.level >= level_cap:
+        return (player.xp, xp_table[level_cap], True)
+
+    return (player.xp, xp_table[player.level], False)

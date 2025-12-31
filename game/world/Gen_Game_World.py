@@ -21,7 +21,7 @@ class Game_World():
     
 
     def build_town(self) -> None:
-        self.areas["Town"] = build_town_graph()
+        self.areas["Town"] = build_town_graph(castle_unlocked=self.castle_unlocked)
 
         town = self.areas["Town"]
 
@@ -48,6 +48,13 @@ class Game_World():
 
         return manager
     
+    def unlock_castle(self):
+        if self.castle_unlocked:
+            return
+
+        self.castle_unlocked = True
+        self.build_town()
+        
     def on_day_advance(self) -> dict[str, any]:
         self.day_counter += 1
         self.build_persistent_dungeons()

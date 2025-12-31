@@ -1,4 +1,3 @@
-
 __all__ = [
     "Character",
     "Enemy",
@@ -9,5 +8,7 @@ __all__ = [
     "Enemy_type",
     "Item_Type",
     "Items",
+    "Skill",
+    "Status",
     "Warrior"
 ]

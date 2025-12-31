@@ -1,6 +1,5 @@
 
 __all__ = [
     "Action",
-    "Combat_State",
-    "Status"
+    "Combat_State"
 ]
