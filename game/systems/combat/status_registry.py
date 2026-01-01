@@ -8,6 +8,7 @@ STATUS_REGISTRY = {
         "prevents_action": False,
         "description": "Deals damage at the start of each turn.",
         "on_tick": lambda target, status: target.take_damage(status.magnitude),
+        "is_debuff": True,
         "interactions": {
             "regen": {
                 "description": "Poison damage is reduced while Regen is active.",
@@ -27,6 +28,7 @@ STATUS_REGISTRY = {
         "max_stacks": 1,
         "prevents_action": False,
         "description": "Restores health at the start of each turn.",
+        "is_debuff": False,
         "on_tick": lambda target, status: setattr(
             target,
             "hp",
@@ -41,6 +43,7 @@ STATUS_REGISTRY = {
         "max_stacks": 5,
         "description": "Reduces outgoing damage.",
         "modifiers": {"damage_mult": 0.75},
+        "is_debuff": True,
     },
 
     "strength_up": {
@@ -50,6 +53,7 @@ STATUS_REGISTRY = {
         "max_stacks": 5,
         "description": "Increases outgoing damage.",
         "modifiers": {"damage_mult": 1.25},
+        "is_debuff": False,
     },
 
     "stun": {

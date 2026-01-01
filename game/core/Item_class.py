@@ -31,6 +31,7 @@ class Items():
                  stats: dict[str, any] | None = None, effect: dict[str, any] | None = None, 
                  passive_modifiers: dict[str, float] | None = None,
                  on_hit_status: dict | None = None, value: int = 0):
+        self.id = None
         self.name = name
         self.category = category
         self.stackable = stackable
@@ -309,6 +310,7 @@ def spawn_item(item_type):
         effect    = template.get("effect"),      # ← SAFE ACCESS
         value     = template["value"],
     )
+    item_obj.id = item_type
 
     # Attach optional behavior data
     if "on_hit_status" in template:
@@ -356,7 +358,7 @@ ITEM_DEFINITIONS = {
         "category": Item_Type.WEAPON,
         "stackable": False,
         "unique": True,
-        "stats": {"damage": +20, "crit_chance": +0.05},
+        "stats": {"damage": +20},
         "effect": None,
         "value": 40
     },

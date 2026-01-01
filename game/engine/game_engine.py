@@ -7,6 +7,8 @@ from game.ui.shop_ui import ShopUI
 from game.ui.tavern_ui import TavernUI
 from game.ui.inn_ui import InnUI
 from game.ui.inventory_ui import run_inventory_menu
+from game.engine.save_system import save_game, load_game
+from game.ui.save_menu_ui import run_save_load_menu
 from enum import Enum
 from game.world.Dungeon_room_code import Room, Room_Types
 from game.world.dungeon_manager import Dungeon_Manager
@@ -68,8 +70,10 @@ class GameEngine:
         }
 
         self.shop_ui = ShopUI(self.player)
-        self.tavern_ui = TavernUI(self.player)
-        self.inn_ui: 'InnUI' = InnUI(self.player, self.world, engine=self)
+        self.tavern_ui = TavernUI(self.player, engine=self)
+        self.inn_ui = InnUI(self.player, self.world, engine=self)
+
+        self.current_save_slot: str | None = None
 
     def get_player_command(self, raw_input: str, context: str, *, has_room_action: bool = False) -> str | None:
         cmd = inventory_input_parser(raw_input)
@@ -78,6 +82,12 @@ class GameEngine:
         
         if raw_input == "debug":
             return "debug_menu"
+        
+        if raw_input.lower().startswith("save"):
+            return "save_game"
+        
+        if raw_input.lower().startswith("load"):
+            return "load_game"
 
         if context == Command_Context.SHOP.value:
             return parse_shop_input(raw_input)
@@ -119,10 +129,7 @@ class GameEngine:
 
             self.current_room = room
 
-            has_room_action = (
-                self.current_room.room_type == Room_Types.TREASURE_ROOM
-                and not self.current_room.treasure_opened
-            )
+            has_room_action = self.current_dungeon.get_room_action_label(room) is not None
 
             entry_result = dungeon.process_room_on_enter(room)
 
@@ -186,6 +193,36 @@ class GameEngine:
             if command == "debug_menu":
                 self.run_debug_menu()
                 continue
+
+            if command == "save_game":
+                slot = run_save_load_menu(
+                    mode="save",
+                    current_slot=self.current_save_slot,
+                )
+
+                if slot:
+                    save_game(self, slot)
+                    self.current_save_slot = slot
+                    print(f"\nGame saved to '{slot}'.")
+                    input()
+                continue
+
+            if command == "load_game":
+                slot = run_save_load_menu(
+                    mode="load",
+                    current_slot=self.current_save_slot,
+                )
+
+                if slot:
+                    self.player, self.world = load_game(slot)
+                    self.shop_ui = ShopUI(self.player)
+                    self.tavern_ui = TavernUI(self.player, engine=self)
+                    self.inn_ui = InnUI(self.player, self.world, engine=self)
+                    self.current_save_slot = slot
+                    print(f"\nLoaded save '{slot}'.")
+                    input()
+                continue
+
             
             if command is None:
                 print("I don't understand that. Try again.")
@@ -251,6 +288,13 @@ class GameEngine:
 
                 if not result:
                     print("\nThere is nothing to do here.")
+                    input()
+                    continue
+                
+                if result.get("rest"):
+                    self.player.hp = self.player.max_hp
+                    self.player.clear_negative_statuses()
+                    print(result["message"])
                     input()
                     continue
 
@@ -338,6 +382,36 @@ class GameEngine:
             if command == "debug_menu":
                 self.run_debug_menu()
                 continue
+
+            if command == "save_game":
+                slot = run_save_load_menu(
+                    mode="save",
+                    current_slot=self.current_save_slot,
+                )
+
+                if slot:
+                    save_game(self, slot)
+                    self.current_save_slot = slot
+                    print(f"\nGame saved to '{slot}'.")
+                    input()
+                continue
+
+            if command == "load_game":
+                slot = run_save_load_menu(
+                    mode="load",
+                    current_slot=self.current_save_slot,
+                )
+
+                if slot:
+                    self.player, self.world = load_game(slot)
+                    self.shop_ui = ShopUI(self.player)
+                    self.tavern_ui = TavernUI(self.player, engine=self)
+                    self.inn_ui = InnUI(self.player, self.world, engine=self)
+                    self.current_save_slot = slot
+                    print(f"\nLoaded save '{slot}'.")
+                    input()
+                continue
+
 
             if command is None:
                 print("I don't understand that. Try again.")

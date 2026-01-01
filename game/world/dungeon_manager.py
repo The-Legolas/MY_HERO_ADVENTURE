@@ -37,7 +37,7 @@ class Dungeon_Manager():
         starting_room = Room(Room_Types.EMPTY, start_x, start_y, day_counter=self.day_counter)
         self.dungeon_rooms[(start_x, start_y)] = starting_room
 
-        base_size = 4
+        base_size = 20
         dungeon_room_count = base_size + int(self.day_counter * 1.2)
 
         current_pos = (start_x, start_y)
@@ -47,7 +47,8 @@ class Dungeon_Manager():
 
             if next_pos not in self.dungeon_rooms:
                 x, y = next_pos
-                room_type = roll_room_type(self.day_counter)
+                depth = self.compute_depth(next_pos)
+                room_type = roll_room_type(self.day_counter, depth)
                 self.dungeon_rooms[next_pos] = Room(
                     room_type, x, y, day_counter=self.day_counter
                 )
@@ -156,6 +157,8 @@ class Dungeon_Manager():
             "spawned_enemies": [],
             "special_events": []
         }
+        if room.room_type == Room_Types.REST_ROOM:
+            return encounter
 
         if room.visited:
             return encounter
@@ -214,14 +217,15 @@ class Dungeon_Manager():
         return enemies
            
 
-    def spawn_boss_for_room(self, room):
+    def spawn_boss_for_room(self, room: Room):
         depth = self.compute_depth((room.pos_x, room.pos_y))
 
         boss = spawn_enemy(Enemy_type.ENEMY_BOSS_DRAGON)
         boss.scale_stats(self.day_counter, depth)
 
-        room.contents["enemies"].append(boss)
-        return boss
+        room.contents["enemies"] = [boss]
+        return room.contents["enemies"]
+
     
     def _is_enemy_allowed(self, candidate: Enemy, existing: list[Enemy]) -> bool:
         first = existing[0]
@@ -329,6 +333,11 @@ class Dungeon_Manager():
         return dx + dy
     
     def get_room_action_label(self, room: Room) -> str | None:
+        if room.room_type == Room_Types.REST_ROOM:
+            if room.rest_used_day == self.day_counter:
+                return None
+            return "Rest"
+    
         if room.room_type == Room_Types.TREASURE_ROOM and not room.treasure_opened:
             return "Open chest"
 
@@ -338,6 +347,17 @@ class Dungeon_Manager():
         return None
     
     def room_action(self, room: Room):
+        if room.room_type == Room_Types.REST_ROOM:
+            if room.rest_used_day == self.day_counter:
+                return None
+
+            room.rest_used_day = self.day_counter
+
+            return {
+                "rest": True,
+                "message": "You rest at the sanctuary. Your wounds fade, and your mind clears."
+            }
+        
         if room.room_type == Room_Types.TREASURE_ROOM and not room.treasure_opened:
             items = self.open_treasure(room)
             if items:
@@ -373,16 +393,22 @@ class Dungeon_Manager():
                     room_pos = self.dungeon_rooms[position]
 
                     if position == self.player_current_pos:
-                        symbol = "| S |"
+                        symbol = "| ◎ |"
                     
+                    elif room_pos.room_type == Room_Types.REST_ROOM:
+                        symbol = "| ✚ |"
+
                     elif room_pos.room_type == Room_Types.TREASURE_ROOM:
-                        symbol = "| T |"
+                        symbol = "| ✦ |"
 
                     elif room_pos.room_type == Room_Types.ENEMY_ROOM:
-                        symbol = "| E |"
+                        symbol = "| ⚔ |"
+
+                    elif room_pos.room_type == Room_Types.BOSS_ROOM:
+                        symbol = "| ☠ |"
 
                     elif room_pos.room_type == Room_Types.EMPTY:
-                        symbol = "|EMP|"
+                        symbol = "| · |"
                     
                     else:
                         symbol = "| . |"
@@ -413,7 +439,11 @@ def pick_random_adjacent(position) -> tuple:
             return (x - 1, y)
 
 
-def roll_room_type(day_counter) -> Room_Types:
+def roll_room_type(day_counter: int, depth: int) -> Room_Types:
+    if depth >= 6:
+        if random.random() < 0.08:
+            return Room_Types.REST_ROOM
+        
     enemy_chance = min(0.50 + day_counter * 0.01, 0.90)
     treasure_chance = max(0.20 - day_counter * 0.005, 0.05)
 

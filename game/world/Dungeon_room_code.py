@@ -7,6 +7,7 @@ class Room_Types(Enum):
     EMPTY = "empty"
     ENEMY_ROOM = "enemy room"
     TREASURE_ROOM  = "treasure room"
+    REST_ROOM = "rest room"
     BOSS_ROOM = "boss room"
 
 
@@ -24,6 +25,7 @@ class Room():
         self.cleared: bool = False
         self.treasure_opened: bool = False
         self.is_miniboss_room = False
+        self.rest_used_day: int | None = None
 
 
         match room_type:
@@ -40,30 +42,6 @@ class Room():
             
             case _: #Types.EMPTY
                 pass
-        
-    def visualize_encounter(self):        
-        text_block = ""
-        text_block += "===== ENCOUNTER DEBUG VIEW =====\n"
-        text_block += f"Room Type: {self.room_type} \n"
-        text_block += f'Position: ({self.pos_x}, {self.pos_y})\n'
-
-        text_block += "Enemies\n"
-        if self.contents["enemies"]:
-            for enemy in self.contents["enemies"]:
-                text_block += f"{enemy.name} (hp: {enemy.hp}, damage: {enemy.damage}, rarity: {enemy.rarity}, type: {enemy.type}, subtype: {enemy.sub_type})\n"
-        else:
-            text_block += "No enemies spawned yet. (this is normal if room not entered)\n"
-        
-
-        text_block += "Items\n"
-        if self.contents["items"]:
-            for item in self.contents["items"]:
-                text_block += f"{item.name}\n"
-            
-        else:
-            text_block += "No items present.\n"
-
-        return text_block
 
     def __str__(self):
         enemy_list = ", ".join([f"{enemy.name}, ({enemy.hp} HP), {enemy.type}" for enemy in self.contents["enemies"]]) or "None"

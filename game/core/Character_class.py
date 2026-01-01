@@ -91,15 +91,15 @@ class Character():
 
 
     def add_item(self, item: Items, amount:int = 1) -> None:
-        if item.name not in self.inventory["items"]:
-            self.inventory["items"][item.name] = {
+        if item.id not in self.inventory["items"]:
+            self.inventory["items"][item.id] = {
                 "item": item, 
                 "count": amount
                 }
             return
         
         if item.stackable:
-            self.inventory["items"][item.name]["count"] += amount
+            self.inventory["items"][item.id]["count"] += amount
     
 
     def remove_item(self, item_id: str, amount: int = 1) -> None:
@@ -165,18 +165,19 @@ class Character():
 
         self.equipment[slot] = item
         
-        self.remove_item(item.name, 1)
+        self.remove_item(item.id, 1)
 
         if item.category in (Item_Type.WEAPON, Item_Type.ARMOR):
             for stat, value in item.stats.items():
                 if stat == "damage":
-                    self.damage += value
+                    self.base_damage += value
                 elif stat == "defence":
-                    self.defence += value
+                    self.base_defence += value
                 elif stat == "hp":
-                    self.hp += value
+                    self.base_hp += value
 
         print(f"You equipped {item.name} in {slot} slot.")
+        input()
         
 
     def unequip_item(self, item: Items) -> None:
@@ -206,16 +207,15 @@ class Character():
 
         for stat, value in item.stats.items():
             if stat == "damage":
-                self.damage -= value
+                self.base_damage -= value
             elif stat == "defence":
-                self.defence -= value
+                self.base_defence -= value
             elif stat == "hp":
-                self.hp -= value
-            elif stat == "crit_chance":
-                pass #not implemented yet
+                self.base_hp -= value
 
         self.add_item(item, 1)
         print(f"You unequipped {item.name}.")
+        input()
 
 
 
@@ -423,7 +423,14 @@ class Character():
                     return
 
         self.statuses.append(new_status)
-    
+
+    def clear_negative_statuses(self):
+        self.statuses = [
+            s for s in self.statuses
+            if not STATUS_REGISTRY.get(s.id, {}).get("is_debuff", False)
+        ]
+
+
     def process_statuses(self) -> list[dict]:
         expired = []
         logs = []

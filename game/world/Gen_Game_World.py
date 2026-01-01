@@ -14,6 +14,10 @@ class Game_World():
         self.day_counter = day_counter
         self.areas = {}
         self.castle_unlocked = False
+        self.guide_state = {
+            "introduced": False,
+            "castle_notice_given": False,
+        }
 
         random.seed(self.seed)
         self.build_town()
