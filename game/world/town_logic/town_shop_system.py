@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from game.core.Item_class import Items, spawn_item
-from game.core.Character_class import Character
+from game.core.character import Character
 
 MARK_UP_FACTOR = 1.4
 SALE_FACTOR = 0.7

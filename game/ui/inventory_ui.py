@@ -1,4 +1,4 @@
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.core.Item_class import Items, Item_Type
 from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
 from game.core.class_progression import CLASS_PROGRESSION

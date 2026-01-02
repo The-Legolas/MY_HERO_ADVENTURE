@@ -295,29 +295,7 @@ class Dungeon_Manager():
             f"{boss_mood}\n"
             )
 
-
-    def resolve_room_entry(self, room: Room):
-        encounter = self.process_room_on_enter(room)
-
-        result = {
-            "start_combat": False,
-            "enemies": [],
-            "message": None
-        }
-
-        if encounter["spawned_enemies"]:
-            result["start_combat"] = True
-            result["enemies"] = encounter["spawned_enemies"]
-
-            if room.room_type == Room_Types.BOSS_ROOM:
-                result["message"] = "A terrifying presence fills the room."
-            
-            else:
-                result["message"] = "Enemies emerge from the shadows."
-        
-        return result
-    
-    def get_boss_position(self)  -> tuple:
+    def get_boss_position(self) -> tuple:
         return compute_farthest(self.dungeon_rooms)
     
     def distance_to_boss(self):

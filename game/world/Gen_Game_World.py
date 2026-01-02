@@ -4,11 +4,11 @@ from .town_logic.town_layout import build_town_graph
 from .town_logic.town_shop_system import restock_shop_for_new_day, initialize_shop_inventory
 from .town_logic.town_names import Town_names
 from .town_logic.town_creation import TownGraph
-from game.core.Character_class import Character
+from game.core.character import Character
 from .dungeon_manager import Dungeon_Manager, compute_farthest
 
 class Game_World():
-    def __init__(self, player: Character, day_counter: any, seed: any =None) -> None:
+    def __init__(self, player: Character, day_counter: int, seed: int | None =None) -> None:
         self.player = player
         self.seed = seed
         self.day_counter = day_counter

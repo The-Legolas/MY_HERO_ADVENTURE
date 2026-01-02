@@ -1,5 +1,5 @@
 import random
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.core.Status import Status
 from game.core.class_progression import SKILL_REGISTRY
@@ -282,59 +282,3 @@ def _compute_escape_chance(combat_state: 'Combat_State') -> bool:
     chance = max(0.01, min(0.95, base - behavior_penalty - size_penalty + noise))
     return random.random() < chance
 
-def resolve_skill_damage(actor, target, skill) -> dict:
-
-    dmg_def = skill.damage
-
-    if dmg_def is None or target is None:
-        return {
-            "damage": 0,
-            "blocked": False,
-            "critical": False,
-            "died": False,
-        }
-
-    raw = 0
-
-    # --- Base damage ---
-    if dmg_def["type"] == "flat":
-        raw = dmg_def["amount"]
-
-    elif dmg_def["type"] == "multiplier":
-        stat_val = getattr(actor, dmg_def["stat"], 0)
-        raw = int(stat_val * dmg_def["mult"])
-
-    elif dmg_def["type"] == "hybrid":
-        stat_val = getattr(actor, dmg_def["stat"], 0)
-        raw = int(dmg_def["base"] + stat_val * dmg_def["mult"])
-
-    # --- Status modifiers ---
-    raw = int(raw * actor.get_damage_multiplier())
-
-    # --- Critical ---
-    critical = False
-    if dmg_def.get("can_crit", True):
-        if random.random() >= 0.95:
-            raw *= 2
-            critical = True
-
-    # --- Defense ---
-    effective_defence = target.get_effective_defence()
-
-    if raw <= effective_defence:
-        return {
-            "damage": 0,
-            "blocked": True,
-            "critical": critical,
-            "died": False,
-        }
-
-    damage = raw - effective_defence
-    target.take_damage(damage)
-
-    return {
-        "damage": damage,
-        "blocked": False,
-        "critical": critical,
-        "died": not target.is_alive(),
-    }

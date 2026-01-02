@@ -1,4 +1,4 @@
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.core.Heroes import Warrior
 from game.world.Gen_Game_World import Game_World
 from game.world.town_logic.town_names import Town_names
@@ -9,21 +9,13 @@ from game.ui.text_screens import TextScreen
 # Progression & Balance:  |  Resource scarcity tuning (HP, MP, items)  | Grind tolerance (optional but intentional)
 
 
-
-
-
-#later
-# Story Framework: Ending
-
-
-
 # Testing
 
 
 """
 currently __ lines of code as of the previous git commit
 Bugs:
-Fixed: added and end screen and an intro and defeats screen when batteling the boss dragon
+
 
 
 
@@ -169,26 +161,6 @@ def pick_character_and_name() -> Character:
     player_hero = Warrior(hero_name, starting_items=None)
     
     return player_hero
-
-
-"""
-The dragon falls.
-
-Its body collapses into ash and scorched stone, the weight of its presence finally lifting from the land.
-
-For the first time in days, the town feels… quiet.
-
-The cave will still change.
-The world will still turn.
-But something ancient has been put to rest.
-
-You leave behind more than footprints in the dark.
-
-You leave behind a story.
-
-=== THE END ===
-
-"""
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.core.Enemy_class import Enemy
 
 

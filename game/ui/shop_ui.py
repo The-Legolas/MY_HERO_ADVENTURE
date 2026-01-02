@@ -1,4 +1,4 @@
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.engine.input_parser import parse_shop_input
 
 class ShopUI:

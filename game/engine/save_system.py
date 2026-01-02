@@ -5,7 +5,7 @@ from typing import Tuple
 from game.world.Gen_Game_World import Game_World
 from game.world.dungeon_manager import Dungeon_Manager
 from game.world.Dungeon_room_code import Room, Room_Types
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.core.Heroes import Warrior
 from game.core.Item_class import spawn_item, ITEM_DEFINITIONS
 from game.core.Status import Status

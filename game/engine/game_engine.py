@@ -1,4 +1,4 @@
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.world.town_logic.town_names import Town_names
 from game.engine.input_parser import parse_interior_input, parse_leave_town_input, parse_town_gate_input, inventory_input_parser, parse_shop_input, parse_dungeon_input
 from game.world.town_logic.town_creation import Location, Town_Actions, TownGraph

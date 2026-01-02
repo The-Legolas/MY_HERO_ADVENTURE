@@ -4,7 +4,7 @@ import random
 from game.core.Status import Enemy_Rarity
 from typing import TYPE_CHECKING
 
-from game.core.Character_class import Character
+from game.core.character import Character
 
 
 class Enemy_sub_type(Enum):

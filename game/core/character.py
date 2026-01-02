@@ -15,7 +15,7 @@ STAT_VALUE_GETTERS = {
 }
 
 
-class Character():
+class Character:
     def __init__(self, name: str, hp: int, damage: int, defence: int, starting_items: dict[str, int] | None = None, gold: int = 0):
         self.name = name
         self.base_hp = hp
@@ -26,7 +26,6 @@ class Character():
 
         self.level = 1
         self.xp = 0
-        self.STAT_VALUE_GETTERS = 0
         self.class_id:str | None = None
         self.level_bonuses: dict[str, int] = {
             "hp": 0,

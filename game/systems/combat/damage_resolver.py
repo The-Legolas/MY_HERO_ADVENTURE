@@ -2,7 +2,7 @@ import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING: 
-    from game.core.Character_class import Character
+    from game.core.character import Character
 
 def resolve_damage(actor: 'Character', target: 'Character', damage_def: dict) -> dict:
     """

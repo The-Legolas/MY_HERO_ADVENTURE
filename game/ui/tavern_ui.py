@@ -1,4 +1,4 @@
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.world.town_logic.guide_logic import get_guide_display_name, get_guide_dialogue
 from typing import TYPE_CHECKING
 

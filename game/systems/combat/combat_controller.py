@@ -1,5 +1,5 @@
 from game.systems.combat.combat_turn import _get_initiative_value
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.world.Dungeon_room_code import Room
 from game.core.Item_class import roll_loot
@@ -9,7 +9,6 @@ import random
 from typing import Optional
 from game.core.Status import Status
 from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
-from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.core.Skill_class import Skill
 from game.core.class_progression import SKILL_REGISTRY
 from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait

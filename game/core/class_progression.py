@@ -461,25 +461,4 @@ CLASS_PROGRESSION = {
             },
         },
     },
-
-    "wizard": {
-        "level_cap": 10,
-        "xp_curve": "exponential",
-        "xp_per_level": [
-            0,
-            150,
-            350,
-            700,
-            1300,
-            2200,
-            3600,
-            5600,
-            8300,
-            12000,
-        ],
-        "level_rewards": {
-            2: {"skills": ["arcane_bolt"]},
-            4: {"skills": ["toxic_cloud"]},
-        },
-    },
 }

@@ -1,4 +1,4 @@
-from game.core.Character_class import Character
+from game.core.character import Character
 from game.world.Gen_Game_World import Game_World
 from typing import TYPE_CHECKING
 
