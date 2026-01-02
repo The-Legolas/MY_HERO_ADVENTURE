@@ -41,6 +41,10 @@ class Character():
         self.known_skills: set[str] = set()
         self.usable_skills: list[str] = []
 
+        self.resource_name = None
+        self.resource_max = 0
+        self.resource_current = 0
+
         self.equipment = {
             "weapon": None,
             "armor": None,
@@ -699,7 +703,19 @@ class Character():
 
     def get_on_turn_effects(self):
         return self.get_effects_by_trigger("on_turn")
+    
+    def regen_resource(self, amount: int):
+        self.resource_current = min(
+            self.resource_max,
+            self.resource_current + amount
+        )
 
+    def has_enough_resource(self, cost: dict | None) -> bool:
+        if not cost:
+            return True
+
+        amount = cost.get("amount", 0)
+        return self.resource_current >= amount
 
 
     def __str__(self):

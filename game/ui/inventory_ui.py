@@ -170,7 +170,6 @@ def get_inventory_items(player: Character, equippable_only: bool = False) -> lis
 
         results.append((item_id, item, count))
     
-     # --- automatic sorting ---
     def sort_key(entry):
         _, item, _ = entry
         type_index = ITEM_TYPE_ORDER.index(item.category)
@@ -284,6 +283,10 @@ def _render_inventory_item_outcome(outcome: dict):
 
 def render_player_status(player: Character):
     print("\n=== PLAYER STATUS ===")
+    print(f"Name: {player.name}")
+
+    res = f"| {player.resource_name.upper()}: {player.resource_current}/{player.resource_max}"
+    print(f"HP: {player.hp}/{player.max_hp} {res}")
 
     xp, xp_needed, at_cap = get_xp_progress(player)
 

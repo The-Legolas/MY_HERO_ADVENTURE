@@ -14,6 +14,10 @@ from game.core.Skill_class import Skill
 from game.core.class_progression import SKILL_REGISTRY
 from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait
 
+BASE_REGEN = 3
+DEFEND_BONUS = 5
+
+
 class Combat_State():
     def __init__(self, player: Character, enemy_list: list[Enemy]):
         self.player: Character = player
@@ -30,7 +34,8 @@ def show_combat_status(combat: Combat_State):
     icons = format_status_icons(player)
 
     print("\n=== COMBAT STATUS ===")
-    print(f"You: {player.hp}/{player.max_hp} HP {icons}")
+    res = f"| {player.resource_name[:3].upper()}: {player.resource_current}/{player.resource_max}"
+    print(f"{player.name}: {player.hp}/{player.max_hp} HP {res} | {icons}\n")
     for i, e in enumerate(combat.alive_enemies(), start=1):
         icons = format_status_icons(e)
         print(f"{i}. {e.name} ({e.hp}/{e.max_hp} HP) {icons}")
@@ -133,6 +138,10 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 
                 combat_state.log.append({"event": "victory", "loot": total_loot, "xp": total_xp})
                 combat_state.is_running = False
+                player.resource_current = max(
+                    player.resource_current + int(player.resource_max * 0.5),
+                    player.resource_max
+                )
                 return {"result": "victory", "log": combat_state.log, "loot": total_loot, "xp": total_xp}
 
 
@@ -160,6 +169,14 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 action = decide_enemy_action(actor, combat_state)
 
             outcome = resolve_action(action, combat_state)
+
+            if actor is player:
+                if action.type == "attack" or action.type == "item":
+                    player.regen_resource(BASE_REGEN)
+
+                elif action.type == "defend":
+                    player.regen_resource(BASE_REGEN + DEFEND_BONUS)
+
             render_combat_outcome(outcome)
             input()
 
@@ -183,9 +200,6 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 return {"result": "defeat", "log": combat_state.log}
             
         combat_state.round_number += 1
-
-    # fallback
-    #return {"result": "stopped", "log": combat_state.log}
 
 
 
@@ -241,8 +255,13 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
                 if not skill:
                     print(f"{i}. [INVALID SKILL: {skill_id}]")
                     continue
+                cost_text = ""
+                if skill.cost:
+                    cost_text = f" ({skill.cost['amount']} {actor.resource_name.upper()[:3]})"
 
-                print(f"{i}. {skill.name} — {skill.description}")
+                print(f"{i}. {skill.name}{cost_text} — {skill.description}")
+
+                #print(f"{i}. {skill.name} — {skill.description}")
             print("c. Cancel")
 
             choice = input("> ").strip().lower()
@@ -258,6 +277,12 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
             skill_id = skills[idx]
             skill = SKILL_REGISTRY.get(skill_id)
+
+            if skill.cost and not actor.has_enough_resource(skill.cost):
+                resource_name = actor.resource_name
+                print(f"\nNot enough {resource_name} to use {skill.name}.")
+                input()
+                continue
 
             if skill.target == "enemy":
                 enemies = combat.alive_enemies()
@@ -497,9 +522,11 @@ def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
     enemy.intent = None
 
     if not intent:
+        print("oooo")
         return Action(enemy, "attack", player)
 
     if intent["type"] == "attack":
+        print("hhee")
         return Action(enemy, "attack", player)
 
     if intent["type"] == "skill":
@@ -519,7 +546,7 @@ def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
         }
         return Action(enemy, "wait", None)
     
-    return Action(enemy, "attack", player)
+    #return Action(enemy, "attack", player)
 
 
 def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
@@ -551,14 +578,13 @@ def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
     return available
 
 def plan_enemy_intent(enemy: Enemy, combat_state: Combat_State) -> None:
-#fix
     if enemy.locked_state:
         enemy.intent = {
             "type": "charging",
             "skill_id": enemy.locked_state["skill_id"],
             "turns": enemy.locked_state["turns"],
             "forced_action": enemy.locked_state.get("forced_action"),
-            "text": enemy.locked_state.get("intent_hint", "Gathering power lin 561"),
+            "text": enemy.locked_state.get("intent_hint", "Gathering power."),
         }
         return
 

@@ -18,12 +18,10 @@ def render_status_tooltip(status, entity) -> list[str]:
             if "damage_mult" in mag:
                 lines.append(f"Effect strength: x{mag['damage_mult']} damage")
             else:
-                # Fallback for future structured magnitudes
                 for k, v in mag.items():
                     lines.append(f"Effect strength: {k} = {v}")
 
         else:
-            # Scalar magnitude (poison, regen, etc.)
             lines.append(f"Effect strength: {mag}")
 
     if status.remaining_turns >= 0:

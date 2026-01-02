@@ -58,7 +58,6 @@ class TavernUI:
         return
 
     def talk_keeper(self):
-        # Placeholder — you can expand this later
         print("\nThe tavern keeper grunts: 'Not many adventurers make it this far…'")
         input()
     

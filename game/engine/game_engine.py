@@ -15,6 +15,9 @@ from game.world.dungeon_manager import Dungeon_Manager
 from game.systems.combat.combat_controller import start_encounter
 from game.systems.combat.combat_log_viewer import combat_log_renderer
 from game.ui.combat_ui import render_victory_summary
+from game.ui.boss_intro import show_boss_intro
+from game.ui.boss_defeat import show_boss_defeat
+from game.ui.ending_screen import show_ending_screen
 from game.core.Status import Enemy_Rarity
 from typing import TYPE_CHECKING
 
@@ -133,6 +136,9 @@ class GameEngine:
 
             entry_result = dungeon.process_room_on_enter(room)
 
+            if "boss_intro" in entry_result.get("special_events", []):
+                show_boss_intro()
+
             if entry_result["spawned_enemies"]:
                 print("\nEnemies appear!")
                 
@@ -153,6 +159,13 @@ class GameEngine:
                             dungeon.miniboss_defeated = True
                             break
 
+                        if room.room_type == Room_Types.BOSS_ROOM:
+                            show_ending_screen(self.player.name)
+
+                            input("\nPress Enter to exit the game.")
+
+                            raise SystemExit
+
                     print("\n1. View battle report")
                     print("2. Continue")
 
@@ -167,13 +180,15 @@ class GameEngine:
 
 
                 elif result["result"] == "defeat":
+                    if room.room_type == Room_Types.BOSS_ROOM:
+                        show_boss_defeat()
+
                     self.player.hp = self.player.max_hp
 
                     dungeon_depth = self.current_dungeon.current_depth
 
                     self.current_dungeon = None
                     self.current_room = None
-
                     self.state = "town"
 
                     self._handle_day_transition(context="death", dungeon_depth=dungeon_depth)
@@ -293,6 +308,7 @@ class GameEngine:
                 
                 if result.get("rest"):
                     self.player.hp = self.player.max_hp
+                    self.player.resource_current = self.player.resource_max
                     self.player.clear_negative_statuses()
                     print(result["message"])
                     input()

@@ -165,6 +165,9 @@ class Dungeon_Manager():
         
         room.visited = True
 
+        if room.room_type == Room_Types.BOSS_ROOM:
+            encounter["special_events"].append("boss_intro")
+
         if room.room_type == Room_Types.ENEMY_ROOM and not room.cleared:
             enemy = self.spawn_enemy_for_room(room)
             if enemy:

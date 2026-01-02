@@ -13,7 +13,7 @@ from game.ui.text_screens import TextScreen
 
 
 #later
-# Story Framework:   | World premise  |  Player motivation  |  Ending(s)
+# Story Framework: Ending
 
 
 
@@ -23,14 +23,8 @@ from game.ui.text_screens import TextScreen
 """
 currently __ lines of code as of the previous git commit
 Bugs:
-Fixed: Made a save/loading system and ui for it
-Fixed: A bug where you couldn't equip and un-equip weapons and armors because of the property change to def, dmg, hp
-Fixed: Added rest rooms which heals you and removes all debuff status effects
-Fixed: Made it so the inn also heals your debuffs
-Fixed: Added a guide NPC in the Tavern to help the player and guide them a bit through the game
-Fixed: Made it so the boss actual spawns and it's room can be entered
-Fixed: Added symbols to represent room types in the visualizer instead of words
-Fixed: Added intro and totorial section to the start of the game.
+Fixed: added and end screen and an intro and defeats screen when batteling the boss dragon
+
 
 
 Like to have:
@@ -38,7 +32,6 @@ note 1: Statuses should have a chance to apply even if the attack is blocked. (o
 note 2: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
 note 4: in the code base search for #fix to find things to remove before final game release
 note 6: update shop and tressure inventory to hold some of the new items
-# Items & Equipment:  done but maybe the supposed map mechanic
 
 """
 
@@ -96,7 +89,6 @@ def show_intro_story() -> None:
             (
                 "You arrive as many before you have armed, capable, and looking for work.\n\n"
                 "Gold can be earned in the dark.\n"
-                "So can answers.\n\n"
                 "Whether you leave richer, wiser, or not at all…\n"
                 "depends on how deep you dare to go."
             )
@@ -179,7 +171,24 @@ def pick_character_and_name() -> Character:
     return player_hero
 
 
+"""
+The dragon falls.
 
+Its body collapses into ash and scorched stone, the weight of its presence finally lifting from the land.
+
+For the first time in days, the town feels… quiet.
+
+The cave will still change.
+The world will still turn.
+But something ancient has been put to rest.
+
+You leave behind more than footprints in the dark.
+
+You leave behind a story.
+
+=== THE END ===
+
+"""
 
 
 if __name__ == "__main__":

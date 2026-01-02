@@ -54,6 +54,7 @@ class InnUI:
 
             if heal_amount == "full":
                 self.player.hp = self.player.max_hp
+                self.player.resource_current = self.player.resource_max
                 self.player.clear_negative_statuses()
 
             self.engine._handle_day_transition(context="rest")

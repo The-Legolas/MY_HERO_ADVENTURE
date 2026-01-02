@@ -139,6 +139,25 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
             combat_state.log.append(outcome)
             return outcome
         
+        cost = skill.cost
+        if cost:
+            amount = cost.get("amount", 0)
+            if actor.resource_current < amount:
+                outcome = _make_outcome(
+                    actor.name,
+                    "skill_fail",
+                    target.name if target else None,
+                    extra={
+                        "reason": "not_enough_resource",
+                        "resource": actor.resource_name,
+                    }
+                )
+                combat_state.log.append(outcome)
+                return outcome
+        
+        if cost:
+            actor.resource_current -= cost["amount"]
+
         # --- Hit chance ---
         if random.random() > skill.hit_chance:
             outcome = _make_outcome(

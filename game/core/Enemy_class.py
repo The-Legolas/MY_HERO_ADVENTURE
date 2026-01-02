@@ -212,8 +212,8 @@ ENEMY_DEFINITIONS = {
     Enemy_type.ENEMY_BOSS_DRAGON : {
         "name": "Dragon",
         "hp": 150,
-        "damage": 40,
-        "defence": 28,
+        "damage": 20,
+        "defence": 15,
         "rarity": Enemy_Rarity.BOSS,
         "sub_type": Enemy_sub_type.DRAGON,
         "xp_reward": 1800,

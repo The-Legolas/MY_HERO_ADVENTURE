@@ -53,6 +53,11 @@ def _serialize_character(player: Character) -> dict:
         "level_bonuses": player.level_bonuses,
         "known_skills": list(player.known_skills),
         "usable_skills": list(player.usable_skills),
+        "resource": {
+            "current": player.resource_current,
+            "max": player.resource_max,
+            "name": player.resource_name,
+        },
         "inventory": {
             "gold": player.inventory["gold"],
             "items": {
@@ -89,6 +94,12 @@ def _deserialize_character(data: dict) -> Character:
 
     player.known_skills = set(data["known_skills"])
     player.usable_skills = list(data["usable_skills"])
+
+    res = data.get("resource")
+    if res:
+        player.resource_current = res["current"]
+        player.resource_max = res["max"]
+        player.resource_name = res["name"]
     
 
     # Inventory

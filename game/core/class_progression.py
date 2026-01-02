@@ -36,7 +36,12 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "stat": "damage",
             "mult": .7,
         },
+        
         hit_chance=0.85,
+        cost = {
+            "resource": "stamina",
+            "amount": 10
+        },
         apply_status={
             "id": "stun",
             "duration": 1,
@@ -51,6 +56,10 @@ SKILL_REGISTRY: dict[str, Skill] = {
         name="War Cry",
         description="Bolster your strength for a short time.",
         target="self",
+        cost = {
+            "resource": "stamina",
+            "amount": 15
+        },
         apply_status={
             "id": "strength_up",
             "duration": 3,
@@ -72,6 +81,10 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "can_crit": True,
         },
         hit_chance=1.0, #0.9
+        cost = {
+            "resource": "stamina",
+            "amount": 14
+        },
         apply_status={
             "id": "poison",
             "duration": 3,
@@ -370,7 +383,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         locks_actor={
             "state": "charging",
             "turns": 2,
-            "forced_action": "attack",
+            "forced_action": None,
         },
     ),
 
@@ -378,6 +391,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="terrifying_roar",
         name="Terrifying Roar",
         description="A roar that crushes the will to fight.",
+        intent_hint="Missing: terrifying_roar",
         target="enemy",
         damage=None,
         apply_status={
@@ -393,6 +407,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="skyward_ascension",
         name="Skyward Ascension",
         description="The dragon takes to the air, preparing a deadly dive.",
+        intent_hint="Missing: skyward_ascension",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -404,7 +419,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         locks_actor={
             "state": "airborne",
             "turns": 2,
-            "forced_action": "attack",
+            "forced_action": None,
         },
         cooldown_turns=6,
     ),
