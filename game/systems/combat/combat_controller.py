@@ -137,7 +137,7 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 
                 combat_state.log.append({"event": "victory", "loot": total_loot, "xp": total_xp})
                 combat_state.is_running = False
-                player.resource_current = max(
+                player.resource_current = min(
                     player.resource_current + int(player.resource_max * 0.5),
                     player.resource_max
                 )

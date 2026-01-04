@@ -34,7 +34,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "type": "hybrid",
             "base": 5,
             "stat": "damage",
-            "mult": .7,
+            "mult": 0.70,
         },
         
         hit_chance=0.85,
@@ -93,6 +93,120 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
         trigger="on_turn_start",
     ),
+
+    "sundering_blow": Skill(
+        id="sundering_blow",
+        name="Sundering Blow",
+        description="A brutal strike meant to shatter defenses.",
+        target="enemy",
+        damage={
+            "type": "hybrid",
+            "base": 6,
+            "stat": "damage",
+            "mult": 0.9,
+        },
+        hit_chance=0.75,
+        cost={"resource": "stamina", "amount": 18},
+        apply_status={
+            "id": "armor_down",
+            "duration": 2,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+    ),
+
+    "searing_thrust": Skill(
+        id="searing_thrust",
+        name="Searing Thrust",
+        description="A focused thrust that ignites the target from within.",
+        target="enemy",
+        damage={
+            "type": "hybrid",
+            "base": 4,
+            "stat": "damage",
+            "mult": 0.75,
+        },
+        hit_chance=0.95,
+        cost={"resource": "stamina", "amount": 10},
+        apply_status={
+            "id": "burn",
+            "duration": 2,
+            "magnitude": 6,
+            "chance": 1.0,
+        },
+    ),
+
+    "iron_guard": Skill(
+        id="iron_guard",
+        name="Iron Guard",
+        description="Adopt a hardened stance, ready to absorb blows.",
+        target="self",
+        cost={"resource": "stamina", "amount": 8},
+        apply_status={
+            "id": "defending",
+            "duration": 2,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+    ),
+
+    "concussive_strike": Skill(
+        id="concussive_strike",
+        name="Concussive Strike",
+        description="A forceful blow aimed to rattle the enemy’s senses.",
+        target="enemy",
+        damage={
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 0.95,
+        },
+        hit_chance=0.85,
+        cost={"resource": "stamina", "amount": 14},
+        apply_status={
+            "id": "stun",
+            "duration": 1,
+            "magnitude": None,
+            "chance": 0.6,
+        },
+        forbid_if_target_has=["stun"],
+    ),
+
+    "exhausting_assault": Skill(
+        id="exhausting_assault",
+        name="Exhausting Assault",
+        description="An aggressive attack that leaves the enemy drained.",
+        target="enemy",
+        damage={
+            "type": "hybrid",
+            "base": 5,
+            "stat": "damage",
+            "mult": 0.8,
+        },
+        hit_chance=0.8,
+        cost={"resource": "stamina", "amount": 17},
+        apply_status={
+            "id": "weakened",
+            "duration": 4,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+    ),
+
+    "rallying_breath": Skill(
+        id="rallying_breath",
+        name="Rallying Breath",
+        description="Draw deep resolve, restoring vitality through discipline.",
+        target="self",
+        cost={"resource": "stamina", "amount": 15},
+        apply_status={
+            "id": "regen",
+            "duration": 4,
+            "magnitude": 8,
+            "chance": 1.0,
+        },
+    ),
+
+
 
     # ENEMY SKILLS
     # UNDEAD
@@ -153,6 +267,35 @@ SKILL_REGISTRY: dict[str, Skill] = {
         cooldown_turns=4,
     ),
 
+    "grave_resilience": Skill(
+        id="grave_resilience",
+        name="Grave Resilience",
+        description="Dark energy knits shattered bones back together.",
+        target="self",
+        damage=None,
+        apply_status={
+            "id": "regen",
+            "duration": 3,
+            "magnitude": 3,
+            "chance": 1.0,
+        },
+        cooldown_turns=4,
+    ),
+
+    "withering_touch": Skill(
+        id="withering_touch",
+        name="Withering Touch",
+        description="Necrotic power weakens the target’s defenses.",
+        target="enemy",
+        damage=None,
+        apply_status={
+            "id": "armor_down",
+            "duration": 3,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+        forbid_if_target_has=["armor_down"],
+    ),
 
     # HUMANOID
     "dirty_strike": Skill(
@@ -215,6 +358,44 @@ SKILL_REGISTRY: dict[str, Skill] = {
         cooldown_turns=5,
     ),
 
+    "bloodletting_slash": Skill(
+        id="bloodletting_slash",
+        name="Bloodletting Slash",
+        description="A vicious cut designed to make the target bleed out.",
+        target="enemy",
+        damage={
+            "type": "hybrid",
+            "base": 4,
+            "stat": "damage",
+            "mult": 0.7,
+            "can_crit": True,
+        },
+        apply_status={
+            "id": "bleed",
+            "duration": 5,
+            "magnitude": 1,
+            "chance": 1.0,
+        },
+    ),
+
+    "cracking_blow": Skill(
+        id="cracking_blow",
+        name="Cracking Blow",
+        description="A focused strike aimed at armor seams.",
+        target="enemy",
+        damage={
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 0.85,
+            "can_crit": True,
+        },
+        apply_status={
+            "id": "armor_down",
+            "duration": 2,
+            "magnitude": None,
+            "chance": 0.5,
+        },
+    ),
 
     # OOZE
     "acid_splash": Skill(
@@ -235,6 +416,36 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "chance": 0.5,
         },
         forbid_if_target_has=["weakened"],
+    ),
+
+    "dissolve_armor": Skill(
+        id="dissolve_armor",
+        name="Dissolve Armor",
+        description="Acid eats away at protective gear.",
+        target="enemy",
+        damage=None,
+        apply_status={
+            "id": "armor_down",
+            "duration": 4,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+        forbid_if_target_has=["armor_down"],
+    ),
+
+    "gelatinous_recovery": Skill(
+        id="gelatinous_recovery",
+        name="Gelatinous Recovery",
+        description="The ooze reforms damaged mass.",
+        target="self",
+        damage=None,
+        apply_status={
+            "id": "regen",
+            "duration": 4,
+            "magnitude": 4,
+            "chance": 1.0,
+        },
+        cooldown_turns=5,
     ),
 
     "engulf": Skill(
@@ -364,7 +575,25 @@ SKILL_REGISTRY: dict[str, Skill] = {
         cooldown_turns=3,
     ),
 
-    
+    "tear_flesh": Skill(
+        id="tear_flesh",
+        name="Tear Flesh",
+        description="A savage attack that leaves deep wounds.",
+        target="enemy",
+        damage={
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 1.1,
+            "can_crit": True,
+        },
+        apply_status={
+            "id": "bleed",
+            "duration": 4,
+            "magnitude": 2,
+            "chance": 0.7,
+        },
+    ),
+
     # DRAGON
     "flame_breath": Skill(
         id="flame_breath",
@@ -380,9 +609,15 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "can_crit": False,
         },
         hit_chance=1.0,
+        apply_status={
+            "id": "burn",
+            "duration": 3,
+            "magnitude": 0.1,
+            "chance": 1.0,
+        },
         locks_actor={
             "state": "charging",
-            "turns": 2,
+            "turns": 3,
             "forced_action": None,
         },
     ),
@@ -412,6 +647,27 @@ SKILL_REGISTRY: dict[str, Skill] = {
         damage={
             "type": "multiplier",
             "stat": "damage",
+            "mult": 1.7,
+            "can_crit": False,
+        },
+        hit_chance=1.0,
+        locks_actor={
+            "state": "airborne",
+            "turns": 2,
+            "forced_action": None,
+        },
+        cooldown_turns=6,
+    ),
+
+    "cataclysmic_slam": Skill(
+        id="cataclysmic_slam",
+        name="Cataclysmic Slam",
+        description="The dragon crashes down with devastating force.",
+        intent_hint="The ground trembles beneath it…",
+        target="enemy",
+        damage={
+            "type": "multiplier",
+            "stat": "damage",
             "mult": 2.0,
             "can_crit": False,
         },
@@ -423,6 +679,135 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
         cooldown_turns=6,
     ),
+
+    "molten_scales": Skill(
+        id="molten_scales",
+        name="Molten Scales",
+        description="The dragon’s scales glow with molten heat.",
+        target="self",
+        damage=None,
+        apply_status={
+            "id": "defending",
+            "duration": 2,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+        cooldown_turns=6,
+    ),
+
+    "crushing_bite": Skill(
+        id="crushing_bite",
+        name="Crushing Bite",
+        description="The dragon snaps its jaws with bone-crushing force.",
+        intent_hint="Its jaws spread wide…",
+        target="enemy",
+        damage={
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 1.4,
+            "can_crit": True,
+        },
+        hit_chance=0.9,
+    ),
+
+    "raking_talons": Skill(
+        id="raking_talons",
+        name="Raking Talons",
+        description="Razor-sharp claws tear through flesh, leaving deep wounds.",
+        intent_hint="The dragon rears back, claws poised…",
+        target="enemy",
+        damage={
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 1.0,
+            "can_crit": False,
+        },
+        apply_status={
+            "id": "bleed",
+            "duration": 4,
+            "magnitude": 2,
+            "chance": 0.8,
+        },
+        forbid_if_target_has=["bleed"],
+    ),
+
+    "searing_presence": Skill(
+        id="searing_presence",
+        name="Searing Presence",
+        description="The dragon’s heat weakens nearby defenses.",
+        intent_hint="Heat distorts the air around it…",
+        target="enemy",
+        damage=None,
+        apply_status={
+            "id": "armor_down",
+            "duration": 3,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+        forbid_if_target_has=["armor_down"],
+        cooldown_turns=4,
+    ),
+
+    "ancient_fury": Skill(
+        id="ancient_fury",
+        name="Ancient Fury",
+        description="The dragon taps into its ancient rage, increasing its power.",
+        intent_hint="The dragon roars with ancient fury…",
+        target="self",
+        damage=None,
+        apply_status={
+            "id": "strength_up",
+            "duration": 3,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+        forbid_if_target_has=["strength_up"],
+        cooldown_turns=5,
+    ),
+
+    "smoldering_regeneration": Skill(
+        id="smoldering_regeneration",
+        name="Smoldering Regeneration",
+        description="Flames knit the dragon’s wounds shut.",
+        intent_hint="Its wounds glow with embers…",
+        target="self",
+        damage=None,
+        apply_status={
+            "id": "regen",
+            "duration": 4,
+            "magnitude": 6,
+            "chance": 1.0,
+        },
+        cooldown_turns=6,
+    ),
+
+    "inferno_surge": Skill(
+        id="inferno_surge",
+        name="Inferno Surge",
+        description="The dragon gathers fire deep within its chest.",
+        intent_hint="Flames churn beneath its scales…",
+        target="enemy",
+        damage={
+            "type": "multiplier",
+            "stat": "damage",
+            "mult": 1.6,
+            "can_crit": False,
+        },
+        apply_status={
+            "id": "burn",
+            "duration": 4,
+            "magnitude": 0.12,
+            "chance": 1.0,
+        },
+        locks_actor={
+            "state": "overheating",
+            "turns": 2,
+            "forced_action": None,
+        },
+        cooldown_turns=5,
+    ),
+
+
 }
 
 
@@ -435,14 +820,14 @@ CLASS_PROGRESSION = {
             0,    # level 1
             100,  # level 2
             200,
-            300,
             400,
-            500,
-            600,
             700,
-            800,
-            900,
-            1000,  # level 10
+            1000,
+            1300,
+            1600,
+            2000,
+            2500,
+            3000,  # level 10
         ],
         "level_rewards": {
 
@@ -450,14 +835,29 @@ CLASS_PROGRESSION = {
                 "stats": {"hp": +10, "damage": +2},
             },
             3: {
-                "stats": {"hp": +10, "damage": +2},
+                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
                 "skills": ["shield_bash"],
             },
             4: {
                 "stats": {"defence": +1},
             },
+            5: {
+                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
+            },
             6: {
                 "skills": ["war_cry"],
+            },
+            7: {
+                "stats": {"hp": +10, "defence": +3, "damage": +2, "resource_max": +10},
+            },
+            8: {
+                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
+            },
+            9: {
+                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
+            },
+            10: {
+                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
             },
         },
     },

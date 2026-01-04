@@ -4,24 +4,17 @@ from game.world.Gen_Game_World import Game_World
 from game.world.town_logic.town_names import Town_names
 from game.engine.game_engine import GameEngine
 from game.ui.text_screens import TextScreen
-# Missing from the game still:
-
-# Progression & Balance:  |  Resource scarcity tuning (HP, MP, items)  | Grind tolerance (optional but intentional)
-
-
-# Testing
-
 
 """
 currently __ lines of code as of the previous git commit
 Bugs:
 
-
+Fixed:
+Statuses should have a chance to apply even if the attack is blocked. (or makeing it so if defence is more than the attack (and not defending) only doing halve dmg)
+add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
 
 
 Like to have:
-note 1: Statuses should have a chance to apply even if the attack is blocked. (or makeing it so if defence is more than the attack (and not defending) only doing halve dmg)
-note 2: add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
 note 4: in the code base search for #fix to find things to remove before final game release
 note 6: update shop and tressure inventory to hold some of the new items
 

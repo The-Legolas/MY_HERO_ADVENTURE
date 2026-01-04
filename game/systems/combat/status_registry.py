@@ -38,7 +38,7 @@ STATUS_REGISTRY = {
 
     "weakened": {
         "priority": 30,
-        "icon": "⬇",
+        "icon": "⚔⬇",
         "stacking": "stack",
         "max_stacks": 5,
         "description": "Reduces outgoing damage.",
@@ -48,7 +48,7 @@ STATUS_REGISTRY = {
 
     "strength_up": {
         "priority": 40,
-        "icon": "⚔",
+        "icon": "⚔⬆",
         "stacking": "stack",
         "max_stacks": 5,
         "description": "Increases outgoing damage.",
@@ -75,5 +75,44 @@ STATUS_REGISTRY = {
         "modifiers": {"defence_mult": 2.0},
         "expires_end_of_turn": True,
     },
-}
+    "burn": {
+        "priority": 15,
+        "icon": "🔥",
+        "stacking": "refresh",
+        "max_stacks": 1,
+        "prevents_action": False,
+        "description": "Deals percentage-based damage each turn.",
+        "on_tick": lambda target, status: target.take_damage(
+            max(1, int(target.max_hp * (status.magnitude / 100)))
+        ),
+        "is_debuff": True,
+    },
 
+    "bleed": {
+        "priority": 12,
+        "icon": "🩸",
+        "stacking": "stack",
+        "max_stacks": 10,
+        "prevents_action": False,
+        "description": "Deals minor damage over time. Can stack heavily.",
+        "on_tick": lambda target, status: target.take_damage(
+            max(1, int(status.magnitude * 0.5))
+        ),
+        "is_debuff": True,
+    },
+
+    "armor_down": {
+        "priority": 35,
+        "icon": "🛡⬇",
+        "stacking": "stack",
+        "max_stacks": 5,
+        "prevents_action": False,
+        "description": "Reduces defense, making the target more vulnerable.",
+        "modifiers": {
+            "defence_mult": 0.8,
+        },
+        "is_debuff": True,
+    },
+
+}
+ 

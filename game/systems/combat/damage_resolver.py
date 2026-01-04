@@ -45,15 +45,24 @@ def resolve_damage(actor: 'Character', target: 'Character', damage_def: dict) ->
             critical = True
 
     # --- Step 4: Defense ---
-    if raw <= target.defence:
+    effective_defence = target.get_effective_defence()
+
+    if raw <= effective_defence:
+        # Proportional blocked damage (max 50%, min 0%)
+        ratio = max(0.0, min(1.0, (raw * 2 - effective_defence) / raw))
+        damage = int(raw * 0.25 * ratio)
+
+        if damage > 0:
+            target.take_damage(damage)
+
         return {
-            "damage": 0,
+            "damage": damage,
             "blocked": True,
             "critical": critical,
-            "died": False,
+            "died": not target.is_alive(),
         }
 
-    damage = raw - target.defence
+    damage = raw - effective_defence
     target.take_damage(damage)
 
     return {

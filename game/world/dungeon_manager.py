@@ -37,7 +37,7 @@ class Dungeon_Manager():
         starting_room = Room(Room_Types.EMPTY, start_x, start_y, day_counter=self.day_counter)
         self.dungeon_rooms[(start_x, start_y)] = starting_room
 
-        base_size = 20
+        base_size = 18
         dungeon_room_count = base_size + int(self.day_counter * 1.2)
 
         current_pos = (start_x, start_y)

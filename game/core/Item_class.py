@@ -680,4 +680,81 @@ ITEM_DEFINITIONS = {
         "effect": None,
         "value": 3
     },
+    "broken_helm": {
+        "name": "Broken Helm",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 13
+    },
+
+    "tarnished_insignia": {
+        "name": "Tarnished Insignia",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 14
+    },
+    "rotted_bone": {
+        "name": "Rotted Bone",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 4
+    },
+    "boar_tusk": {
+        "name": "Boar Tusk",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 6
+    },
+
+    "matted_hide": {
+        "name": "Matted Hide",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 15
+    },
+  
+    "hardened_slime_core": {
+        "name": "Hardened Slime Core",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 50
+    },
+
+    "charred_scale": {
+        "name": "Charred Scale",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 140
+    },
+
+    "ashen_drake_claw": {
+        "name": "Ashen Drake Claw",
+        "category": Item_Type.SCRAP,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": None,
+        "value": 270
+    },
 }

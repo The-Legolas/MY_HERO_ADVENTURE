@@ -705,8 +705,8 @@ class Character:
     
     def regen_resource(self, amount: int):
         self.resource_current = min(
-            self.resource_max,
-            self.resource_current + amount
+            self.resource_current + amount,
+            self.resource_max
         )
 
     def has_enough_resource(self, cost: dict | None) -> bool:

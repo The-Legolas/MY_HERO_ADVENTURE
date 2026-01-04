@@ -20,6 +20,18 @@ class Enemy_type(Enum):
     ENEMY_WOLF = "wolf"
     ENEMY_ORC = "orc"
     ENEMY_BOSS_DRAGON = "dragon boss"
+    ENEMY_FORGOTTEN_CHAMPION = "forgotten champion"
+    ENEMY_CORRUPTED_GUARDIAN = "corrupted guardian"
+    ENEMY_ASH_DRAKE = "ash drake"
+    ENEMY_LICHBOUND_KNIGHT = "lichbound knight"
+    ENEMY_DARK_TEMPLAR_INQUISITOR = "dark templar inquisitor"
+    ENEMY_WIGHT_CHAMPION = "wight champion"
+    ENEMY_DARK_TEMPLAR = "dark templar"
+    ENEMY_GELATINOUS_SENTINEL = "gelatinous sentinel"
+    ENEMY_DIRE_WOLF = "dire wolf"
+    ENEMY_DEAD_WARDEN = "dead warden"
+    ENEMY_DIRE_BOAR = "dire boar"
+    ENEMY_SHAMBLING_CORPSE = "shambling corpse"
 
 
 class Enemy_behavior_tag(Enum):
@@ -125,13 +137,14 @@ ENEMY_DEFINITIONS = {
         "name": "Goblin",
         "hp": 20,
         "damage": 4,
-        "defence": 1,
+        "defence": 3,
         "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 50,
-        "gold_reward": 3,
+        "gold_reward": 20,
         "loot_table": [
             {"item": "goblin_ear", "chance": 0.60},
+            {"item": "boar_tusk", "chance": 0.40},
             {"item": "small_healing_potion", "chance": 0.10},
         ],
         "usable_skills": [
@@ -146,12 +159,13 @@ ENEMY_DEFINITIONS = {
         "hp": 14,
         "damage": 2,
         "defence": 5,
-        "rarity": Enemy_Rarity.COMMON, #Enemy_Rarity.COMMON,
+        "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.OOZE,
         "xp_reward": 50,
-        "gold_reward": 2,
+        "gold_reward": 10,
         "loot_table": [
             {"item": "slime_goop", "chance": 0.70},
+            {"item": "hardened_slime_core", "chance": 0.20},
             {"item": "small_healing_potion", "chance": 0.10},
             {"item": "explosive_potion", "chance": 0.05},
         ],
@@ -159,6 +173,7 @@ ENEMY_DEFINITIONS = {
             "engulf",
             "acid_splash",
             "corrosive_buildup",
+            "dissolve_armor"
         ],
         "status_affinities": {
             "poison": "immune",
@@ -167,66 +182,501 @@ ENEMY_DEFINITIONS = {
         },
         "behavior_tag": Enemy_behavior_tag.COWARDLY
     },
-    Enemy_type.ENEMY_WOLF:  {
-        "name": "Wolf",
-        "hp": 23,
-        "damage": 5,
-        "defence": 3,
-        "rarity": Enemy_Rarity.MINI_BOSS, #Enemy_Rarity.UNCOMMON,
+
+    Enemy_type.ENEMY_SHAMBLING_CORPSE: {
+        "name": "Shambling Corpse",
+        "hp": 28,
+        "damage": 4,
+        "defence": 2,
+        "rarity": Enemy_Rarity.COMMON,
+        "sub_type": Enemy_sub_type.UNDEAD,
+        "xp_reward": 45,
+        "gold_reward": 5,
+        "loot_table": [
+            {"item": "rotted_bone", "chance": 0.60},
+            {"item": "broken_helm", "chance": 0.45},
+            {"item": "small_healing_potion", "chance": 0.10},
+        ],
+        "usable_skills": [
+            "rotting_claw",
+            "grave_resilience",
+        ],
+        "status_affinities": {
+            "poison": "immune",
+            "bleed": "immune",
+            "burn": "normal",
+        },
+        "behavior_tag": Enemy_behavior_tag.SLOW
+    },
+
+    Enemy_type.ENEMY_DIRE_BOAR: {
+        "name": "Dire Boar",
+        "hp": 40,
+        "damage": 6,
+        "defence": 4,
+        "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.BEAST,
         "xp_reward": 60,
-        "gold_reward": 3,
+        "gold_reward": 6,
         "loot_table": [
-            {"item": "wolf_tooth", "chance": 0.65},
-            {"item": "small_healing_potion", "chance": 0.13},
-            {"item": "medium_healing_potion", "chance": 0.07},
+            {"item": "matted_hide", "chance": 0.60},
+            {"item": "boar_tusk", "chance": 0.60},
+            {"item": "small_healing_potion", "chance": 0.10},
+        ],
+        "usable_skills": [
+            "rending_bite",
+            "pounce",
+        ],
+        "status_affinities": {
+            "stun": "resistant",
+            "weakened": "vulnerable",
+            "burn": "vulnerable",
+        },
+        "behavior_tag": Enemy_behavior_tag.AGGRESSIVE
+    },
+
+
+    Enemy_type.ENEMY_DEAD_WARDEN: {
+        "name": "Dead Warden",
+        "hp": 55,
+        "damage": 6,
+        "defence": 9,
+        "rarity": Enemy_Rarity.UNCOMMON,
+        "sub_type": Enemy_sub_type.UNDEAD,
+        "xp_reward": 90,
+        "gold_reward": 10,
+        "loot_table": [
+            {"item": "broken_helm", "chance": 0.60},
+            {"item": "rotted_bone", "chance": 0.60},
+            {"item": "small_healing_potion", "chance": 0.10},
+            {"item": "medium_healing_potion", "chance": 0.05},
+        ],
+        "usable_skills": [
+            "rotting_claw",
+            "grave_resilience",
+            "grave_chill",
+            "death_coil",
+        ],
+        "status_affinities": {
+            "poison": "immune",
+            "armor_down": "resistant",
+        },
+        "behavior_tag": Enemy_behavior_tag.SLOW
+    },
+
+    Enemy_type.ENEMY_DIRE_WOLF: {
+        "name": "Dire Wolf",
+        "hp": 32,
+        "damage": 7,
+        "defence": 3,
+        "rarity": Enemy_Rarity.UNCOMMON,
+        "sub_type": Enemy_sub_type.BEAST,
+        "xp_reward": 75,
+        "gold_reward": 6,
+        "loot_table": [
+            {"item": "matted_hide", "chance": 0.60},
+            {"item": "wolf_tooth", "chance": 0.60},
+            {"item": "small_healing_potion", "chance": 0.10},
+            {"item": "medium_healing_potion", "chance": 0.05},
         ],
         "usable_skills": [
             "rending_bite",
             "poison_bite",
             "pounce",
             "savage_howl",
+            "tear_flesh",
+        ],
+        "status_affinities": {
+            "bleed": "vulnerable",
+            "stun": "normal",
+        },
+        "behavior_tag": Enemy_behavior_tag.AGGRESSIVE
+    },
+
+    Enemy_type.ENEMY_GELATINOUS_SENTINEL: {
+        "name": "Gelatinous Sentinel",
+        "hp": 60,
+        "damage": 5,
+        "defence": 12,
+        "rarity": Enemy_Rarity.UNCOMMON,
+        "sub_type": Enemy_sub_type.OOZE,
+        "xp_reward": 110,
+        "gold_reward": 8,
+        "loot_table": [
+            {"item": "slime_goop", "chance": 0.70},
+            {"item": "hardened_slime_core", "chance": 0.60},
+            {"item": "small_healing_potion", "chance": 0.10},
+            {"item": "medium_healing_potion", "chance": 0.05},
+        ],
+        "usable_skills": [
+            "engulf",
+            "acid_splash",
+            "corrosive_buildup",
+            "dissolve_armor",
+            "gelatinous_recovery"
+        ],
+        "status_affinities": {
+            "poison": "immune",
+            "bleed": "immune",
+            "burn": "vulnerable",
+        },
+        "behavior_tag": Enemy_behavior_tag.SLOW
+    },
+
+
+    Enemy_type.ENEMY_WOLF:  {
+        "name": "Wolf",
+        "hp": 23,
+        "damage": 5,
+        "defence": 3,
+        "rarity": Enemy_Rarity.UNCOMMON, #Enemy_Rarity.UNCOMMON,
+        "sub_type": Enemy_sub_type.BEAST,
+        "xp_reward": 60,
+        "gold_reward": 3,
+        "loot_table": [
+            {"item": "matted_hide", "chance": 0.60},
+            {"item": "wolf_tooth", "chance": 0.65},
+            {"item": "small_healing_potion", "chance": 0.10},
+            {"item": "medium_healing_potion", "chance": 0.05},
+        ],
+        "usable_skills": [
+            "rending_bite",
+            "poison_bite",
+            "pounce",
+            "savage_howl",
+            "tear_flesh",
         ],
         "behavior_tag": Enemy_behavior_tag.AGGRESSIVE
     },
+
+    Enemy_type.ENEMY_DARK_TEMPLAR: {
+        "name": "Dark Templar",
+        "hp": 45,
+        "damage": 8,
+        "defence": 6,
+        "rarity": Enemy_Rarity.RARE,
+        "sub_type": Enemy_sub_type.HUMANOID,
+        "xp_reward": 120,
+        "gold_reward": 18,
+        "loot_table": [
+            {"item": "tarnished_insignia", "chance": 0.80},
+            {"item": "broken_helm", "chance": 0.30},
+            {"item": "medium_healing_potion", "chance": 0.15},
+            {"item": "grand_healing_potion", "chance": 0.02},
+            {"item": "explosive_potion", "chance": 0.00005},
+            {"item": "lesser_fortitude_draught", "chance": 0.00005},
+            {"item": "elixir_of_battle_focus", "chance": 0.00005},
+            {"item": "antivenom_vial", "chance": 0.00005},
+            {"item": "volatile_concoction", "chance": 0.00005},
+            {"item": "sluggish_brew", "chance": 0.00005},
+            {"item": "poison_flask", "chance": 0.00005},
+            {"item": "strength_elixir", "chance": 0.00005},
+            {"item": "regeneration_draught", "chance": 0.00005},
+        ],
+        "usable_skills": [
+            "bloodletting_slash",
+            "shield_wall",
+            "battle_shout",
+        ],
+        "status_affinities": {
+            "stun": "resistant",
+            "weakened": "resistant",
+            "poison": "normal",
+            "bleed": "normal",
+        },
+        "behavior_tag": Enemy_behavior_tag.NORMAL
+    },
+
+    Enemy_type.ENEMY_WIGHT_CHAMPION: {
+        "name": "Wight Champion",
+        "hp": 70,
+        "damage": 10,
+        "defence": 7,
+        "rarity": Enemy_Rarity.RARE,
+        "sub_type": Enemy_sub_type.UNDEAD,
+        "xp_reward": 160,
+        "gold_reward": 30,
+        "loot_table": [
+            {"item": "broken_helm", "chance": 0.60},
+            {"item": "medium_healing_potion", "chance": 0.15},
+            {"item": "grand_healing_potion", "chance": 0.02},
+            {"item": "explosive_potion", "chance": 0.00005},
+            {"item": "lesser_fortitude_draught", "chance": 0.00005},
+            {"item": "elixir_of_battle_focus", "chance": 0.00005},
+            {"item": "antivenom_vial", "chance": 0.00005},
+            {"item": "volatile_concoction", "chance": 0.00005},
+            {"item": "sluggish_brew", "chance": 0.00005},
+            {"item": "poison_flask", "chance": 0.00005},
+            {"item": "strength_elixir", "chance": 0.00005},
+            {"item": "regeneration_draught", "chance": 0.00005},
+        ],
+        "usable_skills": [
+            "grave_resilience",
+            "grave_chill",
+            "death_coil",
+            "withering_touch",
+            "shield_wall"
+        ],
+        "status_affinities": {
+            "poison": "immune",
+            "weakened": "resistant",
+            "burn": "normal",
+        },
+        "behavior_tag": Enemy_behavior_tag.HULKING
+    },
+
+    Enemy_type.ENEMY_DARK_TEMPLAR_INQUISITOR: {
+        "name": "Dark Templar Inquisitor",
+        "hp": 65,
+        "damage": 9,
+        "defence": 8,
+        "rarity": Enemy_Rarity.ELITE,
+        "sub_type": Enemy_sub_type.HUMANOID,
+        "xp_reward": 180,
+        "gold_reward": 35,
+        "loot_table": [
+            {"item": "bloodletter_axe", "chance": 0.05},
+            {"item": "ashen_drake_claw", "chance": 0.40},
+            {"item": "tarnished_insignia", "chance": 0.80},
+            {"item": "tarnished_insignia", "chance": 0.10},
+            {"item": "broken_helm", "chance": 0.60},
+            {"item": "medium_healing_potion", "chance": 0.24},
+            {"item": "grand_healing_potion", "chance": 0.13},
+            {"item": "explosive_potion", "chance": 0.0005},
+            {"item": "lesser_fortitude_draught", "chance": 0.0005},
+            {"item": "elixir_of_battle_focus", "chance": 0.0005},
+            {"item": "antivenom_vial", "chance": 0.0005},
+            {"item": "volatile_concoction", "chance": 0.0005},
+            {"item": "sluggish_brew", "chance": 0.0005},
+            {"item": "poison_flask", "chance": 0.0005},
+            {"item": "strength_elixir", "chance": 0.0005},
+            {"item": "regeneration_draught", "chance": 0.0005},
+        ],
+        "usable_skills": [
+            "bloodletting_slash",
+            "shield_wall",
+            "battle_shout",
+            "cracking_blow"
+        ],
+        "status_affinities": {
+            "stun": "resistant",
+            "poison": "resistant",
+            "weakened": "normal",
+        },
+        "behavior_tag": Enemy_behavior_tag.SLOW
+    },
+
+    Enemy_type.ENEMY_LICHBOUND_KNIGHT: {
+        "name": "Lichbound Knight",
+        "hp": 85,
+        "damage": 11,
+        "defence": 10,
+        "rarity": Enemy_Rarity.ELITE,
+        "sub_type": Enemy_sub_type.UNDEAD,
+        "xp_reward": 220,
+        "gold_reward": 45,
+        "loot_table": [
+            {"item": "frostbrand_sword", "chance": 0.05},
+            {"item": "medium_healing_potion", "chance": 0.24},
+            {"item": "grand_healing_potion", "chance": 0.13},
+            {"item": "explosive_potion", "chance": 0.0005},
+            {"item": "lesser_fortitude_draught", "chance": 0.0005},
+            {"item": "elixir_of_battle_focus", "chance": 0.0005},
+            {"item": "antivenom_vial", "chance": 0.0005},
+            {"item": "volatile_concoction", "chance": 0.0005},
+            {"item": "sluggish_brew", "chance": 0.0005},
+            {"item": "poison_flask", "chance": 0.0005},
+            {"item": "strength_elixir", "chance": 0.0005},
+            {"item": "regeneration_draught", "chance": 0.0005},
+        ],
+        "usable_skills": [
+            "grave_resilience",
+            "grave_chill",
+            "death_coil",
+            "withering_touch",
+            "shield_wall"
+            "tear_flesh",
+        ],
+        "status_affinities": {
+            "stun": "resistant",
+            "poison": "immune",
+        },
+        "behavior_tag": Enemy_behavior_tag.HULKING
+    },
+
     Enemy_type.ENEMY_ORC: {
         "name": "Orc",
         "hp": 50,
         "damage": 7,
         "defence": 5,
-        "rarity": Enemy_Rarity.MINI_BOSS, #Rare
+        "rarity": Enemy_Rarity.ELITE,
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 100,
         "gold_reward": 20,
         "loot_table": [
+            {"item": "ring_of_corruption", "chance": 0.05},
             {"item": "goblin_ear", "chance": 0.25},
-            {"item": "basic_armor", "chance": 0.10},
-            {"item": "medium_healing_potion", "chance": 0.20},
+            {"item": "medium_healing_potion", "chance": 0.35},
+            {"item": "grand_healing_potion", "chance": 0.20},
+            {"item": "explosive_potion", "chance": 0.0005},
+            {"item": "lesser_fortitude_draught", "chance": 0.0005},
+            {"item": "elixir_of_battle_focus", "chance": 0.0005},
+            {"item": "antivenom_vial", "chance": 0.0005},
+            {"item": "volatile_concoction", "chance": 0.0005},
+            {"item": "sluggish_brew", "chance": 0.0005},
+            {"item": "poison_flask", "chance": 0.0005},
+            {"item": "strength_elixir", "chance": 0.0005},
+            {"item": "regeneration_draught", "chance": 0.0005},
         ],
         "usable_skills": [
             "dirty_strike",
             "battle_shout",
+            "cracking_blow",
+            "shield_wall",
         ],
         "behavior_tag": Enemy_behavior_tag.SLOW
     },
-    Enemy_type.ENEMY_BOSS_DRAGON : {
-        "name": "Dragon",
-        "hp": 150,
-        "damage": 20,
-        "defence": 15,
-        "rarity": Enemy_Rarity.BOSS,
+
+    Enemy_type.ENEMY_ASH_DRAKE: {
+        "name": "Ash Drake",
+        "hp": 110,
+        "damage": 14,
+        "defence": 10,
+        "rarity": Enemy_Rarity.MINI_BOSS,
         "sub_type": Enemy_sub_type.DRAGON,
-        "xp_reward": 1800,
-        "gold_reward": 450,
+        "xp_reward": 350,
+        "gold_reward": 90,
         "loot_table": [
-            {"item": "improved_sword", "chance": 1.0},
-            {"item": "grand_healing_potion", "chance": 0.5},
-            {"item": "slime_goop", "chance": 0.001}
+            {"item": "ring_of_vital_flow", "chance": 0.05},
+            {"item": "ashen_drake_claw", "chance": 0.50},
+            {"item": "charred_scale", "chance": 0.59},
+            {"item": "medium_healing_potion", "chance": 0.35},
+            {"item": "grand_healing_potion", "chance": 0.20},
+            {"item": "explosive_potion", "chance": 0.0005},
+            {"item": "lesser_fortitude_draught", "chance": 0.0005},
+            {"item": "elixir_of_battle_focus", "chance": 0.0005},
+            {"item": "antivenom_vial", "chance": 0.0005},
+            {"item": "volatile_concoction", "chance": 0.0005},
+            {"item": "sluggish_brew", "chance": 0.0005},
+            {"item": "poison_flask", "chance": 0.0005},
+            {"item": "strength_elixir", "chance": 0.0005},
+            {"item": "regeneration_draught", "chance": 0.0005},
         ],
         "usable_skills": [
             "flame_breath",
             "terrifying_roar",
             "skyward_ascension",
+            "molten_scales",
+            "searing_presence",
+        ],
+        "status_affinities": {
+            "burn": "immune",
+            "poison": "resistant",
+        },
+        "behavior_tag": Enemy_behavior_tag.HULKING
+    },
+
+    Enemy_type.ENEMY_CORRUPTED_GUARDIAN: {
+        "name": "Corrupted Guardian",
+        "hp": 130,
+        "damage": 12,
+        "defence": 14,
+        "rarity": Enemy_Rarity.MINI_BOSS,
+        "sub_type": Enemy_sub_type.HUMANOID,
+        "xp_reward": 380,
+        "gold_reward": 110,
+        "loot_table": [
+            {"item": "cracked_warhammer", "chance": 0.05},
+            {"item": "medium_healing_potion", "chance": 0.35},
+            {"item": "grand_healing_potion", "chance": 0.20},
+            {"item": "explosive_potion", "chance": 0.0005},
+            {"item": "lesser_fortitude_draught", "chance": 0.0005},
+            {"item": "elixir_of_battle_focus", "chance": 0.0005},
+            {"item": "antivenom_vial", "chance": 0.0005},
+            {"item": "volatile_concoction", "chance": 0.0005},
+            {"item": "sluggish_brew", "chance": 0.0005},
+            {"item": "poison_flask", "chance": 0.0005},
+            {"item": "strength_elixir", "chance": 0.0005},
+            {"item": "regeneration_draught", "chance": 0.0005},
+        ],
+        "usable_skills": [
+            "dirty_strike",
+            "battle_shout",
+            "cracking_blow",
+            "shield_wall",
+            "bloodletting_slash",
+        ],
+        "status_affinities": {
+            "stun": "resistant",
+            "armor_down": "resistant",
+        },
+        "behavior_tag": Enemy_behavior_tag.SLOW
+    },
+
+    Enemy_type.ENEMY_FORGOTTEN_CHAMPION: {
+        "name": "Forgotten Champion",
+        "hp": 140,
+        "damage": 13,
+        "defence": 11,
+        "rarity": Enemy_Rarity.MINI_BOSS,
+        "sub_type": Enemy_sub_type.UNDEAD,
+        "xp_reward": 400,
+        "gold_reward": 130,
+        "loot_table": [
+            {"item": "ring_of_iron_will", "chance": 0.05},
+            {"item": "medium_healing_potion", "chance": 0.35},
+            {"item": "grand_healing_potion", "chance": 0.20},
+            {"item": "explosive_potion", "chance": 0.0005},
+            {"item": "lesser_fortitude_draught", "chance": 0.0005},
+            {"item": "elixir_of_battle_focus", "chance": 0.0005},
+            {"item": "antivenom_vial", "chance": 0.0005},
+            {"item": "volatile_concoction", "chance": 0.0005},
+            {"item": "sluggish_brew", "chance": 0.0005},
+            {"item": "poison_flask", "chance": 0.0005},
+            {"item": "strength_elixir", "chance": 0.0005},
+            {"item": "regeneration_draught", "chance": 0.0005},
+        ],
+        "usable_skills": [
+            "grave_resilience",
+            "grave_chill",
+            "death_coil",
+            "withering_touch",
+            "shield_wall"
+            "tear_flesh",
+            "battle_shout",
+            "bloodletting_slash",
+        ],
+        "status_affinities": {
+            "poison": "immune",
+            "bleed": "resistant",
+            "burn": "vulnerable",
+        },
+        "behavior_tag": Enemy_behavior_tag.HULKING
+    },
+
+    Enemy_type.ENEMY_BOSS_DRAGON : {
+        "name": "Dragon",
+        "hp": 240,
+        "damage": 23,
+        "defence": 19,
+        "rarity": Enemy_Rarity.BOSS,
+        "sub_type": Enemy_sub_type.DRAGON,
+        "xp_reward": 1800,
+        "gold_reward": 450,
+        "loot_table": [
+            {"item": "slime_goop", "chance": 0.001}
+        ],
+        "usable_skills": [
+            "flame_breath",
+            "terrifying_roar",
+            "cataclysmic_slam",
+            "molten_scales",
+            "searing_presence",
+            "crushing_bite",
+            "raking_talons",
+            "ancient_fury",
+            "smoldering_regeneration",
+            "inferno_surge",
         ],
         "behavior_tag": Enemy_behavior_tag.HULKING
     }
