@@ -12,7 +12,7 @@ def format_skill_name(skill_id: str | None) -> str:
 def describe_wait(extra: dict) -> str:
     state = extra.get("state")
     if state:
-        return f"is {state.replace('_', ' ')}"
+        return f"is {state}"
     return "is gathering power"
 
 

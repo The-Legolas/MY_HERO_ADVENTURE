@@ -300,8 +300,13 @@ class GameEngine:
 
             if command == "room_action":
                 result = self.current_dungeon.room_action(room)
+                if result.get("items"):
+                    result["items"] = [
+                        item for item in result["items"]
+                        if not (item.unique and item.id in self.player.inventory["items"])
+                    ]
 
-                if not result:
+                if not result or not result.get("items") and not result.get("rest"):
                     print("\nThere is nothing to do here.")
                     input()
                     continue

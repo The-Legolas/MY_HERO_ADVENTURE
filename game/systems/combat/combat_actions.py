@@ -4,6 +4,7 @@ from game.core.Enemy_class import Enemy, Enemy_behavior_tag
 from game.core.Status import Status
 from game.core.class_progression import SKILL_REGISTRY
 from game.systems.combat.damage_resolver import resolve_damage
+from game.systems.combat.status_registry import STATUS_REGISTRY
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -157,6 +158,36 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         
         if cost:
             actor.resource_current -= cost["amount"]
+        
+        # --- Composite effects (cleanse, multi-status, etc.) ---
+        if skill.effects:
+            for effect in skill.effects:
+
+                if effect["type"] == "cleanse":
+                    actor.statuses = [
+                        s for s in actor.statuses
+                        if not STATUS_REGISTRY.get(s.id, {}).get("is_debuff", False)
+                        or s.id in effect.get("except", [])
+                    ]
+
+                elif effect["type"] == "apply_status":
+                    stacks = effect.get("stacks")
+                    status_id = effect["id"]
+
+                    if stacks == "max":
+                        max_stacks = STATUS_REGISTRY.get(status_id, {}).get("max_stacks", 1)
+                        magnitude = max_stacks
+                    else:
+                        magnitude = effect.get("magnitude")
+
+                    status = Status(
+                        id=status_id,
+                        remaining_turns=effect["duration"],
+                        magnitude=magnitude,
+                        source=skill.name,
+                    )
+                    actor.apply_status(status, combat_state.log)
+
 
         # --- Hit chance ---
         if random.random() > skill.hit_chance:
@@ -174,7 +205,15 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
             return outcome
 
         # --- Damage via normal attack pipeline ---
-        result = resolve_damage(actor, target, skill.damage)
+        if skill.damage:
+            result = resolve_damage(actor, target, skill.damage)
+        else:
+            result = {
+                "damage": 0,
+                "blocked": False,
+                "critical": False,
+                "died": False,
+            }
 
         # --- Apply status (if any) ---
         if skill.apply_status and target and not result["blocked"]:

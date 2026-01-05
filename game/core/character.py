@@ -12,6 +12,7 @@ STAT_VALUE_GETTERS = {
     "hp": lambda c: c.max_hp,
     "damage": lambda c: c.damage,
     "defence": lambda c: c.defence,
+    "resource": lambda c: c.resource_max,
 }
 
 
@@ -31,6 +32,7 @@ class Character:
             "hp": 0,
             "damage": 0,
             "defence": 0,
+            "resource": 0,
         }
 
 
@@ -40,8 +42,8 @@ class Character:
         self.known_skills: set[str] = set()
         self.usable_skills: list[str] = []
 
+        self.base_resource = 0
         self.resource_name = None
-        self.resource_max = 0
         self.resource_current = 0
 
         self.equipment = {
@@ -74,10 +76,9 @@ class Character:
                 value=data.get("value", 0),
             )
 
-                self.inventory["items"][item_id] = {
-                    "item": item,
-                    "count": count
-                }
+                item.id = item_id
+                self.add_item(item, count)
+                
     @property
     def max_hp(self) -> int:
         return self.base_hp + self.level_bonuses.get("hp", 0)
@@ -91,7 +92,11 @@ class Character:
     @property
     def defence(self) -> int:
         return self.base_defence + self.level_bonuses.get("defence", 0)
-
+    
+    @property
+    def resource_max(self) -> int:
+        return self.base_resource + self.level_bonuses.get("resource", 0)
+    
 
     def add_item(self, item: Items, amount:int = 1) -> None:
         if item.id not in self.inventory["items"]:
@@ -179,7 +184,7 @@ class Character:
                 elif stat == "hp":
                     self.base_hp += value
 
-        print(f"You equipped {item.name} in {slot} slot.")
+        print(f"\nYou equipped {item.name} in {slot} slot.")
         input()
         
 
@@ -217,7 +222,7 @@ class Character:
                 self.base_hp -= value
 
         self.add_item(item, 1)
-        print(f"You unequipped {item.name}.")
+        print(f"\nYou unequipped {item.name}.")
         input()
 
 
@@ -325,6 +330,12 @@ class Character:
             if stat == "hp":
                 self.hp = new_value
 
+            elif stat == "resource":
+                ratio = (
+                    self.resource_current / old_value
+                    if old_value > 0 else 1.0
+                )
+                self.resource_current = int(new_value * ratio)
 
             result["stats"][stat] = {
                 "old": old_value,
@@ -353,6 +364,7 @@ class Character:
             "hp": 0,
             "damage": 0,
             "defence": 0,
+            "resource": 0,
         }
 
         self.known_skills.clear()
@@ -361,6 +373,10 @@ class Character:
         self.apply_level_rewards(1)
 
         self.hp = min(self.hp, self.max_hp)
+        self.resource_current = min(
+            self.resource_current,
+            self.resource_max
+        )
 
     def set_level(self, target_level: int) -> None:
         progression = CLASS_PROGRESSION[self.class_id]

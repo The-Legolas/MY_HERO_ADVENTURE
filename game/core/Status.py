@@ -11,12 +11,13 @@ class Status():
         self.expires_end_of_turn = expires_end_of_turn
 
 class Enemy_Rarity(Enum):
-    COMMON = 100 #100
+    COMMON = 90 #100
     UNCOMMON = 40 #40
     RARE = 20 # 15
     ELITE = 5
     MINI_BOSS = 2 # 2
     BOSS = 0
+    DEBUG = 1000000
 
 INTERRUPT_RESISTANCE_BY_RARITY = {
     Enemy_Rarity.COMMON: 0.0,   # no resistance

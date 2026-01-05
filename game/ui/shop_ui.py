@@ -1,11 +1,12 @@
 from game.core.character import Character
+import math
 from game.engine.input_parser import parse_shop_input
 
 class ShopUI:
     def __init__(self, player: Character):
         self.player = player
 
-    def run_shop_menu(self, shop_metadata: dict[str, any]):
+    def run_shop_menu(self, shop_metadata: dict[str, any]) -> None:
             inventory = shop_metadata.get("inventory", [])
             buy_mult = shop_metadata.get("buy_multiplier", 1.0)
             sell_mult = shop_metadata.get("sell_multiplier", 0.5)
@@ -37,52 +38,77 @@ class ShopUI:
     
 
 
+    def handle_buy_item(self, inventory: dict[str, any], buy_mult: float) -> None:
+        page = 0
+        ITEMS_PER_PAGE = 10
 
-
-    def handle_buy_item(self, inventory: dict[str, any], buy_mult: float):
         while True:
-            print("\n\n--- SHOP MENU ---")
-            print("Your gold:", self.player.inventory["gold"])
-            print("\nItems for sale:")
-
-            print("\nWhich item do you want to buy?")
-            
             visible_items = []
             for record in inventory:
-                if record.stock > 0:
-                    price = int(record.current_price * buy_mult)
-                    visible_items.append(record)
-                    print(f"{len(visible_items)}. {record.item.name}  |  Price {price}  |  Stock {record.stock}")
+                if record.stock <= 0:
+                    continue
+                price = int(record.current_price * buy_mult)
+                visible_items.append(record)
+                #print(f"{len(visible_items)}. {record.item.name}  |  Price {price}  |  Stock {record.stock}")
 
-                
-            if not visible_items:
-                print("\n\tThere is nothing more to buy.")
-                input()
-                return
+            total_pages = max(1, math.ceil(len(visible_items) / ITEMS_PER_PAGE))
+            page = max(0, min(page, total_pages - 1))
+
+            start = page * ITEMS_PER_PAGE
+            end = start + ITEMS_PER_PAGE
+            page_items = visible_items[start:end]
+
+            name_width = max(len(r.item.name) for r in page_items)
+            name_width += 2
+            price_width = max(len(str(int(r.current_price * buy_mult))) for r in page_items)
+            stock_width = max(len(str(r.stock)) for r in page_items)
             
-            if self.player.inventory["gold"] <= 0:
-                print("\nYou have no gold.")
-                input()
-                return
-            
-            print("\nType number to buy, or 'back' to return.")
-            choice = input("> ")
+            print("\n--- SHOP MENU ---")
+            print(f"Gold: {self.player.inventory['gold']}\n")
 
-            if choice in  ("leave_shop", "back", "c"):
+            print(
+                f"{'#':>2}  "
+                f"{'Item Name'.ljust(name_width)} | "
+                f"{'Price'.rjust(price_width)} | "
+                f"{'Stock'.rjust(stock_width)}"
+            )
+            print("-" * (6 + name_width + price_width + stock_width + 6))
+
+            for i, record in enumerate(page_items, start=1):
+                price = int(record.current_price * buy_mult)
+                print(
+                    f"{i:>2}  "
+                    f"{record.item.name.ljust(name_width)} | "
+                    f"{str(price).rjust(price_width)} | "
+                    f"{str(record.stock).rjust(stock_width)}"
+                )
+            print(f"\nPage {page + 1} / {total_pages}")
+            print("Type number to buy, [n]ext, [p]revious, or [back]")
+            choice = input("> ").strip().lower()
+
+            if choice in ("back", "c"):
                 return
 
-            if not (choice and choice.isdigit()):
-                print("\nInvalid choice. Provide an item number.")
+            if choice == "n":
+                page = (page + 1) % total_pages
+                continue
+
+            if choice == "p":
+                page = (page - 1) % total_pages
+                continue
+
+            if not choice.isdigit():
+                print("Invalid input.")
                 input()
                 continue
 
             index = int(choice) - 1
-            if index < 0 or index >= len(visible_items):
+            if index < 0 or index >= len(page_items):
                 print("Invalid selection.")
                 input()
                 continue
-            
-            record = visible_items[index]            
+
+            record = page_items[index]
             price = int(record.current_price * buy_mult)
 
             print(f"\nHow many {record.item.name} do you want? (max {record.stock})")
@@ -133,9 +159,9 @@ class ShopUI:
 
             print(f"\nYou bought {qty} × {record.item.name}!")
             input()
-            
+           
 
-    def handle_sell_item(self, sell_mult: float):
+    def handle_sell_item(self, sell_mult: float) -> None:
         while True:
             print("\n--- SELL MENU ---")
             print("\nYour inventory:")

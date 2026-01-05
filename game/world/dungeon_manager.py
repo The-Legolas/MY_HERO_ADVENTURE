@@ -27,7 +27,7 @@ class Dungeon_Manager():
             if self.assign_miniboss_room():
                 return
 
-        raise RuntimeError("Failed to generate dungeon with a valid miniboss room.")
+        #raise RuntimeError("Failed to generate dungeon with a valid miniboss room.")
 
     def _generate_layout(self):
         self.dungeon_rooms = {}
@@ -424,9 +424,15 @@ def roll_room_type(day_counter: int, depth: int) -> Room_Types:
     if depth >= 6:
         if random.random() < 0.08:
             return Room_Types.REST_ROOM
-        
-    enemy_chance = min(0.50 + day_counter * 0.01, 0.90)
-    treasure_chance = max(0.20 - day_counter * 0.005, 0.05)
+
+    #the real versions    
+    #enemy_chance = min(0.50 + day_counter * 0.01, 0.90)
+    #treasure_chance = max(0.20 - day_counter * 0.005, 0.05)
+
+    enemy_chance = max(0.50 + day_counter * 0.01, 0.99999)
+    treasure_chance = min(0.20 - day_counter * 0.005, 0.0001)
+
+
 
     rnd = random.random()
 

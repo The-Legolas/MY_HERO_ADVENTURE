@@ -8,15 +8,28 @@ from game.ui.text_screens import TextScreen
 """
 currently __ lines of code as of the previous git commit
 Bugs:
+note 1: Ring of Corruption and Ring of Vital Flow doesn't have a descipteve text like Ring of Iron Will
+note 1.5: weapon effect aren't in the inventory description either
+note 2: no ux for if the player is stunned
+
+Test:
+1. re-test combat wiht the correct amount of health and dmg
 
 Fixed:
-Statuses should have a chance to apply even if the attack is blocked. (or makeing it so if defence is more than the attack (and not defending) only doing halve dmg)
-add burn to flame_breath skill, add bleed to rending_bite, add armor_down (weakening for defence) to acid_splash
+updated shop and tressure inventory to hold some of the new items
+made it so a max of 1 special item can be awarded per chest
+tested that all skills and stamna works correctly
+tested all items to make sure they work
+added add intents to all enemy skills
+Tested all enemies and tested all attacks
+made the inventory screen have the same beauty as the buy menu
 
 
 Like to have:
-note 4: in the code base search for #fix to find things to remove before final game release
-note 6: update shop and tressure inventory to hold some of the new items
+note 1: in the code base search for #fix to find things to remove before final game release
+note 2: make a proper start menu
+note 3: make the sell menu have the same beauty as the buy menu
+note 4: refractor when done so all enums and such have their own folder
 
 """
 
@@ -30,7 +43,7 @@ def main():
     choice = input("Do you want to see the tutorial? (yes/no)\n> ").strip().lower()
     if choice in ("yes", "y"):
         show_system_guide()
-
+    
     player_hero = pick_character_and_name()
     
     game_world = Game_World(player_hero, day_counter=1)
@@ -47,11 +60,27 @@ def main():
 
 
 def title_screen() -> None:
-    print("  _________________________________")
-    print("\tHello and welcome to:")
-    print("\tMy hero adventure")
-    print("\n\t\t    by The-Legolas")
-    print("  _________________________________\n")
+    print("""
+_______________________________________________________________________________________________                                                         
+ _____     _ _                  _    _ _ _     _                      _       _ 
+|  |  |___| | |___    ___ ___ _| |  | | | |___| |___ ___ _____ ___   | |_ ___|_|
+|     | -_| | | . |  | .'|   | . |  | | | | -_| |  _| . |     | -_|  |  _| . |_ 
+|__|__|___|_|_|___|  |__,|_|_|___|  |_____|___|_|___|___|_|_|_|___|  |_| |___|_|
+""")
+    input()
+    print(
+"""
+  __  __         _                                _                 _                  
+ |  \\/  |       | |                              | |               | |                 
+ | \\  / |_   _  | |__   ___ _ __ ___     __ _  __| |_   _____ _ __ | |_ _   _ _ __ ___ 
+ | |\\/| | | | | | '_ \\ / _ \\ '__/ _ \\   / _` |/ _` \\ \\ / / _ \\ '_ \\| __| | | | '__/ _ \\
+ | |  | | |_| | | | | |  __/ | | (_) | | (_| | (_| |\\ V /  __/ | | | |_| |_| | | |  __/
+ |_|  |_|\\__, | |_| |_|\\___|_|  \\___/   \\__,_|\\__,_| \\_/ \\___|_| |_|\\__|\\__,_|_|  \\___|
+          __/ |                                                                        
+         |___/         
+_______________________________________________________________________________________________
+""")
+    print("\n\t\t\t\t\t\t\t\t\t\tby The-Legolas")
 
 def show_intro_story() -> None:
     intro = TextScreen(
@@ -151,7 +180,15 @@ def pick_character_and_name() -> Character:
             break
 
     #if hero_choice: #hero_choice == "warrior":
-    player_hero = Warrior(hero_name, starting_items=None)
+    player_hero = Warrior(hero_name, starting_items={
+        "basic_sword":1, "improved_sword":1, "venom_fang_dagger":1, 
+        "frostbrand_sword":1, "bloodletter_axe":1, "ring_of_corruption":1, 
+        "ring_of_iron_will":1, "ring_of_vital_flow":1, "basic_armor":1, "improved_armor":1, "ring_of_vital_flow":1, 
+        "ring_of_iron_will":1, "ring_of_corruption":1, "small_healing_potion":1, "medium_healing_potion":2,
+        "grand_healing_potion":3, "stamina_tonic":4, "antivenom_vial":5, "second_wind_potion":6, "cooling_salve":7, 
+        "coagulant_tonic":8, "battle_elixir":9, "reinforcement_draught":10, "explosive_potion":2,
+        "lesser_fortitude_draught":5,
+    })
     
     return player_hero
 

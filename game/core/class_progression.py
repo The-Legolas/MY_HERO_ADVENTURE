@@ -124,7 +124,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "type": "hybrid",
             "base": 4,
             "stat": "damage",
-            "mult": 0.75,
+            "mult": 0.95,
         },
         hit_chance=0.95,
         cost={"resource": "stamina", "amount": 10},
@@ -144,7 +144,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         cost={"resource": "stamina", "amount": 8},
         apply_status={
             "id": "defending",
-            "duration": 2,
+            "duration": 3,
             "magnitude": None,
             "chance": 1.0,
         },
@@ -206,7 +206,37 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
     ),
 
-
+    "ultimate_rage": Skill(
+        id="ultimate_rage",
+        name="Ultimate Rage",
+        description="Unleash a powerful rowr, purging weakness and igniting fury, but at the cost of ones own health.",
+        target="self",
+        cost={"resource": "stamina", "amount": 60},
+        effects=[
+            {
+                "type": "cleanse",
+                "except": ["bleed"],
+            },
+            {
+                "type": "apply_status",
+                "id": "regen",
+                "duration": 4,
+                "magnitude": 8,
+            },
+            {
+                "type": "apply_status",
+                "id": "strength_up",
+                "duration": 6,
+                "stacks": "max",
+            },
+            {
+                "type": "apply_status",
+                "id": "bleed",
+                "duration": 10,
+                "magnitude": 8,
+            },
+        ],
+    ),
 
     # ENEMY SKILLS
     # UNDEAD
@@ -214,6 +244,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="rotting_claw",
         name="Rotting Claw",
         description="A decayed claw that spreads infection.",
+        intent_hint="The undead raises a diseased claw.",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -234,6 +265,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="grave_chill",
         name="Grave Chill",
         description="A freezing aura that saps strength.",
+        intent_hint="A deathly cold spreads through the air.",
         target="enemy",
         damage=None,
         hit_chance=0.85,
@@ -250,12 +282,13 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="death_coil",
         name="Death Coil",
         description="The undead gathers necrotic energy into a dark spiral.",
+        intent_hint="Dark power gathers and will not relent.",
         target="enemy",
         damage={
             "type": "hybrid",
             "base": 2,
             "stat": "damage",
-            "mult": 0.8,
+            "mult": 1.4,
             "can_crit": False,
         },
         hit_chance=1.0,
@@ -271,6 +304,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="grave_resilience",
         name="Grave Resilience",
         description="Dark energy knits shattered bones back together.",
+        intent_hint="Dark energy reinforces its form.",
         target="self",
         damage=None,
         apply_status={
@@ -286,6 +320,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="withering_touch",
         name="Withering Touch",
         description="Necrotic power weakens the target’s defenses.",
+        intent_hint="A withering hand reaches out.",
         target="enemy",
         damage=None,
         apply_status={
@@ -302,7 +337,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="dirty_strike",
         name="Dirty Strike",
         description="A cheap attack aimed at weak points, reducing the target's damage.",
-        intent_hint="Preparing a vicious strike",
+        intent_hint="Preparing a vicious strike...",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -324,7 +359,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="battle_shout",
         name="Battle Shout",
         description="A rallying cry that boosts strength.",
-        intent_hint="Drawing breath for a rallying cry",
+        intent_hint="Drawing breath for a rallying cry.",
         target="self",
         damage=None,
         apply_status={
@@ -341,7 +376,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="shield_wall",
         name="Shield Wall",
         description="The enemy braces behind its shield.",
-        intent_hint="missing: shield wall",
+        intent_hint="It plants its stance and prepares to endure.",
         target="self",
         damage=None,
         apply_status={
@@ -362,6 +397,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="bloodletting_slash",
         name="Bloodletting Slash",
         description="A vicious cut designed to make the target bleed out.",
+        intent_hint="A vicious cut aims to draw blood.",
         target="enemy",
         damage={
             "type": "hybrid",
@@ -382,6 +418,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="cracking_blow",
         name="Cracking Blow",
         description="A focused strike aimed at armor seams.",
+        intent_hint="A focused strike seeking a weak point.",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -402,7 +439,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="acid_splash",
         name="Acid Splash",
         description="Corrosive acid burns through armor.",
-        intent_hint="missing: acid splash",
+        intent_hint="Corrosive fluid spatters outward.",
         target="enemy",
         damage={
             "type": "flat",
@@ -422,6 +459,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="dissolve_armor",
         name="Dissolve Armor",
         description="Acid eats away at protective gear.",
+        intent_hint="Corrosive slime spreads over exposed gear.",
         target="enemy",
         damage=None,
         apply_status={
@@ -437,6 +475,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="gelatinous_recovery",
         name="Gelatinous Recovery",
         description="The ooze reforms damaged mass.",
+        intent_hint="The ooze thickens and stabilizes.",
         target="self",
         damage=None,
         apply_status={
@@ -452,7 +491,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="engulf",
         name="Engulf",
         description="The ooze engulfs its prey, immobilizing them.",
-        intent_hint="missing: engulf",
+        intent_hint="Gelatinous mass swells and presses in.",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -475,7 +514,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="corrosive_buildup",
         name="Corrosive Build-Up",
         description="The ooze thickens with burning acid.",
-        intent_hint="missing: Corrosive Build-Up",
+        intent_hint="The ooze churns with rising acidity.",
         target="enemy",
         damage=None,
         apply_status={
@@ -498,7 +537,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="poison_bite",
         name="Poison Bite",
         description="A vicious bite that injects poison.",
-        intent_hint="missing: poison_bite",
+        intent_hint="The beast snaps with a tainted bite.",
         target="enemy",
         damage={
             "type": "hybrid",
@@ -521,7 +560,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="rending_bite",
         name="Rending Bite",
         description="A vicious bite that tears flesh.",
-        intent_hint="missing: rending_bite",
+        intent_hint="Fangs bare in a tearing lunge.",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -535,7 +574,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="pounce",
         name="Pounce",
         description="A sudden leap that overwhelms the target.",
-        intent_hint="missing: pounce",
+        intent_hint="Muscles tense for...",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -558,7 +597,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="savage_howl",
         name="Savage Howl",
         description="The beast howls, stirring its bloodlust.",
-        intent_hint="missing: savage_howl",
+        intent_hint="The beast throws its head back and roars.",
         target="self",
         damage=None,
         apply_status={
@@ -579,6 +618,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="tear_flesh",
         name="Tear Flesh",
         description="A savage attack that leaves deep wounds.",
+        intent_hint="It aims for a deep wound.",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -599,13 +639,13 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="flame_breath",
         name="Flame Breath",
         description="Unleashes a cone of fire dealing heavy damage.",
-        intent_hint="Inhales deeply...",
+        intent_hint="The dragon inhales, embers glowing within…",
         target="enemy",
         damage={
             "type": "hybrid",
-            "base": 5,
+            "base": 15,
             "stat": "damage",
-            "mult": 1.25,
+            "mult": 1.4,
             "can_crit": False,
         },
         hit_chance=1.0,
@@ -617,16 +657,17 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
         locks_actor={
             "state": "charging",
-            "turns": 3,
+            "turns": 4,
             "forced_action": None,
         },
+        cooldown_turns=8,
     ),
 
     "terrifying_roar": Skill(
         id="terrifying_roar",
         name="Terrifying Roar",
         description="A roar that crushes the will to fight.",
-        intent_hint="Missing: terrifying_roar",
+        intent_hint="Its chest swells as a dreadful roar forms.",
         target="enemy",
         damage=None,
         apply_status={
@@ -642,7 +683,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="skyward_ascension",
         name="Skyward Ascension",
         description="The dragon takes to the air, preparing a deadly dive.",
-        intent_hint="Missing: skyward_ascension",
+        intent_hint="Its wings spread as it lifts from the ground.",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -663,7 +704,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="cataclysmic_slam",
         name="Cataclysmic Slam",
         description="The dragon crashes down with devastating force.",
-        intent_hint="The ground trembles beneath it…",
+        intent_hint="The air trembles as it prepares to crash down…",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -684,6 +725,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="molten_scales",
         name="Molten Scales",
         description="The dragon’s scales glow with molten heat.",
+        intent_hint="Its scales glow with seething heat.",
         target="self",
         damage=None,
         apply_status={
@@ -699,7 +741,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="crushing_bite",
         name="Crushing Bite",
         description="The dragon snaps its jaws with bone-crushing force.",
-        intent_hint="Its jaws spread wide…",
+        intent_hint="Rows of teeth close in with crushing force.",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -714,7 +756,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="raking_talons",
         name="Raking Talons",
         description="Razor-sharp claws tear through flesh, leaving deep wounds.",
-        intent_hint="The dragon rears back, claws poised…",
+        intent_hint="Claws rake the air as it draws back…",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -735,7 +777,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="searing_presence",
         name="Searing Presence",
         description="The dragon’s heat weakens nearby defenses.",
-        intent_hint="Heat distorts the air around it…",
+        intent_hint="Heat rolls outward, warping the air.",
         target="enemy",
         damage=None,
         apply_status={
@@ -752,7 +794,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="ancient_fury",
         name="Ancient Fury",
         description="The dragon taps into its ancient rage, increasing its power.",
-        intent_hint="The dragon roars with ancient fury…",
+        intent_hint="Ancient rage stirs behind its burning eyes.",
         target="self",
         damage=None,
         apply_status={
@@ -769,7 +811,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="smoldering_regeneration",
         name="Smoldering Regeneration",
         description="Flames knit the dragon’s wounds shut.",
-        intent_hint="Its wounds glow with embers…",
+        intent_hint="Firelight pulses through torn flesh.",
         target="self",
         damage=None,
         apply_status={
@@ -785,7 +827,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         id="inferno_surge",
         name="Inferno Surge",
         description="The dragon gathers fire deep within its chest.",
-        intent_hint="Flames churn beneath its scales…",
+        intent_hint="Flames churn violently beneath its scales…",
         target="enemy",
         damage={
             "type": "multiplier",
@@ -802,7 +844,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         locks_actor={
             "state": "overheating",
             "turns": 2,
-            "forced_action": None,
+            "forced_action": "wait",
         },
         cooldown_turns=5,
     ),
@@ -832,32 +874,39 @@ CLASS_PROGRESSION = {
         "level_rewards": {
 
             2: {
-                "stats": {"hp": +10, "damage": +2},
-            },
-            3: {
-                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
-                "skills": ["shield_bash"],
-            },
-            4: {
-                "stats": {"defence": +1},
-            },
-            5: {
-                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
-            },
-            6: {
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
                 "skills": ["war_cry"],
             },
+            3: {
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
+                "skills": ["iron_guard", "exhausting_assault"],
+            },
+            4: {
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
+                "skills": ["poison_strike"],
+            },
+            5: {
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
+                "skills": ["sundering_blow"],
+            },
+            6: {
+                "stats": {"hp": +10, "damage": +2, "resource": +30},
+            },
             7: {
-                "stats": {"hp": +10, "defence": +3, "damage": +2, "resource_max": +10},
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
+                "skills": ["concussive_strike"],
             },
             8: {
-                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
+                "skills": ["searing_thrust"],
             },
             9: {
-                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
+                "skills": ["rallying_breath"],
             },
             10: {
-                "stats": {"hp": +10, "damage": +2, "resource_max": +10},
+                "stats": {"hp": +10, "damage": +2, "defence": +3, "resource": +10},
+                "skills": ["ultimate_rage"],
             },
         },
     },

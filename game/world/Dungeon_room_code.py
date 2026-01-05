@@ -51,17 +51,35 @@ class Room():
 
 def treasure_room_spawner() -> list['Items']:
     item_list = []
-    item_list_type = ["small_healing_potion", "medium_healing_potion", "grand_healing_potion", "explosive_potion", None]
-    amount = random.randint(1, 4)
-    if amount == 1:
-        amount += 1
-    for _ in range(amount):
+    item_list_type = [
+        "small_healing_potion", "medium_healing_potion", "grand_healing_potion", "explosive_potion", None,
+        "venom_fang_dagger", "cracked_warhammer", "frostbrand_sword", "bloodletter_axe", "basic_armor", 
+        "ring_of_vital_flow", "ring_of_iron_will", "ring_of_corruption", "stamina_tonic", "second_wind_potion",
+        "antivenom_vial", "cooling_salve", "coagulant_tonic", "battle_elixir", "reinforcement_draught",
+        "lesser_fortitude_draught", "volatile_concoction", "sluggish_brew", "poison_flask",
+        "strength_elixir", "regeneration_draught", "slime_goop", "broken_helm",
+        ]
+    target_amount  = random.randint(2, 4)
+    attempts = 0
+    MAX_ATTEMPTS = 20
+    unique_added = False
+
+    while len(item_list) < target_amount and attempts < MAX_ATTEMPTS:
+        attempts += 1
         rnd = random.choice(item_list_type)
+
         if rnd is None:
             continue
 
         item_obj = spawn_item(rnd)
+        
+        if item_obj.unique:
+            if unique_added:
+                continue
+            unique_added = True
+        
         item_list.append(item_obj)
+
     return item_list
 
 def boss_room_spawner(day_counter:int = 1) -> list['Enemy']:

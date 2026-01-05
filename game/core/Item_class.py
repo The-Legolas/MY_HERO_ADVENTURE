@@ -99,6 +99,11 @@ class Items():
             summary_parts.append(f"cures {status.lower()}")
             detail_lines.append(f"\t• Removes {status}")
 
+        if "restore_resource" in self.effect:
+            amount = self.effect["restore_resource"]
+            summary_parts.append("restores stamina")
+            detail_lines.append(f"\t• Restores {amount} stamina")
+
         # ─── RENDER ────────────────────────────────────────
         if summary_parts:
             summary = " and ".join(summary_parts)
@@ -141,7 +146,7 @@ class Items():
                         total_heal += amount
                     elif effect_type == "damage":
                         total_damage += amount
-
+                        
                     details.append({
                         "effect": effect_type,
                         "amount": amount
@@ -183,6 +188,23 @@ class Items():
 
                     if success:
                         did_something = True
+                    continue
+
+                if effect_type == "restore_resource":
+                    before = target.resource_current
+                    target.resource_current = min(
+                        target.resource_max,
+                        target.resource_current + amount
+                    )
+
+                    details.append({
+                        "effect": "restore_resource",
+                        "amount": amount,
+                        "before": before,
+                        "after": target.resource_current,
+                    })
+
+                    did_something = True
                     continue
 
             if not did_something:
@@ -349,10 +371,11 @@ ITEM_DEFINITIONS = {
         "category": Item_Type.WEAPON,
         "stackable": False,
         "unique": True,
-        "stats": {"damage": +5},
+        "stats": {"damage": +7},
         "effect": None,
-        "value": 15
+        "value": 90
     },
+    
     "improved_sword": {
         "name": "Improved Sword",
         "category": Item_Type.WEAPON,
@@ -360,13 +383,14 @@ ITEM_DEFINITIONS = {
         "unique": True,
         "stats": {"damage": +20},
         "effect": None,
-        "value": 40
+        "value": 300
     },
+
     "venom_fang_dagger": {
     "name": "Venom Fang Dagger",
     "category": Item_Type.WEAPON,
     "stackable": False,
-    "unique": False,
+    "unique": True,
     "stats": {"damage": +3},
     "effect": [
         {
@@ -379,13 +403,14 @@ ITEM_DEFINITIONS = {
         }
         }
     ],
-    "value": 45
+    "value": 150
     },
+
     "cracked_warhammer": {
     "name": "Cracked Warhammer",
     "category": Item_Type.WEAPON,
     "stackable": False,
-    "unique": False,
+    "unique": True,
     "stats": {"damage": +6},
     "effect": [
         {
@@ -398,13 +423,14 @@ ITEM_DEFINITIONS = {
         }
         }
     ],
-    "value": 60
+    "value": 160
     },
+
     "frostbrand_sword": {
     "name": "Frostbrand Sword",
     "category": Item_Type.WEAPON,
     "stackable": False,
-    "unique": False,
+    "unique": True,
     "stats": {"damage": +5},
     "effect": [
         {
@@ -417,13 +443,14 @@ ITEM_DEFINITIONS = {
         }
         }
     ],
-    "value": 80
+    "value": 145
     },
+
     "bloodletter_axe": {
     "name": "Bloodletter Axe",
     "category": Item_Type.WEAPON,
     "stackable": False,
-    "unique": False,
+    "unique": True,
     "stats": {"damage": +7},
     "effect": [
         {
@@ -437,8 +464,9 @@ ITEM_DEFINITIONS = {
         }
         }
     ],
-    "value": 90
+    "value": 170
     },
+
     "basic_armor": {
         "name": "Basic Armor",
         "category": Item_Type.ARMOR,
@@ -446,8 +474,9 @@ ITEM_DEFINITIONS = {
         "unique": True,
         "stats": {"defence": +8},
         "effect": None,
-        "value": 10
+        "value": 90
     },
+
     "improved_armor": {
         "name": "Improved Armor",
         "category": Item_Type.ARMOR,
@@ -455,13 +484,14 @@ ITEM_DEFINITIONS = {
         "unique": True,
         "stats": {"defence": +25},
         "effect": None,
-        "value": 50
+        "value": 400
     },
+
     "ring_of_vital_flow": {
     "name": "Ring of Vital Flow",
     "category": Item_Type.RING,
     "stackable": False,
-    "unique": False,
+    "unique": True,
     "stats": None,
     "effect": [
         {
@@ -475,20 +505,22 @@ ITEM_DEFINITIONS = {
     ],
     "value": 75
     },
+
     "ring_of_iron_will": {
     "name": "Ring of Iron Will",
     "category": Item_Type.RING,
     "stackable": False,
-    "unique": False,
+    "unique": True,
     "stats": {"stun_resist": 0.50},
     "effect": None,
     "value": 65
     },
+
     "ring_of_corruption": {
     "name": "Ring of Corruption",
     "category": Item_Type.RING,
     "stackable": False,
-    "unique": False,
+    "unique": True,
     "stats": None,
     "effect": [
         {
@@ -502,6 +534,7 @@ ITEM_DEFINITIONS = {
     ],
     "value": 100
     },
+
     "small_healing_potion": {
         "name": "Small Healing Potion",
         "category": Item_Type.CONSUMABLE,
@@ -511,6 +544,7 @@ ITEM_DEFINITIONS = {
         "effect": {"heal": 30},
         "value": 15
     },
+
     "medium_healing_potion": {
         "name": "Medium Healing Potion",
         "category": Item_Type.CONSUMABLE,
@@ -520,6 +554,7 @@ ITEM_DEFINITIONS = {
         "effect": {"heal": 70},
         "value": 30
     },
+
     "grand_healing_potion": {
         "name": "Grand Healing Potion",
         "category": Item_Type.CONSUMABLE,
@@ -529,6 +564,91 @@ ITEM_DEFINITIONS = {
         "effect": {"heal": 150},
         "value": 60
     },
+
+    "stamina_tonic": {
+        "name": "Stamina Tonic",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "restore_resource": 20
+        },
+        "value": 18
+    },
+
+    "second_wind_potion": {
+        "name": "Second Wind Potion",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "restore_resource": 40
+        },
+        "value": 32
+    },
+
+    "antivenom_vial": {
+        "name": "Antivenom Vial",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "remove_status": "poison"
+        },
+        "value": 30
+    },
+
+    "cooling_salve": {
+        "name": "Cooling Salve",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "remove_status": "burn"
+        },
+        "value": 30
+    },
+
+    "coagulant_tonic": {
+        "name": "Coagulant Tonic",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "remove_status": "bleed"
+        },
+        "value": 30
+    },
+
+    "battle_elixir": {
+        "name": "Battle Elixir",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "remove_status": "weakened"
+        },
+        "value": 30
+    },
+
+    "reinforcement_draught": {
+        "name": "Reinforcement Draught",
+        "category": Item_Type.CONSUMABLE,
+        "stackable": True,
+        "unique": False,
+        "stats": None,
+        "effect": {
+            "remove_status": "armor_down"
+        },
+        "value": 30
+    },
+
     "explosive_potion": {
         "name": "Explosive Potion",
         "category": Item_Type.CONSUMABLE,
@@ -538,6 +658,7 @@ ITEM_DEFINITIONS = {
         "effect": {"damage": 25},
         "value": 25
     },
+
     "lesser_fortitude_draught": {
         "name": "Lesser Fortitude Draught",
         "category": Item_Type.CONSUMABLE,
@@ -553,12 +674,12 @@ ITEM_DEFINITIONS = {
         },
         "value": 20
     },
-    "elixir_of_battle_focus": {
-        "name": "Elixir of Battle Focus",
+
+    "strength_elixir": {
+        "name": "Strength Elixir",
         "category": Item_Type.CONSUMABLE,
         "stackable": True,
         "unique": False,
-        "stats": None,
         "effect": {
             "apply_status": {
                 "id": "strength_up",
@@ -566,19 +687,9 @@ ITEM_DEFINITIONS = {
                 "magnitude": None
             }
         },
-        "value": 35
-    },
-    "antivenom_vial": {
-        "name": "Antivenom Vial",
-        "category": Item_Type.CONSUMABLE,
-        "stackable": True,
-        "unique": False,
-        "stats": None,
-        "effect": {
-            "remove_status": "poison"
-        },
         "value": 30
     },
+    
     "volatile_concoction": {
         "name": "Volatile Concoction",
         "category": Item_Type.CONSUMABLE,
@@ -595,6 +706,7 @@ ITEM_DEFINITIONS = {
         },
         "value": 40
     },
+
     "sluggish_brew": {
         "name": "Sluggish Brew",
         "category": Item_Type.CONSUMABLE,
@@ -610,6 +722,7 @@ ITEM_DEFINITIONS = {
         },
         "value": 25
     },
+
     "poison_flask": {
         "name": "Poison Flask",
         "category": Item_Type.CONSUMABLE,
@@ -621,20 +734,6 @@ ITEM_DEFINITIONS = {
                 "id": "poison",
                 "duration": 3,
                 "magnitude": 1
-            }
-        },
-        "value": 30
-    },
-    "strength_elixir": {
-        "name": "Strength Elixir",
-        "category": Item_Type.CONSUMABLE,
-        "stackable": True,
-        "unique": False,
-        "effect": {
-            "apply_status": {
-                "id": "strength_up",
-                "duration": 3,
-                "magnitude": None
             }
         },
         "value": 30
@@ -653,6 +752,7 @@ ITEM_DEFINITIONS = {
         },
         "value": 40
     },
+
     "wolf_tooth": {
         "name": "Wolf Tooth",
         "category": Item_Type.SCRAP,
@@ -662,6 +762,7 @@ ITEM_DEFINITIONS = {
         "effect": None,
         "value": 8
     },
+    
     "slime_goop": {
         "name": "Slime Goop",
         "category": Item_Type.SCRAP,
@@ -671,6 +772,7 @@ ITEM_DEFINITIONS = {
         "effect": None,
         "value": 5
     },
+    
     "goblin_ear": {
         "name": "Goblin Ear",
         "category": Item_Type.SCRAP,
@@ -680,6 +782,7 @@ ITEM_DEFINITIONS = {
         "effect": None,
         "value": 3
     },
+    
     "broken_helm": {
         "name": "Broken Helm",
         "category": Item_Type.SCRAP,
@@ -699,6 +802,7 @@ ITEM_DEFINITIONS = {
         "effect": None,
         "value": 14
     },
+    
     "rotted_bone": {
         "name": "Rotted Bone",
         "category": Item_Type.SCRAP,
@@ -708,6 +812,7 @@ ITEM_DEFINITIONS = {
         "effect": None,
         "value": 4
     },
+    
     "boar_tusk": {
         "name": "Boar Tusk",
         "category": Item_Type.SCRAP,
