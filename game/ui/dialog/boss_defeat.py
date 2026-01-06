@@ -1,4 +1,4 @@
-from game.ui.text_screens import TextScreen
+from game.ui.class_text_screens import TextScreen
 
 def show_boss_defeat():
     defeat = TextScreen(

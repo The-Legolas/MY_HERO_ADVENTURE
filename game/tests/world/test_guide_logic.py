@@ -6,7 +6,7 @@ from game.world.town_logic.guide_logic import (
     get_guide_dialogue,
 )
 
-from game.world.town_logic.guide_dialogue import (
+from game.ui.dialog.guide_dialogue import (
     GUIDE_NAME,
     INTRO_DIALOGUE,
     CASTLE_UNLOCKED_MESSAGE,

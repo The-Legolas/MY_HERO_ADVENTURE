@@ -1,15 +1,18 @@
 import unittest
 from unittest.mock import patch
 
-from game.systems.combat.damage_resolver import resolve_damage
-from game.systems.combat.status_evaluator import evaluate_status_magnitude
-from game.systems.combat.status_registry import STATUS_REGISTRY
 from game.core.Status import Status
-from game.systems.combat.combat_turn import _get_initiative_value
 from game.core.character import Character
 from game.core.Enemy_class import Enemy
-from game.core.Status import Enemy_Rarity
 from game.core.Enemy_class import Enemy_type, Enemy_sub_type
+
+from game.systems.combat.damage_resolver import resolve_damage
+from game.systems.combat.status_evaluator import evaluate_status_magnitude
+from game.systems.combat.combat_turn import _get_initiative_value
+
+from game.systems.enums.enemy_rarity import Enemy_Rarity
+
+from game.definitions.status_registry import STATUS_REGISTRY
 
 
 class DummyCharacter:
@@ -154,7 +157,7 @@ class TestStatusEvaluatorBase(unittest.TestCase):
         )
 
         with patch.dict(
-            "game.systems.combat.status_registry.STATUS_REGISTRY",
+            "game.definitions.status_registry.STATUS_REGISTRY",
             {},
             clear=True
         ):
@@ -178,7 +181,7 @@ class TestStatusEvaluatorInteractions(unittest.TestCase):
         }
 
         with patch.dict(
-            "game.systems.combat.status_registry.STATUS_REGISTRY",
+            "game.definitions.status_registry.STATUS_REGISTRY",
             registry,
             clear=True
         ):
@@ -201,7 +204,7 @@ class TestStatusEvaluatorInteractions(unittest.TestCase):
         }
 
         with patch.dict(
-            "game.systems.combat.status_registry.STATUS_REGISTRY",
+            "game.definitions.status_registry.STATUS_REGISTRY",
             registry,
             clear=True
         ):
@@ -222,7 +225,7 @@ class TestStatusEvaluatorInteractions(unittest.TestCase):
         }
 
         with patch.dict(
-            "game.systems.combat.status_registry.STATUS_REGISTRY",
+            "game.definitions.status_registry.STATUS_REGISTRY",
             registry,
             clear=True
         ):
@@ -243,7 +246,7 @@ class TestStatusEvaluatorInteractions(unittest.TestCase):
         }
 
         with patch.dict(
-            "game.systems.combat.status_registry.STATUS_REGISTRY",
+            "game.definitions.status_registry.STATUS_REGISTRY",
             registry,
             clear=True
         ):

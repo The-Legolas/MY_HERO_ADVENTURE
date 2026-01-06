@@ -2,7 +2,7 @@ import unittest
 
 from game.world.town_logic.town_layout import build_town_graph
 from game.world.town_logic.town_creation import Location_Type, Town_Actions
-from game.world.town_logic.town_names import Town_names
+from game.systems.enums.town_names import Town_names
 
 
 class TestTownLayoutStructure(unittest.TestCase):

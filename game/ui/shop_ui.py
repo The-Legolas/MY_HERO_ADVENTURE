@@ -1,7 +1,8 @@
 from game.core.character import Character
 import math
 from game.engine.input_parser import parse_shop_input
-from game.ui.inventory_ui import ITEM_TYPE_ORDER, get_inventory_items
+from game.ui.inventory_ui import get_inventory_items
+from game.definitions.item_type_order import ITEM_TYPE_ORDER
 
 ITEMS_PER_PAGE = 10
 

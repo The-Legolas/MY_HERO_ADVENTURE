@@ -1,15 +1,13 @@
 from game.core.character import Character
-from game.core.Item_class import Items, Item_Type
-from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
-from game.core.class_progression import CLASS_PROGRESSION
+from game.core.Item_class import Items
 
-ITEM_TYPE_ORDER = [
-    Item_Type.CONSUMABLE,
-    Item_Type.WEAPON,
-    Item_Type.ARMOR,
-    Item_Type.RING,
-    Item_Type.SCRAP,
-]
+from game.systems.enums.item_type import Item_Type
+
+from game.definitions.class_progression import CLASS_PROGRESSION
+from game.definitions.item_type_order import ITEM_TYPE_ORDER
+
+from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
+
 
 def run_inventory_menu(player: Character):
    while True:

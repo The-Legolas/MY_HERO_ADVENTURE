@@ -3,12 +3,25 @@ from unittest.mock import patch
 from enum import Enum
 
 from game.core.character import Character
-from game.core.Enemy_class import Enemy, Enemy_type, Enemy_sub_type, Enemy_behavior_tag, Enemy_Spawner, spawn_enemy, ENEMY_DEFINITIONS
 from game.core.Heroes import Warrior
 from game.core.Skill_class import Skill
-from game.core.class_progression import SKILL_REGISTRY, CLASS_PROGRESSION
-from game.core.Item_class import make_outcome, Items, Item_Type, spawn_item, roll_loot
-from game.core.Status import Status, Enemy_Rarity, INTERRUPT_RESISTANCE_BY_RARITY
+from game.core.Item_class import item_make_outcome, Items
+from game.core.Status import Status
+
+from game.definitions.class_progression import CLASS_PROGRESSION
+from game.definitions.enemy_definitions import ENEMY_DEFINITIONS
+from game.definitions.skill_registry import SKILL_REGISTRY
+
+from game.systems.enums.enemy_rarity import Enemy_Rarity, INTERRUPT_RESISTANCE_BY_RARITY
+from game.systems.enums.enemy_type import Enemy_type
+from game.systems.enums.enemy_sub_type import Enemy_sub_type
+from game.systems.enums.enemy_behavior_tag import Enemy_behavior_tag
+from game.systems.enums.item_type import Item_Type
+
+from game.systems.util_funcs.roll_random import roll_loot
+
+from game.engine.item_spawner import spawn_item
+from game.engine.enemy_spawner import Enemy_Spawner, spawn_enemy
 
 
 class TestCharacterCoreStats(unittest.TestCase):
@@ -291,8 +304,8 @@ class TestSkillDefaultSafety(unittest.TestCase):
         self.assertEqual(skill_b.forbid_if_target_has, [])
 
 class TestMakeOutcome(unittest.TestCase):
-    def test_make_outcome_structure(self):
-        result = make_outcome(
+    def test_item_make_outcome_structure(self):
+        result = item_make_outcome(
             actor_name="Hero",
             action="use_item",
             target_name="Enemy",
@@ -582,10 +595,8 @@ class TestEnemySpawner(unittest.TestCase):
 class TestCoreImports(unittest.TestCase):
     def test_core_imports(self):
         import game.core.character
-        import game.core.Heroes
-        import game.core.Status
-        import game.core.Skill_class
-        import game.core.Item_class
-        import game.core.class_progression
         import game.core.Enemy_class
-        
+        import game.core.Heroes
+        import game.core.Item_class
+        import game.core.Skill_class
+        import game.core.Status

@@ -1,12 +1,18 @@
 import random
-from game.core.Item_class import Item_Type, Items, make_outcome, ITEM_DEFINITIONS
-from game.systems.combat.status_evaluator import evaluate_status_magnitude
-from game.systems.combat.status_registry import STATUS_REGISTRY
-from game.systems.combat.damage_resolver import resolve_damage
-from game.core.Status import INTERRUPT_RESISTANCE_BY_RARITY
-from game.core.class_progression import CLASS_PROGRESSION, SKILL_REGISTRY
 
+from game.core.Item_class import Items, item_make_outcome
 from game.core.Status import Status
+
+from game.definitions.class_progression import CLASS_PROGRESSION
+from game.definitions.item_definitions import ITEM_DEFINITIONS
+from game.definitions.skill_registry import SKILL_REGISTRY
+from game.definitions.status_registry import STATUS_REGISTRY
+
+from game.systems.enums.item_type import Item_Type
+from game.systems.enums.enemy_rarity import INTERRUPT_RESISTANCE_BY_RARITY
+from game.systems.combat.status_evaluator import evaluate_status_magnitude
+from game.systems.combat.damage_resolver import resolve_damage
+
 
 STAT_VALUE_GETTERS = {
     "hp": lambda c: c.max_hp,
@@ -131,7 +137,7 @@ class Character:
     def use_item(self, item_id: str, target: 'Character') -> None:
         entry = self.inventory["items"].get(item_id)
         if not entry:
-            return make_outcome(
+            return item_make_outcome(
                 self.name,
                 "use_item_fail",
                 getattr(target, "name", None),

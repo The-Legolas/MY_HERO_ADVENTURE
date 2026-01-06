@@ -2,10 +2,16 @@ import unittest
 from unittest.mock import patch
 
 from game.core.character import Character
-from game.core.Enemy_class import Enemy, Enemy_behavior_tag, Enemy_type, Enemy_sub_type
-from game.core.Status import Enemy_Rarity
+from game.core.Enemy_class import Enemy
+
+from game.systems.enums.enemy_rarity import Enemy_Rarity
+from game.systems.enums.enemy_type import Enemy_type
+from game.systems.enums.enemy_sub_type import Enemy_sub_type
+from game.systems.enums.enemy_behavior_tag import Enemy_behavior_tag
+
 from game.systems.combat.combat_controller import Combat_State, start_encounter, get_available_enemy_skills, plan_enemy_intent, weighted_pick_enemy_skill, decide_enemy_action
-from game.core.class_progression import SKILL_REGISTRY
+
+from game.definitions.skill_registry import SKILL_REGISTRY
 
 
 def make_enemy(name="Goblin", hp=1):

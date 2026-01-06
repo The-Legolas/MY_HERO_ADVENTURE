@@ -1,4 +1,4 @@
-from game.systems.combat.status_registry import STATUS_REGISTRY
+from game.definitions.status_registry import STATUS_REGISTRY
 
 def evaluate_status_magnitude(status, active_statuses) -> float:
     

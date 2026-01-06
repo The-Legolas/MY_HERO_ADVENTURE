@@ -1,17 +1,24 @@
-from game.systems.combat.combat_turn import _get_initiative_value
-from game.core.character import Character
-from game.core.Enemy_class import Enemy, Enemy_behavior_tag
-from game.world.Dungeon_room_code import Room
-from game.core.Item_class import roll_loot
-from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
-from game.ui.status_ui import format_status_icons
 import random
 from typing import Optional
+
+from game.core.character import Character
+from game.core.Enemy_class import Enemy
 from game.core.Status import Status
-from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
 from game.core.Skill_class import Skill
-from game.core.class_progression import SKILL_REGISTRY
-from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait
+
+from game.world.dungeon_room import Room
+
+from game.ui.status_ui import format_status_icons
+from game.ui.status_ui import describe_status_compact, sort_statuses_by_priority, inspect_entity_statuses
+
+from game.definitions.skill_registry import SKILL_REGISTRY
+
+from game.systems.enums.enemy_behavior_tag import Enemy_behavior_tag
+from game.systems.util_funcs.roll_random import roll_loot
+from game.systems.combat.combat_turn import _get_initiative_value
+from game.systems.combat.combat_actions import Action, resolve_action, _choose_consumable_from_inventory, _choose_enemy_target
+from game.systems.combat.combat_viewer import render_combat_outcome
+
 
 BASE_REGEN = 3
 DEFEND_BONUS = 5
@@ -206,8 +213,6 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 return {"result": "defeat", "log": combat_state.log}
             
         combat_state.round_number += 1
-
-
 
 def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['Action']:
     while True:
@@ -417,99 +422,6 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
         if action == "flee":
             return Action(actor, "flee", None)
 
-def render_combat_outcome(outcome: dict):
-    if not outcome:
-        return
-    
-    action = outcome.get("action")
-    actor = outcome.get("actor")
-    target = outcome.get("target")
-
-    damage = outcome.get("damage", 0)
-    blocked = outcome.get("blocked", False)
-    critical = outcome.get("critical", False)
-    died = outcome.get("died", False)
-    extra = outcome.get("extra", {})
-
-    if action == "attack":
-        print(describe_attack(actor, target, damage, blocked, critical))
-        if died:
-            print(f"{target} has been slain!")
-
-    elif action == "skill":
-        print(describe_skill(actor, target, extra, damage, blocked))
-        if died:
-            print(f"{target} has been slain!")
-
-    elif action == "defend":
-        print(f"{actor} braces for impact, raising their defenses.")
-
-    elif action == "use_item":
-        item = extra.get("item", "item")
-        details = extra.get("details", [])
-
-        print(f"{actor} uses {item}.")
-
-        for d in details:
-            effect = d.get("effect")
-
-            if effect == "heal":
-                print(f"{target} recovers {d['amount']} HP.")
-            elif effect == "damage":
-                print(f"{target} takes {d['amount']} damage.")
-            elif effect == "apply_status":
-                status = d["status"].replace("_", " ").title()
-                if d.get("applied"):
-                    print(f"{target} is affected by {status}.")
-                else:
-                    print(f"{target} is not affected by {status}.")
-            elif effect == "remove_status":
-                status = d["status"].replace("_", " ").title()
-                if d.get("success"):
-                    print(f"{status} is removed.")
-                else:
-                    print(f"{target} had no {status}.")
-
-
-    elif action == "wait":
-        reason = extra.get("reason")
-
-        if reason == "stunned":
-            print(f"{actor} is stunned and cannot act.")
-
-            intent = extra.get("enemy_intent")
-            if intent:
-                print(f"The enemy is preparing to act: {intent}")
-
-        elif reason == "overheating":
-            print(f"{actor} is overheated and must recover.")
-            print("Flames subside as it gathers itself.")
-
-        else:
-            print(f"{actor} waits.")
-
-    elif action == "flee":
-        if extra.get("escaped"):
-            print(f"{actor} successfully fled!")
-        else:
-            print(f"{actor} failed to flee!")
-    
-    feedback = outcome.get("status_feedback")
-    if feedback:
-        status = feedback["status"].replace("_", " ").title()
-        result = feedback["result"]
-
-        if result == "immune":
-            print(f"{target} is immune to {status}.")
-        elif result == "resisted":
-            print(f"{target} resists the effects of {status}.")
-        elif result == "vulnerable":
-            print(f"{status} takes hold more strongly!")
-        elif result == "resistant":
-            print(f"{status} has reduced effect on {target}.")
-
-    print()  # spacing only
-
 
 def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
     player = combat_state.player
@@ -615,8 +527,6 @@ def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
             "intent_hint": intent["text"],
         }
         return Action(enemy, "wait", None)
-    
-
 
 def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
 

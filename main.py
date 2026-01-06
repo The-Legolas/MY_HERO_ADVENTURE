@@ -1,10 +1,14 @@
 from game.core.character import Character
 from game.core.Heroes import Warrior
+
 from game.world.Gen_Game_World import Game_World
-from game.world.town_logic.town_names import Town_names
+from game.systems.enums.town_names import Town_names
+
 from game.engine.game_engine import GameEngine
-from game.ui.text_screens import TextScreen
+
+from game.ui.class_text_screens import TextScreen
 from game.ui.save_menu_ui import run_save_load_menu
+
 from game.engine.save_system import load_game
 
 
@@ -16,13 +20,12 @@ Test:
 1. re-test combat wiht the correct amount of health and dmg
 
 Fixed:
-fixed the ux for if the player is stunned
 
 
 
 Like to have:
 note 1: in the code base search for #fix to find things to remove before final game release
-note 4: refractor when done so all enums and such have their own folder
+
 
 """
 

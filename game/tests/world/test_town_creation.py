@@ -1,12 +1,7 @@
 import unittest
 
-from game.world.town_logic.town_creation import (
-    Location,
-    TownGraph,
-    Location_Type,
-    Town_Actions,
-)
-from game.world.town_logic.town_names import Town_names
+from game.world.town_logic.town_creation import Location, TownGraph, Location_Type, Town_Actions
+from game.systems.enums.town_names import Town_names
 
 
 def make_basic_town(castle_unlocked=False) -> TownGraph:

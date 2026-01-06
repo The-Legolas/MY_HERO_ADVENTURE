@@ -1,18 +1,16 @@
 import random
-from enum import Enum
-from game.core.Item_class import Items, spawn_item
-from game.core.Enemy_class import Enemy, Enemy_type, spawn_enemy
 
-class Room_Types(Enum):
-    EMPTY = "empty"
-    ENEMY_ROOM = "enemy room"
-    TREASURE_ROOM  = "treasure room"
-    REST_ROOM = "rest room"
-    BOSS_ROOM = "boss room"
+from game.core.Item_class import Items
+from game.core.Enemy_class import Enemy
 
+from game.systems.enums.room_types import Room_Types
+from game.systems.enums.enemy_type import Enemy_type
+
+from game.engine.item_spawner import spawn_item
+from game.engine.enemy_spawner import spawn_enemy
 
 class Room(): 
-    def __init__(self, room_type: Room_Types, pos_x: int =0, pos_y: int =0, day_counter: int =1):
+    def __init__(self, room_type: Room_Types, pos_x: int =0, pos_y: int = 0, day_counter: int = 1):
         self.room_type = room_type
         self.pos_x = pos_x
         self.pos_y = pos_y

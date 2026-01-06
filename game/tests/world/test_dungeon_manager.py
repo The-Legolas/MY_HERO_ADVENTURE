@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import patch
 
 from game.world.dungeon_manager import Dungeon_Manager
-from game.world.Dungeon_room_code import Room_Types
-from game.core.Status import Enemy_Rarity
+from game.world.dungeon_room import Room_Types
+from game.systems.enums.enemy_rarity import Enemy_Rarity
 
 
 class TestDungeonGeneration(unittest.TestCase):

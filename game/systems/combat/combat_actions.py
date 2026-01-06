@@ -1,11 +1,16 @@
 import random
-from game.core.character import Character
-from game.core.Enemy_class import Enemy, Enemy_behavior_tag
-from game.core.Status import Status
-from game.core.class_progression import SKILL_REGISTRY
-from game.systems.combat.damage_resolver import resolve_damage
-from game.systems.combat.status_registry import STATUS_REGISTRY
 from typing import TYPE_CHECKING
+
+from game.core.character import Character
+from game.core.Enemy_class import Enemy
+from game.core.Status import Status
+
+from game.definitions.skill_registry import SKILL_REGISTRY
+from game.definitions.status_registry import STATUS_REGISTRY
+
+from game.systems.combat.damage_resolver import resolve_damage
+
+from game.systems.enums.enemy_behavior_tag import Enemy_behavior_tag
 
 if TYPE_CHECKING:
     from game.systems.combat.combat_controller import Combat_State

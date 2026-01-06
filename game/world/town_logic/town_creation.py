@@ -1,24 +1,7 @@
-from enum import Enum
-from .town_names import Town_names
+from game.systems.enums.town_names import Town_names
 
-class Location_Type(Enum):
-    EXTERIOR = "exterior"
-    INTERIOR = "interior"
-    SPECIAL  = "special"
-
-class Town_Actions(Enum):
-    ENTER_INN        = "enter inn"
-    ENTER_TAVERN     = "enter tavern"
-    ENTER_SHOP       = "enter shop"
-    LEAVE_BUILDING   = "leave building"
-    REST             = "rest"
-    TALK             = "talk"
-    ENTER_CAVE       = "enter cave"
-    ENTER_CASTLE     = "enter castle"
-    LEAVE_TOWN       = "leave town"
-    BUY_BEER         = "buy beer"
-    BUY_FROM_SHOP    = "buy from shop"
-    SELL_FROM_SHOP   = "sell from shop"
+from game.systems.enums.location_type import Location_Type
+from game.systems.enums.town_actions import Town_Actions
 
 
 class Location():

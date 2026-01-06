@@ -1,4 +1,4 @@
-from game.systems.combat.status_registry import STATUS_REGISTRY
+from game.definitions.status_registry import STATUS_REGISTRY
 from game.core.Status import Status
 
 def render_status_tooltip(status, entity) -> list[str]:

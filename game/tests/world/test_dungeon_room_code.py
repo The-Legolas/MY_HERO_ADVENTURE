@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from game.world.Dungeon_room_code import (
+from game.world.dungeon_room import (
     Room,
     Room_Types,
     treasure_room_spawner,

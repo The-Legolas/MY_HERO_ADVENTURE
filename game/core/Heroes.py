@@ -1,5 +1,4 @@
-import random
-from .character import Character
+from game.core.character import Character
 
 class Warrior(Character):
     def __init__(self, name: str, starting_items: dict[str, int] | None = None, gold: int = 0):

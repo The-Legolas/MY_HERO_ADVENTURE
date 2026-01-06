@@ -1,5 +1,8 @@
-from .town_creation import Town_Actions, TownGraph, Location, Location_Type
-from .town_names import Town_names
+from game.world.town_logic.town_creation import TownGraph, Location
+
+from game.systems.enums.town_names import Town_names
+from game.systems.enums.location_type import Location_Type
+from game.systems.enums.town_actions import Town_Actions
 
 def build_town_graph(castle_unlocked: bool) -> TownGraph:
     town = TownGraph(castle_unlocked)

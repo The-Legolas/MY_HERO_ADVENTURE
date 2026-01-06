@@ -1,4 +1,4 @@
-from game.world.town_logic.guide_dialogue import GUIDE_NAME, INTRO_DIALOGUE, HINT_MESSAGES, CASTLE_UNLOCKED_MESSAGE
+from game.ui.dialog.guide_dialogue import GUIDE_NAME, INTRO_DIALOGUE, HINT_MESSAGES, CASTLE_UNLOCKED_MESSAGE
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

@@ -1,4 +1,4 @@
-from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait, format_skill_name
+from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait
 from game.ui.combat_ui import render_victory_summary
 
 def combat_log_renderer(log: list[dict]) -> str:
@@ -236,3 +236,96 @@ def combat_log_renderer(log: list[dict]) -> str:
     flush_turn()
     lines.append("\n=====================\n")
     return "\n".join(lines)
+
+def render_combat_outcome(outcome: dict):
+    if not outcome:
+        return
+    
+    action = outcome.get("action")
+    actor = outcome.get("actor")
+    target = outcome.get("target")
+
+    damage = outcome.get("damage", 0)
+    blocked = outcome.get("blocked", False)
+    critical = outcome.get("critical", False)
+    died = outcome.get("died", False)
+    extra = outcome.get("extra", {})
+
+    if action == "attack":
+        print(describe_attack(actor, target, damage, blocked, critical))
+        if died:
+            print(f"{target} has been slain!")
+
+    elif action == "skill":
+        print(describe_skill(actor, target, extra, damage, blocked))
+        if died:
+            print(f"{target} has been slain!")
+
+    elif action == "defend":
+        print(f"{actor} braces for impact, raising their defenses.")
+
+    elif action == "use_item":
+        item = extra.get("item", "item")
+        details = extra.get("details", [])
+
+        print(f"{actor} uses {item}.")
+
+        for d in details:
+            effect = d.get("effect")
+
+            if effect == "heal":
+                print(f"{target} recovers {d['amount']} HP.")
+            elif effect == "damage":
+                print(f"{target} takes {d['amount']} damage.")
+            elif effect == "apply_status":
+                status = d["status"].replace("_", " ").title()
+                if d.get("applied"):
+                    print(f"{target} is affected by {status}.")
+                else:
+                    print(f"{target} is not affected by {status}.")
+            elif effect == "remove_status":
+                status = d["status"].replace("_", " ").title()
+                if d.get("success"):
+                    print(f"{status} is removed.")
+                else:
+                    print(f"{target} had no {status}.")
+
+
+    elif action == "wait":
+        reason = extra.get("reason")
+
+        if reason == "stunned":
+            print(f"{actor} is stunned and cannot act.")
+
+            intent = extra.get("enemy_intent")
+            if intent:
+                print(f"The enemy is preparing to act: {intent}")
+
+        elif reason == "overheating":
+            print(f"{actor} is overheated and must recover.")
+            print("Flames subside as it gathers itself.")
+
+        else:
+            print(f"{actor} waits.")
+
+    elif action == "flee":
+        if extra.get("escaped"):
+            print(f"{actor} successfully fled!")
+        else:
+            print(f"{actor} failed to flee!")
+    
+    feedback = outcome.get("status_feedback")
+    if feedback:
+        status = feedback["status"].replace("_", " ").title()
+        result = feedback["result"]
+
+        if result == "immune":
+            print(f"{target} is immune to {status}.")
+        elif result == "resisted":
+            print(f"{target} resists the effects of {status}.")
+        elif result == "vulnerable":
+            print(f"{status} takes hold more strongly!")
+        elif result == "resistant":
+            print(f"{status} has reduced effect on {target}.")
+
+    print()  # spacing only
