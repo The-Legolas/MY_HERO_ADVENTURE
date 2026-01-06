@@ -98,3 +98,4 @@ class TestRoomStringRepresentation(unittest.TestCase):
 
         self.assertIsInstance(result, str)
         self.assertIn(room.room_type.value, result)
+        

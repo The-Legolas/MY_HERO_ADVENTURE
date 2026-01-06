@@ -2,9 +2,9 @@ from game.core.character import Character
 
 class Warrior(Character):
     def __init__(self, name: str, starting_items: dict[str, int] | None = None, gold: int = 0):
-        base_hp = 1000 # 70
-        base_damage = 5 # 10
-        base_defence = 3 # 3
+        base_hp = 100 # 70
+        base_damage = 10 # 10
+        base_defence = 4 # 3
 
         scaled_hp = int(base_hp * 1.2)
         scaled_damage = int(base_damage * 0.9)

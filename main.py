@@ -13,7 +13,7 @@ from game.engine.save_system import load_game
 
 
 """
-currently __ lines of code as of the previous git commit
+currently 11177 lines of code as of the previous git commit
 Bugs:
 
 Test:
@@ -24,7 +24,6 @@ Fixed:
 
 
 Like to have:
-note 1: in the code base search for #fix to find things to remove before final game release
 
 
 """
@@ -222,8 +221,9 @@ def pick_character_and_name() -> Character:
     while True:
         print("\n--- Choose Your Class ---")
         print("1. Warrior")
+        print("— Trained for battle and built to endure. High vitality and strong armor make the Warrior difficult to bring down, even in the deepest depths.\n")
         print("2. Archer   (Locked – In development)")
-        print("3. Wizard   (Locked – In development)")
+        print("3. Wizard   (Locked – In development)\n")
 
         choice = input("> ").strip().lower()
 
@@ -270,7 +270,7 @@ def pick_character_and_name() -> Character:
         "lesser_fortitude_draught":5,
     }
     if hero_choice == "warrior":
-        player_hero = Warrior(hero_name, starting_items=starting_items)
+        player_hero = Warrior(hero_name, starting_items=None)
 
     return player_hero
 

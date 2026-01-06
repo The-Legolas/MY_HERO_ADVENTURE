@@ -599,3 +599,4 @@ class TestCoreImports(unittest.TestCase):
         import game.core.Item_class
         import game.core.Skill_class
         import game.core.Status
+        

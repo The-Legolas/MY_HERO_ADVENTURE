@@ -58,3 +58,4 @@ def roll_room_type(day_counter: int, depth: int) -> Room_Types:
         return Room_Types.TREASURE_ROOM
     else:
         return Room_Types.EMPTY
+    

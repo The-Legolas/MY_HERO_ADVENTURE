@@ -141,3 +141,4 @@ class TestPriceAdjustment(unittest.TestCase):
         update_prices_based_on_demand(self.metadata)
 
         self.assertEqual(record.current_price, record.base_price)
+        

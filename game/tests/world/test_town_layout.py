@@ -133,3 +133,4 @@ class TestTavernInterior(unittest.TestCase):
 
     def test_tavern_adjacency(self):
         self.assertEqual(self.tavern.adjacent_locations, [Town_names.TOWN_GATE.value])
+        

@@ -311,3 +311,4 @@ class ShopUI:
 
             if sold_something:
                 continue
+            
