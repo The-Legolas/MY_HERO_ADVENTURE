@@ -80,8 +80,9 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
 
         for enemy in combat_state.alive_enemies():
             if isinstance(enemy, Enemy) and enemy.locked_state:
-                enemy.locked_state["turns"] -= 1
+                enemy.locked_state["turns"] -= 1            
             plan_enemy_intent(enemy, combat_state)
+            
 
         for actor in participants_sorted:
             if not combat_state.is_running:
@@ -153,11 +154,17 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
                 continue
 
             if not actor.can_act():
-                combat_state.log.append({
-                    "event": "status_prevented_action",
-                    "target": actor.name
-                })
+                action = Action(
+                    actor=actor,
+                    action_type="wait",
+                    state="stunned"
+                )
+
+                outcome = resolve_action(action, combat_state)
+                render_combat_outcome(outcome)
+                input()
                 continue
+
 
             if actor is combat_state.player:
                 action = ask_player_for_action(actor, combat_state)
@@ -331,8 +338,6 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
             continue
 
-
-
         if action == "inspect":
             print("\nInspect:")
             print("1. Enemies")
@@ -467,7 +472,21 @@ def render_combat_outcome(outcome: dict):
 
 
     elif action == "wait":
-        print(f"{actor} {describe_wait(extra)}.")
+        reason = extra.get("reason")
+
+        if reason == "stunned":
+            print(f"{actor} is stunned and cannot act.")
+
+            intent = extra.get("enemy_intent")
+            if intent:
+                print(f"The enemy is preparing to act: {intent}")
+
+        elif reason == "overheating":
+            print(f"{actor} is overheated and must recover.")
+            print("Flames subside as it gathers itself.")
+
+        else:
+            print(f"{actor} waits.")
 
     elif action == "flee":
         if extra.get("escaped"):
@@ -521,11 +540,9 @@ def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
     enemy.intent = None
 
     if not intent:
-        print("oooo")
         return Action(enemy, "attack", player)
 
     if intent["type"] == "attack":
-        print("hhee")
         return Action(enemy, "attack", player)
 
     if intent["type"] == "skill":
@@ -545,7 +562,60 @@ def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
         }
         return Action(enemy, "wait", None)
     
-    #return Action(enemy, "attack", player)
+    if intent["type"] == "airborne":
+        enemy.locked_state = {
+            "skill_id": intent["skill_id"],
+            "turns": intent["turns"],
+            "forced_action": intent.get("forced_action"),
+            "intent_hint": intent["text"],
+        }
+        return Action(enemy, "wait", None)
+    
+    if intent["type"] == "overheating":
+        enemy.locked_state = {
+            "skill_id": intent["skill_id"],
+            "turns": intent["turns"],
+            "forced_action": intent.get("forced_action"),
+            "intent_hint": intent["text"],
+        }
+        return Action(enemy, "wait", None)
+    
+    if intent["type"] == "howling":
+        enemy.locked_state = {
+            "skill_id": intent["skill_id"],
+            "turns": intent["turns"],
+            "forced_action": intent.get("forced_action"),
+            "intent_hint": intent["text"],
+        }
+        return Action(enemy, "wait", None)
+    
+    if intent["type"] == "seething":
+        enemy.locked_state = {
+            "skill_id": intent["skill_id"],
+            "turns": intent["turns"],
+            "forced_action": intent.get("forced_action"),
+            "intent_hint": intent["text"],
+        }
+        return Action(enemy, "wait", None)
+    
+    if intent["type"] == "bracing":
+        enemy.locked_state = {
+            "skill_id": intent["skill_id"],
+            "turns": intent["turns"],
+            "forced_action": intent.get("forced_action"),
+            "intent_hint": intent["text"],
+        }
+        return Action(enemy, "wait", None)
+    
+    if intent["type"] == "channeling":
+        enemy.locked_state = {
+            "skill_id": intent["skill_id"],
+            "turns": intent["turns"],
+            "forced_action": intent.get("forced_action"),
+            "intent_hint": intent["text"],
+        }
+        return Action(enemy, "wait", None)
+    
 
 
 def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:

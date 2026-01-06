@@ -191,7 +191,7 @@ class TestStatusObject(unittest.TestCase):
 
 class TestEnemyRarityEnum(unittest.TestCase):
     def test_enemy_rarity_values(self):
-        self.assertEqual(Enemy_Rarity.COMMON.value, 100)
+        self.assertEqual(Enemy_Rarity.COMMON.value, 90)
         self.assertEqual(Enemy_Rarity.ELITE.value, 5)
         self.assertEqual(Enemy_Rarity.BOSS.value, 0)
 

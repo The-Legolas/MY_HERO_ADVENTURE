@@ -20,6 +20,10 @@ class DummyCharacter:
 
     def get_damage_multiplier(self):
         return 1.0
+    
+    def get_effective_defence(self) -> int:
+        defence = self.defence
+        return defence
 
     def take_damage(self, amount):
         self.hp = max(0, self.hp - amount)

@@ -11,16 +11,13 @@ from game.engine.save_system import load_game
 """
 currently __ lines of code as of the previous git commit
 Bugs:
-note 2: no ux for if the player is stunned
 
 Test:
 1. re-test combat wiht the correct amount of health and dmg
 
 Fixed:
-Made it so all items with extra effects have their full description added to the inventory screen (mainly weapons and rings)
-Made it so the sell menu looks like the buy menu
-Made a main menu
-Made a proper start menu with a load save, a check tutorial screen (which was also updated), an imporved version of character select, an imporved version of the title screen
+fixed the ux for if the player is stunned
+
 
 
 Like to have:
@@ -270,7 +267,7 @@ def pick_character_and_name() -> Character:
         "lesser_fortitude_draught":5,
     }
     if hero_choice == "warrior":
-        player_hero = Warrior(hero_name, tarting_items=starting_items)
+        player_hero = Warrior(hero_name, starting_items=starting_items)
 
     return player_hero
 

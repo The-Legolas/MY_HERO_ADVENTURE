@@ -14,12 +14,13 @@ if TYPE_CHECKING:
 
 
 class Action():
-    def __init__(self, actor: Character, action_type: str, target: None, skill_id: str | None = None, item_id: str | None = None):
+    def __init__(self, actor: Character, action_type: str, target: Character | None = None, skill_id: str | None = None, item_id: str | None = None, state: str | None = None,):
         self.actor = actor
         self.type = action_type
         self.target = target
         self.skill_id = skill_id
         self.item_id = item_id
+        self.state = state
 
 
 def _make_outcome(actor_name: str, action: str, target_name: str | None = None, damage: int = 0,
@@ -290,19 +291,25 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         return outcome
     
     if action.type == "wait":
+        reason = action.state
+
         outcome = {
-        "action": "wait",
-        "actor": action.actor.name,
-        "target": None,
-        "damage": 0,
-        "blocked": False,
-        "critical": False,
-        "died": False,
-        "extra": {
-            "state": getattr(action, "state", None)
+            "action": "wait",
+            "actor": action.actor.name,
+            "target": None,
+            "damage": 0,
+            "blocked": False,
+            "critical": False,
+            "died": False,
+            "extra": {
+                "reason": reason
+            }
         }
-    }
-    combat_state.log.append(outcome)
+
+
+        combat_state.log.append(outcome)
+        return outcome
+    
     return outcome
 
 

@@ -844,9 +844,27 @@ SKILL_REGISTRY: dict[str, Skill] = {
         locks_actor={
             "state": "overheating",
             "turns": 2,
-            "forced_action": "wait",
+            "forced_action": None,
         },
         cooldown_turns=5,
+    ),
+
+    "debug": Skill(
+        id="debug",
+        name="Debug",
+        description="A testing attack/status skill",
+        intent_hint="Testing Stun",
+        target="enemy",
+        damage=None,
+        hit_chance=1,
+        apply_status={
+            "id": "stun",
+            "duration": 1,
+            "magnitude": None,
+            "chance": 1.0,
+        },
+        forbid_if_target_has=["stun"],
+        cooldown_turns=0
     ),
 
 

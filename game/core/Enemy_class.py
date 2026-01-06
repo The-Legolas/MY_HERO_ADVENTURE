@@ -32,6 +32,7 @@ class Enemy_type(Enum):
     ENEMY_DEAD_WARDEN = "dead warden"
     ENEMY_DIRE_BOAR = "dire boar"
     ENEMY_SHAMBLING_CORPSE = "shambling corpse"
+    ENEMY_DEBUG = "debug"
 
 
 class Enemy_behavior_tag(Enum):
@@ -735,6 +736,25 @@ ENEMY_DEFINITIONS = {
             "inferno_surge",
         ],
         "behavior_tag": Enemy_behavior_tag.HULKING
+    },
+
+    Enemy_type.ENEMY_DEBUG : {
+        "name": "Debug",
+        "hp": 3,
+        "damage": 20,
+        "defence": 10,
+        "rarity": Enemy_Rarity.DEBUG,
+        "sub_type": Enemy_sub_type.DRAGON,
+        "xp_reward": 1,
+        "gold_reward": 2,
+        "loot_table": [],
+        "usable_skills": [
+            "debug",
+            #"inferno_surge",
+            #"cataclysmic_slam",
+            #"skyward_ascension",
+        ],
+        "behavior_tag": None
     }
 }
 
