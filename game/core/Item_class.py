@@ -43,82 +43,6 @@ class Items():
         self.passive_modifiers = passive_modifiers or {}
         self.on_hit_status = on_hit_status
     
-    # old version
-    """
-    def get_tooltip(self) -> str:
-        lines = []
-
-        if self.stats:
-            for k, v in self.stats.items():
-                name = k.replace("_", " ").title()
-
-                if isinstance(v, float):
-                    lines.append(f"{name}: +{int(v * 100)}%")
-                else:
-                    sign = "+" if v > 0 else ""
-                    lines.append(f"{name}: {sign}{v}")
-
-        if self.passive_modifiers:
-            for k, v in self.passive_modifiers.items():
-                name = k.replace("_", " ").replace("resist", "Resist").title()
-                lines.append(f"{name}: +{int(v * 100)}%")
-
-        
-        # CONSUMABLE EFFECTS
-        if not isinstance(self.effect, dict):
-            return "\n".join(lines)
-        
-        summary_parts = []
-        detail_lines = []
-
-        # Status application
-        status_data = self.effect.get("apply_status")
-        if status_data:
-            status_name = status_data["id"].replace("_", " ").title()
-            duration = status_data.get("duration")
-            summary_parts.append(f"applies {status_name.lower()}")
-
-            if duration:
-                detail_lines.append(f"\t• {status_name} for {duration} turns")
-            else:
-                detail_lines.append(f"\t• {status_name}")
-
-        # Healing
-        if "heal" in self.effect:
-            amount = self.effect["heal"]
-            summary_parts.append("restores health")
-            detail_lines.append(f"\t• Heals {amount} HP")
-
-        # Damage
-        if "damage" in self.effect:
-            amount = self.effect["damage"]
-            summary_parts.append("deals damage")
-            detail_lines.append(f"\t• Deals {amount} damage")
-
-        # Remove status
-        if "remove_status" in self.effect:
-            status = self.effect["remove_status"].replace("_", " ").title()
-            summary_parts.append(f"cures {status.lower()}")
-            detail_lines.append(f"\t• Removes {status}")
-
-        if "restore_resource" in self.effect:
-            amount = self.effect["restore_resource"]
-            summary_parts.append("restores stamina")
-            detail_lines.append(f"\t• Restores {amount} stamina")
-
-        # ─── RENDER ────────────────────────────────────────
-        if summary_parts:
-            summary = " and ".join(summary_parts)
-            lines.append(f"Use: {summary.capitalize()}")
-
-            # Only show bullets if more than one effect
-            if detail_lines:
-                for line in detail_lines:
-                    lines.append(f"  {line}")
-
-        return "\n".join(lines)
-
-    """
     def get_tooltip(self) -> str:
         lines = []
 
@@ -208,12 +132,6 @@ class Items():
                 }.get(trigger, trigger.replace("_", " ").title())
 
                 line = f"\t{trigger_text}: {status_name}"
-
-                """if magnitude is not None:
-                    if isinstance(magnitude, float):
-                        line += f" (+{int(magnitude * 100)}%)"
-                    else:
-                        line += f" (+{magnitude})" """
                 
                 if duration is not None:
                     if duration < 0:

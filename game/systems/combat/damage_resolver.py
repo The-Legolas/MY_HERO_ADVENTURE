@@ -5,11 +5,6 @@ if TYPE_CHECKING:
     from game.core.character import Character
 
 def resolve_damage(actor: 'Character', target: 'Character', damage_def: dict) -> dict:
-    """
-    Final authoritative damage resolver.
-    All combat damage MUST go through here.
-    """
-
     if not target or not damage_def:
         return {
             "damage": 0,

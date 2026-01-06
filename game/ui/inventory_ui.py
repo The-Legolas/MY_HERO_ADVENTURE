@@ -265,11 +265,6 @@ def group_inventory_by_category(items):
     return grouped
 
 def _inventory_category_menu(player: Character, *, mode: str):
-    """
-    mode:
-        - "view" → read-only inventory browsing
-        - "use"  → returns selected (inv_key, item) or None
-    """
     items = get_inventory_items(player, equippable_only=False)
     if not items:
         print("\nInventory is empty.")
@@ -452,9 +447,6 @@ def _inspect_player_statuses(player: Character):
         inspect_entity_statuses(player)
 
 def get_xp_progress(player: Character) -> tuple[int, int, bool]:
-    """
-    Returns (current_xp, xp_required, at_cap)
-    """
     if player.class_id is None:
         return (0, 0, True)
 
