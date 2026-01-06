@@ -32,7 +32,6 @@ def run_inventory_menu(player: Character):
         if choice == "1":
             _show_equipped_items(player)
         elif choice == "2":
-            #_show_inventory_items(player, equippable_only=False)
             _inventory_category_menu(player, mode="view")
         elif choice == "3":
             _inspect_player_statuses(player)
@@ -61,62 +60,6 @@ def _show_equipped_items(player: Character) -> None:
     input()
 
 
-def _show_inventory_items(player: Character, equippable_only: bool):
-    items = get_inventory_items(player, equippable_only)
-    
-    print("\n--- Inventory ---")
-
-    if not items:
-        print("Inventory is empty.")
-        return []
-
-    current_category = None
-    category_counts = {}
-
-    for _, item, count in items:
-        category_counts[item.category] = category_counts.get(item.category, 0) + count
-
-    for idx, (_, item, count) in enumerate(items, start=1):
-        if item.category != current_category:
-            current_category = item.category
-            total = category_counts[current_category]
-            print(f"\n--- {current_category.value.title()} ({total}) ---")
-
-        print(f"{idx}. {item.name} x{count}")
-        tooltip = item.get_tooltip()
-        if tooltip:
-            print(f"\t{tooltip}\n")
-
-    return items
-
-
-#old version
-"""
-def _equip_flow(player: Character) -> None:
-    items = _show_inventory_items(player, equippable_only=True)
-
-    if not items:
-        return
-
-    while True:
-        choice = input("\nEquip which item? (number or 'back'): ").strip()
-
-        if choice.lower() in ("back", "c"):
-            return
-
-        if not choice.isdigit():
-            print("Invalid input.")
-            continue
-
-        index = int(choice) - 1
-        if index < 0 or index >= len(items):
-            print("Invalid selection.")
-            continue
-
-        _, item, _ = items[index]
-        player.equip_item(item)
-        return
-"""
 def _equip_flow(player: Character) -> None:
     items = get_inventory_items(player, equippable_only=True)
 
@@ -154,40 +97,6 @@ def _equip_flow(player: Character) -> None:
             player.equip_item(result)
             return
 
-
-#old version
-"""
-def _unequip_flow(player: Character) -> None:
-    equipped = get_equipped_items(player)
-
-    print("\n--- Unequip ---")
-
-    if not equipped:
-        print("Nothing to unequip.")
-        return
-
-    for idx, (slot, item) in enumerate(equipped, start=1):
-        print(f"{idx}. {slot.title()}: {item.name}")
-
-    while True:
-        choice = input("\nUnequip which item? (number or 'back'): ").strip()
-
-        if choice.lower() in ("back", "c"):
-            return
-
-        if not choice.isdigit():
-            print("Invalid input.")
-            continue
-
-        index = int(choice) - 1
-        if index < 0 or index >= len(equipped):
-            print("Invalid selection.")
-            continue
-
-        _, item = equipped[index]
-        player.unequip_item(item)
-        return
-"""
 
 def _unequip_flow(player: Character) -> None:
     equipped = get_equipped_items(player)
@@ -275,61 +184,6 @@ def get_inventory_items(player: Character, equippable_only: bool = False) -> lis
     results.sort(key=sort_key)
 
     return results
-
-
-
-
-#old version
-"""
-def _use_item_flow(player: Character):
-    items = get_inventory_items(player, equippable_only=False)
-
-    consumables = [
-        (key, item, count)
-        for (key, item, count) in items
-        if item.category == Item_Type.CONSUMABLE
-    ]
-
-    if not consumables:
-        print("\nYou have no usable consumables.")
-        input("Press Enter to continue...")
-        return
-
-    print("\n--- Use Item ---")
-    for idx, (_, item, count) in enumerate(consumables, start=1):
-        print(f"{idx}. {item.name} x{count}")
-        tooltip = item.get_tooltip()
-        if tooltip:
-            print(f"\t{tooltip}")
-        print() #spacing
-    print("c. Cancel")
-
-    choice = input("> ").strip().lower()
-    if choice in ("c", "cancel", "back"):
-        return
-
-    if not choice.isdigit():
-        print("Invalid choice.")
-        return
-
-    idx = int(choice) - 1
-    if idx < 0 or idx >= len(consumables):
-        print("Invalid selection.")
-        return
-
-    inv_key, item, _ = consumables[idx]
-
-    outcome = item.use(player, player)
-
-    _render_inventory_item_outcome(outcome)
-
-
-    if outcome and outcome.get("action") == "use_item":
-        player.remove_item(inv_key, amount=1)
-
-    input("\nPress Enter to continue...")
-"""
-
 
 
 
@@ -481,7 +335,7 @@ def _paginated_inventory_view(
             print(f"{idx}. {item.name} x{count}")
             tooltip = item.get_tooltip()
             if tooltip:
-                print(f"\t{tooltip}\n")
+                print(f"{tooltip}\n")
 
         print("\n[n]ext  [p]rev  [back]")
         if mode == "use":
@@ -534,7 +388,7 @@ def _paginated_equip_view(player: Character, entries: list[tuple[str, Items, int
             print(f"{idx}. {item.name} x{count}")
             tooltip = item.get_tooltip()
             if tooltip:
-                print(f"\t{tooltip}\n")
+                print(f"{tooltip}\n")
 
         print("\n[n]ext  [p]rev  [back]")
         choice = input("> ").strip().lower()

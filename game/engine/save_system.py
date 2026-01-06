@@ -97,9 +97,15 @@ def _deserialize_character(data: dict) -> Character:
 
     res = data.get("resource")
     if res:
-        player.resource_current = res["current"]
-        player.resource_max = res["max"]
         player.resource_name = res["name"]
+        player.resource_current = res["current"]
+
+        # Restore max resource via base + bonuses
+        saved_max = res["max"]
+        base = player.base_resource
+        bonus = max(0, saved_max - base)
+
+        player.level_bonuses["resource"] = bonus
     
 
     # Inventory

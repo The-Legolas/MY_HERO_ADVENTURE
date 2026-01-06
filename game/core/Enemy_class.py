@@ -715,7 +715,7 @@ ENEMY_DEFINITIONS = {
         "hp": 240,
         "damage": 30,
         "defence": 19,
-        "rarity": Enemy_Rarity.DEBUG,
+        "rarity": Enemy_Rarity.BOSS,
         "sub_type": Enemy_sub_type.DRAGON,
         "xp_reward": 1,
         "gold_reward": 450,

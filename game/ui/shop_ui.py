@@ -1,6 +1,9 @@
 from game.core.character import Character
 import math
 from game.engine.input_parser import parse_shop_input
+from game.ui.inventory_ui import ITEM_TYPE_ORDER, get_inventory_items
+
+ITEMS_PER_PAGE = 10
 
 class ShopUI:
     def __init__(self, player: Character):
@@ -40,7 +43,6 @@ class ShopUI:
 
     def handle_buy_item(self, inventory: dict[str, any], buy_mult: float) -> None:
         page = 0
-        ITEMS_PER_PAGE = 10
 
         while True:
             visible_items = []
@@ -159,88 +161,160 @@ class ShopUI:
 
             print(f"\nYou bought {qty} × {record.item.name}!")
             input()
-           
+
 
     def handle_sell_item(self, sell_mult: float) -> None:
-        while True:
-            print("\n--- SELL MENU ---")
-            print("\nYour inventory:")
-            player_items = self.player.inventory["items"]
+        player = self.player
 
-            if not player_items:
-                print("You have nothing to sell.")
+        while True:
+        # ─── REBUILD INVENTORY EACH LOOP ───────────────────
+            items = get_inventory_items(player, equippable_only=False)
+
+            if not items:
+                print("\nYou have nothing to sell.")
                 input()
                 return
 
-            listed = []
-            for idx, (item_id, data) in enumerate(player_items.items(), start=1):
-                item_obj = data["item"]
-                count = data["count"]
-                value = int(item_obj.value * sell_mult)
-                print(f"{idx}. {item_obj.name} x{count}  |  Sell price: {value} each")
-                listed.append((item_id, data))
+            # Group by category
+            grouped = {}
+            for item_id, item, count in items:
+                grouped.setdefault(item.category, []).append((item_id, item, count))
 
-            print("\nType number to sell, or 'back' to return.")
-            choice = input("\n> ").strip().lower()
+            grouped = {k: v for k, v in grouped.items() if v}
+            categories = [cat for cat in ITEM_TYPE_ORDER if cat in grouped]
 
-            if choice in ("leave", "back", "c"):
+            # ─── CATEGORY SELECTION ────────────────────────────
+            print("\n--- SELL MENU ---")
+            print(f"Gold: {player.inventory['gold']}\n")
+            print("--- Inventory Categories ---")
+
+            for idx, cat in enumerate(categories, start=1):
+                total = sum(count for _, _, count in grouped[cat])
+                print(f"{idx}. {cat.value.title()} ({total})")
+
+            print("c. Back")
+            choice = input("> ").strip().lower()
+
+            if choice in ("c", "back"):
                 return
 
-            if not (choice and choice.isdigit()):
-                print("Invalid input. Provide an item number.")
+            if not choice.isdigit():
+                print("Invalid input.")
                 input()
                 continue
 
-            index = int(choice) - 1
-            if index < 0 or index >= len(listed):
+            cat_index = int(choice) - 1
+            if cat_index < 0 or cat_index >= len(categories):
                 print("Invalid selection.")
                 input()
                 continue
 
-            item_id, data = listed[index]
-            item_obj = data["item"]
-            player_count = data["count"]
-            sell_price = int(item_obj.value * sell_mult)
+            category = categories[cat_index]
+            entries = grouped[category]
 
-            print(f"\nHow many '{item_obj.name}' do you want to sell? (max {player_count})")
-            qty_raw = input("> ").strip().lower()
+            # ─── PAGINATED ITEM LIST ───────────────────────────
+            page = 0
+            total_pages = max(1, math.ceil(len(entries) / ITEMS_PER_PAGE))
 
-            if qty_raw in ("back", "cancel", "c"):
-                continue
+            sold_something = False
 
-            if not qty_raw.isdigit():
-                print("Please enter a valid number.")
+            while True:
+                start = page * ITEMS_PER_PAGE
+                end = start + ITEMS_PER_PAGE
+                page_items = entries[start:end]
+
+                name_width = max(len(item.name) for _, item, _ in page_items)
+                qty_width = max(len(str(count)) for _, _, count in page_items)
+                price_width = max(
+                    len(str(int(item.value * sell_mult)))
+                    for _, item, _ in page_items
+                )
+
+                print(f"\n--- {category.value.title()} (Page {page + 1}/{total_pages}) ---")
+                print(
+                    f"{'#':>2}  "
+                    f"{'Item Name'.ljust(name_width)} | "
+                    f"{'Qty'.rjust(qty_width)} | "
+                    f"{'Price'.rjust(price_width)}"
+                )
+                print("-" * (8 + name_width + qty_width + price_width))
+
+                for idx, (item_id, item, count) in enumerate(page_items, start=1):
+                    price = int(item.value * sell_mult)
+                    print(
+                        f"{idx:>2}  "
+                        f"{item.name.ljust(name_width)} | "
+                        f"{str(count).rjust(qty_width)} | "
+                        f"{str(price).rjust(price_width)}"
+                    )
+
+                print("\n[n]ext  [p]rev  [back]")
+                choice = input("> ").strip().lower()
+
+                # Navigation
+                if choice in ("back", "c"):
+                    break
+
+                if choice == "n":
+                    page = (page + 1) % total_pages
+                    continue
+
+                if choice == "p":
+                    page = (page - 1) % total_pages
+                    continue
+
+                if not choice.isdigit():
+                    print("Invalid input.")
+                    input()
+                    continue
+
+                index = int(choice) - 1
+                if index < 0 or index >= len(page_items):
+                    print("Invalid selection.")
+                    input()
+                    continue
+
+                # ─── SELL FLOW ──────────────────────────────────
+                item_id, item, owned = page_items[index]
+                price = int(item.value * sell_mult)
+
+                print(f"\nHow many {item.name} do you want to sell? (max {owned})")
+                qty_raw = input("> ").strip().lower()
+
+                if qty_raw in ("c", "back", "cancel"):
+                    continue
+
+                if not qty_raw.isdigit():
+                    print("Invalid number.")
+                    input()
+                    continue
+
+                qty = int(qty_raw)
+                if qty <= 0 or qty > owned:
+                    print("Invalid quantity.")
+                    input()
+                    continue
+
+                total_gold = qty * price
+
+                print(f"\nConfirm sale:")
+                print(f"{qty} × {item.name} × {price} = {total_gold} gold")
+                confirm = input("Confirm? (y/n) > ").strip().lower()
+
+                if confirm not in ("y", "yes"):
+                    print("Sale cancelled.")
+                    input()
+                    continue
+
+                # Apply sale
+                player.remove_item(item_id, amount=qty)
+                player.inventory["gold"] += total_gold
+
+                print(f"\nSold {qty} × {item.name} for {total_gold} gold.")
                 input()
-                continue
 
-            qty = int(qty_raw)
+                sold_something = True
+                break  # exit pagination
 
-            if qty <= 0:
-                print("Quantity must be at least 1.")
-                input()
-                continue
-            
-            if qty > player_count:
-                print("You don't have that many.")
-                input()
-                continue
-
-            total_gold = sell_price * qty
-
-            print(f"\nConfirm sale:")
-            print(f"{qty} × {item_obj.name} × {sell_price} each = {total_gold} gold")
-            confirm = input("\nSell these items? (yes/no) > ").strip().lower()
-
-            if confirm not in ("yes", "y"):
-                print("\nSale cancelled.")
-                continue
-
-            for _ in range(qty):
-                self.player.remove_item(item_id)
-
-            self.player.inventory["gold"] += total_gold
-
-            print(f"\nYou sold {qty} × {item_obj.name} for {total_gold} gold!")
-            input()
-
-        
+            if sold_something:
+                continue  # back to category selection

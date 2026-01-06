@@ -42,7 +42,9 @@ class Items():
         self.stats = stats or {}
         self.passive_modifiers = passive_modifiers or {}
         self.on_hit_status = on_hit_status
-
+    
+    # old version
+    """
     def get_tooltip(self) -> str:
         lines = []
 
@@ -113,6 +115,118 @@ class Items():
             if detail_lines:
                 for line in detail_lines:
                     lines.append(f"  {line}")
+
+        return "\n".join(lines)
+
+    """
+    def get_tooltip(self) -> str:
+        lines = []
+
+        # ─── STATS ───────────────────────────────────────────
+        if self.stats:
+            for k, v in self.stats.items():
+                name = k.replace("_", " ").title()
+
+                if isinstance(v, float):
+                    lines.append(f"\t{name}: +{int(v * 100)}%")
+                else:
+                    sign = "+" if v > 0 else ""
+                    lines.append(f"\t{name}: {sign}{v}")
+
+        # ─── PASSIVE MODIFIERS (resists, etc.) ───────────────
+        if self.passive_modifiers:
+            for k, v in self.passive_modifiers.items():
+                name = k.replace("_", " ").replace("resist", "Resist").title()
+                lines.append(f"\t{name}: +{int(v * 100)}%")
+
+        # ─── NO EFFECT ───────────────────────────────────────
+        if not self.effect:
+            return "\n".join(lines)
+
+        # ─── CONSUMABLE EFFECTS (dict) ───────────────────────
+        if isinstance(self.effect, dict):
+            summary_parts = []
+            detail_lines = []
+
+            if "apply_status" in self.effect:
+                status_data = self.effect["apply_status"]
+                status_name = status_data["id"].replace("_", " ").title()
+                duration = status_data.get("duration")
+
+                summary_parts.append(f"applies {status_name.lower()}")
+                if duration:
+                    detail_lines.append(f"\t• {status_name} for {duration} turns")
+                else:
+                    detail_lines.append(f"\t• {status_name}")
+
+            if "heal" in self.effect:
+                amount = self.effect["heal"]
+                summary_parts.append("restores health")
+                detail_lines.append(f"\t• Heals {amount} HP")
+
+            if "damage" in self.effect:
+                amount = self.effect["damage"]
+                summary_parts.append("deals damage")
+                detail_lines.append(f"\t• Deals {amount} damage")
+
+            if "remove_status" in self.effect:
+                status = self.effect["remove_status"].replace("_", " ").title()
+                summary_parts.append(f"cures {status.lower()}")
+                detail_lines.append(f"\t• Removes {status}")
+
+            if "restore_resource" in self.effect:
+                amount = self.effect["restore_resource"]
+                summary_parts.append("restores stamina")
+                detail_lines.append(f"\t• Restores {amount} stamina")
+
+            if summary_parts:
+                lines.append(f"\tUse: {' and '.join(summary_parts).capitalize()}")
+                for d in detail_lines:
+                    lines.append(f"  {d}")
+
+            return "\n".join(lines)
+
+        # ─── TRIGGERED / PASSIVE EFFECTS (list) ──────────────
+        if isinstance(self.effect, list):
+            for entry in self.effect:
+                trigger = entry.get("trigger", "unknown")
+                chance = entry.get("chance", 1.0)
+                status = entry.get("status")
+
+                if not status:
+                    continue
+
+                status_name = status["id"].replace("_", " ").title()
+                duration = status.get("duration")
+                magnitude = status.get("magnitude")
+
+                # Human-readable trigger
+                trigger_text = {
+                    "on_hit": "On hit",
+                    "on_equip": "On equip",
+                    "on_turn": "Each turn",
+                }.get(trigger, trigger.replace("_", " ").title())
+
+                line = f"\t{trigger_text}: {status_name}"
+
+                """if magnitude is not None:
+                    if isinstance(magnitude, float):
+                        line += f" (+{int(magnitude * 100)}%)"
+                    else:
+                        line += f" (+{magnitude})" """
+                
+                if duration is not None:
+                    if duration < 0:
+                        line += " (while equipped)"
+                    else:
+                        line += f" ({duration} turns)"
+
+                if chance < 1.0:
+                    line += f" — {int(chance * 100)}% chance"
+
+                lines.append(line)
+
+            return "\n".join(lines)
 
         return "\n".join(lines)
 

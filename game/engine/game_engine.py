@@ -83,6 +83,9 @@ class GameEngine:
         if cmd:
             return cmd
         
+        if raw_input == "exit":
+            exit()
+        
         if raw_input == "debug":
             return "debug_menu"
         

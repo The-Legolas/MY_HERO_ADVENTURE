@@ -4,31 +4,27 @@ from game.world.Gen_Game_World import Game_World
 from game.world.town_logic.town_names import Town_names
 from game.engine.game_engine import GameEngine
 from game.ui.text_screens import TextScreen
+from game.ui.save_menu_ui import run_save_load_menu
+from game.engine.save_system import load_game
+
 
 """
 currently __ lines of code as of the previous git commit
 Bugs:
-note 1: Ring of Corruption and Ring of Vital Flow doesn't have a descipteve text like Ring of Iron Will
-note 1.5: weapon effect aren't in the inventory description either
 note 2: no ux for if the player is stunned
 
 Test:
 1. re-test combat wiht the correct amount of health and dmg
 
 Fixed:
-updated shop and tressure inventory to hold some of the new items
-made it so a max of 1 special item can be awarded per chest
-tested that all skills and stamna works correctly
-tested all items to make sure they work
-added add intents to all enemy skills
-Tested all enemies and tested all attacks
-made the inventory screen have the same beauty as the buy menu
+Made it so all items with extra effects have their full description added to the inventory screen (mainly weapons and rings)
+Made it so the sell menu looks like the buy menu
+Made a main menu
+Made a proper start menu with a load save, a check tutorial screen (which was also updated), an imporved version of character select, an imporved version of the title screen
 
 
 Like to have:
 note 1: in the code base search for #fix to find things to remove before final game release
-note 2: make a proper start menu
-note 3: make the sell menu have the same beauty as the buy menu
 note 4: refractor when done so all enums and such have their own folder
 
 """
@@ -38,14 +34,49 @@ def main():
 
     title_screen()
 
+    main_menu()
+
+
+
+def main_menu() -> None:
+    while True:
+        print("\n--- MAIN MENU ---")
+        print("1. New Game")
+        print("2. Load Game")
+        print("3. Tutorial")
+        print("4. Exit")
+
+
+        choice = input("> ").strip().lower()
+
+        if choice in ("1", "new", "new game"):
+            start_new_game()
+            return
+
+        elif choice in ("2", "load", "load game"):
+            start_loaded_game()
+            input("\nPress Enter to continue...")
+
+        elif choice in ("3", "tutorial", "guide", "help"):
+            show_system_guide()
+            input("\nPress Enter to return to the main menu...")
+
+        elif choice in ("4", "exit", "quit"):
+            print("\nGoodbye.")
+            exit()
+
+        else:
+            print("Invalid choice.")
+
+def start_new_game() -> None:
     show_intro_story()
 
     choice = input("Do you want to see the tutorial? (yes/no)\n> ").strip().lower()
     if choice in ("yes", "y"):
         show_system_guide()
-    
+
     player_hero = pick_character_and_name()
-    
+
     game_world = Game_World(player_hero, day_counter=1)
     game_town = game_world.get_town()
     game_town.set_starting_location(Town_names.TOWN_GATE.value)
@@ -53,11 +84,25 @@ def main():
     engine = GameEngine(player=player_hero, game_world=game_world)
 
     print("\nLet the adventure begin.\n")
-
     engine.run()
 
+def start_loaded_game():
+    slot = run_save_load_menu(mode="load")
 
+    if slot is None:
+        return
 
+    try:
+        player, world = load_game(slot)
+    except FileNotFoundError:
+        print("Save file not found.")
+        input("Press Enter to continue...")
+        return
+
+    engine = GameEngine(player=player, game_world=world)
+
+    print(f"\nLoaded save '{slot}'.\n")
+    engine.run()
 
 def title_screen() -> None:
     print("""
@@ -81,6 +126,7 @@ ________________________________________________________________________________
 _______________________________________________________________________________________________
 """)
     print("\n\t\t\t\t\t\t\t\t\t\tby The-Legolas")
+    input()
 
 def show_intro_story() -> None:
     intro = TextScreen(
@@ -124,14 +170,16 @@ def show_system_guide():
                 "Some actions require typed commands instead of numbers:\n"
                 "- inventory\n"
                 "- save\n"
-                "- load"
+                "- load\n"
+                "- exit"
             ),
 
             (
                 "SHORT COMMANDS:\n\n"
                 "Many commands can be shortened:\n"
                 "- i → inventory\n"
-                "- c → cancel / back\n\n"
+                "- c → cancel / back\n"
+                "- exit → immediately quit the game\n\n"
                 "The game will usually accept either form."
             ),
 
@@ -148,12 +196,21 @@ def show_system_guide():
 
             (
                 "STATUS ICONS:\n\n"
-                "☠ Poison       → takes damage over time\n"
-                "✚ Regen        → recovers health over time\n"
-                "💫 Stun        → cannot act\n"
-                "⬇ Weakened     → reduced damage\n"
-                "⚔ Strength     → increased damage\n"
-                "🛡 Defending    → increased defence"
+                " ☠  Poison       → takes damage over time\n"
+                "🔥  Burn         → takes % health damage over time\n"
+                "🩸  Bleed        → takes stacked damage over time\n"
+                " ✚  Regen        → recovers health over time\n"
+                " ⬇  Weakened     → reduced outgoing damage\n"
+                " 🛡  Armor Down   → reduced defence\n"
+                " ⚔  Strength     → increased outgoing damage\n"
+                "💫  Stun         → cannot act\n"
+                " 🛡  Defending    → increased defence"
+            ),
+            (
+                "EXIT COMMAND:\n\n"
+                "Typing 'exit' at any time will immediately close the game.\n\n"
+                "⚠ This does NOT save your progress.\n"
+                "Use this only if you are sure you want to quit."
             ),
         ]
     )
@@ -162,25 +219,48 @@ def show_system_guide():
 
 
 def pick_character_and_name() -> Character:
-    print("skip")
-    """while True:
-        print("\nPlease pick your character from amoung these options")on_day_advance
-        hero_choice = input("(Warrior, Archer, or Wizard): ").strip().lower()
-
-        if hero_choice in ("warrior", "archer", "wizard"):
-            break
-
-        print("please try again.")"""
-    
     while True:
-        hero_name = input("\nAnd what shall be your name?\n: ")
-        yes_no = input(f"Is '{hero_name}' correct? (Yes or No)\n: ").strip().lower()
+        print("\n--- Choose Your Class ---")
+        print("1. Warrior")
+        print("2. Archer   (Locked – In development)")
+        print("3. Wizard   (Locked – In development)")
 
-        if yes_no == "yes" or yes_no == "y":
+        choice = input("> ").strip().lower()
+
+        if choice in ("c", "back"):
+            continue
+
+        if choice in ("1", "warrior"):
+            hero_choice = "warrior"
             break
 
-    #if hero_choice: #hero_choice == "warrior":
-    player_hero = Warrior(hero_name, starting_items={
+        elif choice in ("2", "archer"):
+            print("\nThe Archer class is not finished yet. Please choose another class.")
+            input("Press Enter to continue...")
+            continue
+
+        elif choice in ("3", "wizard"):
+            print("\nThe Wizard class is not finished yet. Please choose another class.")
+            input("Press Enter to continue...")
+            continue
+
+        else:
+            print("Invalid choice.")
+            input("Press Enter to continue...")
+
+    while True:
+        hero_name = input("\nAnd what shall be your name?\n> ").strip()
+
+        if not hero_name:
+            print("Name cannot be empty.")
+            continue
+
+        confirm = input(f"Is '{hero_name}' correct? (y/n)\n> ").strip().lower()
+        if confirm in ("y", "yes"):
+            break
+    
+
+    starting_items={
         "basic_sword":1, "improved_sword":1, "venom_fang_dagger":1, 
         "frostbrand_sword":1, "bloodletter_axe":1, "ring_of_corruption":1, 
         "ring_of_iron_will":1, "ring_of_vital_flow":1, "basic_armor":1, "improved_armor":1, "ring_of_vital_flow":1, 
@@ -188,10 +268,11 @@ def pick_character_and_name() -> Character:
         "grand_healing_potion":3, "stamina_tonic":4, "antivenom_vial":5, "second_wind_potion":6, "cooling_salve":7, 
         "coagulant_tonic":8, "battle_elixir":9, "reinforcement_draught":10, "explosive_potion":2,
         "lesser_fortitude_draught":5,
-    })
-    
-    return player_hero
+    }
+    if hero_choice == "warrior":
+        player_hero = Warrior(hero_name, tarting_items=starting_items)
 
+    return player_hero
 
 if __name__ == "__main__":
     main()

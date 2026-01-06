@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Tuple
+from typing import Optional
 
 SAVE_ROOT = "saves"
 
@@ -14,18 +14,8 @@ def _get_save_slots() -> list[str]:
     )
 
 
-def run_save_load_menu(
-    *,
-    mode: str,
-    current_slot: Optional[str] = None,
-) -> Optional[str]:
-    """
-    mode: "save" or "load"
-    current_slot: name of currently loaded slot (optional)
+def run_save_load_menu(*, mode: str, current_slot: Optional[str] = None) -> Optional[str]:
 
-    Returns:
-        slot_name (str) or None if cancelled
-    """
 
     assert mode in ("save", "load")
 
@@ -56,7 +46,7 @@ def run_save_load_menu(
         choice = input("\nChoose a slot (number or name): ").strip()
 
         # BACK
-        if choice.lower() in ("back", "b", "cancel", "c"):
+        if (choice.lower() in ("back", "b", "cancel", "c")):
             return None
 
         # NUMBER INPUT
@@ -89,7 +79,7 @@ def run_save_load_menu(
 
 def _prompt_new_slot_name(existing_slots: list[str]) -> Optional[str]:
     while True:
-        name = input("Enter new save name (or 'back'): ").strip()
+        name = input("\nEnter new save name (or 'back'): ").strip()
 
         if not name or name.lower() == "back":
             return None
