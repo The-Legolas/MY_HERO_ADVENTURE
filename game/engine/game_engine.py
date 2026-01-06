@@ -283,11 +283,9 @@ class GameEngine:
                     if choice == str(idx) or choice == "back":
                         break
 
-                    # number input
                     if choice in idx_to_dir:
                         direction = idx_to_dir[choice]
                     else:
-                        # text input fallback
                         aliases = {
                             "n": "north", "north": "north",
                             "s": "south", "south": "south",
@@ -505,7 +503,6 @@ class GameEngine:
             return parse_town_gate_input(raw)
 
         if location.is_interior():
-            # BUT: detect shop UI separately
             return parse_interior_input(raw)
 
         return None
@@ -514,7 +511,6 @@ class GameEngine:
     def cmd_to_action(self, cmd: str, location: Location) -> Town_Actions | None:
         name = location.name
 
-        # Town Gate mapping
         if name == Town_names.TOWN_GATE.value:
             if cmd == "enter_shop":
                 return Town_Actions.ENTER_SHOP
@@ -525,7 +521,6 @@ class GameEngine:
             if cmd == "leave_town":
                 return Town_Actions.LEAVE_TOWN
             
-        # Inside buildings
         if location.is_interior():
             if cmd == "talk":
                 return Town_Actions.TALK
@@ -543,7 +538,6 @@ class GameEngine:
             if cmd == "leave_building":
                 return Town_Actions.LEAVE_BUILDING
 
-        # Leave Town submenu
         if cmd == "enter_cave":
             return Town_Actions.ENTER_CAVE
 
@@ -556,7 +550,6 @@ class GameEngine:
     def handle_town_action(self, result: dict, town: TownGraph) -> None:
         t_action = result["type"]
 
-        # leave_building: result should contain destination (e.g., Town Gate)
         if t_action == "leave_building":
             town.move_location(result["destination"])
             return
@@ -575,20 +568,17 @@ class GameEngine:
             self.inn_ui.run_inn_menu(metadata)
             return
                 
-        # Talk
         if t_action == "talk":
             print(result.get("dialogue", "\nYou have a pleasant chat."))
             input()
             return
         
-        # Shop menus: result should provide 'location_metadata' or similar
         if t_action in ("buy_menu", "sell_menu"):
             shop_metadata = town.current_location().extra_metadata
             self.shop_ui.run_shop_menu(shop_metadata)
             return
 
-        
-        # Enter cave/castle transitions: set dungeon and flip state
+
         if t_action == "enter_cave":
             self.current_dungeon = self.world.get_cave()
             self.state = "dungeon"
@@ -601,7 +591,6 @@ class GameEngine:
             print("\nYou enter the castle.")
             return
 
-        # Leave town - show submenu
         if t_action == "leave_town":
             self.show_leave_town_submenu()
             return

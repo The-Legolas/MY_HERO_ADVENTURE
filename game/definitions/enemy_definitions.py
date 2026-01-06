@@ -9,7 +9,7 @@ ENEMY_DEFINITIONS = {
         "hp": 20,
         "damage": 4,
         "defence": 3,
-        "rarity": Enemy_Rarity.COMMON, #COMMON
+        "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 50,
         "gold_reward": 20,
@@ -611,7 +611,7 @@ ENEMY_DEFINITIONS = {
     Enemy_type.ENEMY_DEBUG : {
         "name": "Debug",
         "hp": 3,
-        "damage": 20,
+        "damage": 3,
         "defence": 10,
         "rarity": Enemy_Rarity.DEBUG,
         "sub_type": Enemy_sub_type.DRAGON,
@@ -619,7 +619,8 @@ ENEMY_DEFINITIONS = {
         "gold_reward": 2,
         "loot_table": [],
         "usable_skills": [
-            "debug",
+            "corrosive_buildup"
+            #"debug",
             #"inferno_surge",
             #"cataclysmic_slam",
             #"skyward_ascension",

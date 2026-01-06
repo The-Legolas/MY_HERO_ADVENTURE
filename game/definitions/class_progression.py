@@ -6,7 +6,7 @@ CLASS_PROGRESSION = {
         "xp_curve": "linear",
         "xp_per_level": [
             0,    # level 1
-            100,  # level 2
+            100,
             200,
             400,
             700,

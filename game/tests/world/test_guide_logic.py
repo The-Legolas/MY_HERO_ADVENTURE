@@ -29,7 +29,6 @@ class DummyEngine:
         self._cycle_calls = []
 
     def _cycle_message(self, key, messages):
-        # Deterministic stand-in for cycling logic
         self._cycle_calls.append((key, messages))
         return messages[0]
 
@@ -67,10 +66,8 @@ class TestGuideDialogueFlow(unittest.TestCase):
         world = DummyWorld()
         engine = DummyEngine(world)
 
-        # First interaction consumes intro
         get_guide_dialogue(engine)
 
-        # Unlock castle
         world.castle_unlocked = True
 
         dialogue = get_guide_dialogue(engine)
@@ -78,7 +75,6 @@ class TestGuideDialogueFlow(unittest.TestCase):
         self.assertEqual(dialogue, CASTLE_UNLOCKED_MESSAGE)
         self.assertTrue(world.guide_state["castle_notice_given"])
 
-        # Next call should NOT return castle message again
         dialogue_2 = get_guide_dialogue(engine)
 
         self.assertNotEqual(dialogue_2, CASTLE_UNLOCKED_MESSAGE)
@@ -87,14 +83,11 @@ class TestGuideDialogueFlow(unittest.TestCase):
         world = DummyWorld()
         engine = DummyEngine(world)
 
-        # Consume intro
         get_guide_dialogue(engine)
 
-        # Consume castle message
         world.castle_unlocked = True
         get_guide_dialogue(engine)
 
-        # Now hints
         dialogue = get_guide_dialogue(engine)
 
         self.assertEqual(dialogue, HINT_MESSAGES[0])

@@ -165,7 +165,6 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         if cost:
             actor.resource_current -= cost["amount"]
         
-        # --- Composite effects (cleanse, multi-status, etc.) ---
         if skill.effects:
             for effect in skill.effects:
 
@@ -195,7 +194,6 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                     actor.apply_status(status, combat_state.log)
 
 
-        # --- Hit chance ---
         if random.random() > skill.hit_chance:
             outcome = _make_outcome(
                 actor.name,
@@ -210,7 +208,6 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
             combat_state.log.append(outcome)
             return outcome
 
-        # --- Damage via normal attack pipeline ---
         if skill.damage:
             result = resolve_damage(actor, target, skill.damage)
         else:
@@ -221,7 +218,6 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                 "died": False,
             }
 
-        # --- Apply status (if any) ---
         if skill.apply_status and target and not result["blocked"]:
             if random.random() <= skill.apply_status.get("chance", 1.0):
                 status = Status(

@@ -45,11 +45,9 @@ def run_save_load_menu(*, mode: str, current_slot: Optional[str] = None) -> Opti
 
         choice = input("\nChoose a slot (number or name): ").strip()
 
-        # BACK
         if (choice.lower() in ("back", "b", "cancel", "c")):
             return None
 
-        # NUMBER INPUT
         if choice.isdigit():
             num = int(choice)
 
@@ -65,7 +63,6 @@ def run_save_load_menu(*, mode: str, current_slot: Optional[str] = None) -> Opti
             print("Invalid selection.")
             continue
 
-        # TEXT INPUT
         if choice:
             if choice in slots:
                 return choice

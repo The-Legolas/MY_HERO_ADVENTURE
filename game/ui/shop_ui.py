@@ -52,7 +52,6 @@ class ShopUI:
                     continue
                 price = int(record.current_price * buy_mult)
                 visible_items.append(record)
-                #print(f"{len(visible_items)}. {record.item.name}  |  Price {price}  |  Stock {record.stock}")
 
             total_pages = max(1, math.ceil(len(visible_items) / ITEMS_PER_PAGE))
             page = max(0, min(page, total_pages - 1))
@@ -168,7 +167,6 @@ class ShopUI:
         player = self.player
 
         while True:
-        # ─── REBUILD INVENTORY EACH LOOP ───────────────────
             items = get_inventory_items(player, equippable_only=False)
 
             if not items:
@@ -176,7 +174,6 @@ class ShopUI:
                 input()
                 return
 
-            # Group by category
             grouped = {}
             for item_id, item, count in items:
                 grouped.setdefault(item.category, []).append((item_id, item, count))
@@ -184,7 +181,6 @@ class ShopUI:
             grouped = {k: v for k, v in grouped.items() if v}
             categories = [cat for cat in ITEM_TYPE_ORDER if cat in grouped]
 
-            # ─── CATEGORY SELECTION ────────────────────────────
             print("\n--- SELL MENU ---")
             print(f"Gold: {player.inventory['gold']}\n")
             print("--- Inventory Categories ---")
@@ -213,7 +209,6 @@ class ShopUI:
             category = categories[cat_index]
             entries = grouped[category]
 
-            # ─── PAGINATED ITEM LIST ───────────────────────────
             page = 0
             total_pages = max(1, math.ceil(len(entries) / ITEMS_PER_PAGE))
 
@@ -252,7 +247,6 @@ class ShopUI:
                 print("\n[n]ext  [p]rev  [back]")
                 choice = input("> ").strip().lower()
 
-                # Navigation
                 if choice in ("back", "c"):
                     break
 
@@ -275,7 +269,6 @@ class ShopUI:
                     input()
                     continue
 
-                # ─── SELL FLOW ──────────────────────────────────
                 item_id, item, owned = page_items[index]
                 price = int(item.value * sell_mult)
 
@@ -307,7 +300,6 @@ class ShopUI:
                     input()
                     continue
 
-                # Apply sale
                 player.remove_item(item_id, amount=qty)
                 player.inventory["gold"] += total_gold
 
@@ -315,7 +307,7 @@ class ShopUI:
                 input()
 
                 sold_something = True
-                break  # exit pagination
+                break
 
             if sold_something:
-                continue  # back to category selection
+                continue

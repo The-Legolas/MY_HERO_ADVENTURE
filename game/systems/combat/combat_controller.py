@@ -253,7 +253,7 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
         if action == "skill":
             skills = actor.usable_skills
             
-            print() #spaceing
+            print() # Spacing only
 
             if not skills:
                 print("You have no skills.")
@@ -272,7 +272,6 @@ def ask_player_for_action(actor: Character, combat: Combat_State) -> Optional['A
 
                 print(f"{i}. {skill.name}{cost_text} — {skill.description}")
 
-                #print(f"{i}. {skill.name} — {skill.description}")
             print("c. Cancel")
 
             choice = input("> ").strip().lower()

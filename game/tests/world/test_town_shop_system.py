@@ -21,8 +21,8 @@ class DummyPlayer(Character):
 def make_shop_metadata():
     return {
         "inventory": [
-            {"item_id": "basic_sword", "max_stock": 1},          # unique, non-stackable
-            {"item_id": "small_healing_potion", "max_stock": 5}, # stackable
+            {"item_id": "basic_sword", "max_stock": 1},
+            {"item_id": "small_healing_potion", "max_stock": 5},
         ]
     }
 
@@ -51,7 +51,7 @@ class TestRecordPurchase(unittest.TestCase):
         initialize_shop_inventory(self.metadata)
 
     def test_record_purchase_reduces_stock(self):
-        record = self.metadata["inventory"][1]  # potion
+        record = self.metadata["inventory"][1]
         record_purchase(self.metadata, record.item_id, quantity=2)
 
         self.assertEqual(record.stock, record.max_stock - 2)
@@ -103,7 +103,7 @@ class TestPriceAdjustment(unittest.TestCase):
         initialize_shop_inventory(self.metadata)
 
     def test_full_sellout_increases_price(self):
-        record = self.metadata["inventory"][1]  # stackable
+        record = self.metadata["inventory"][1]
         record.sold_today = record.max_stock
 
         update_prices_based_on_demand(self.metadata)
@@ -134,7 +134,7 @@ class TestPriceAdjustment(unittest.TestCase):
         self.assertEqual(record.current_price, record.base_price)
 
     def test_non_stackable_items_never_change_price(self):
-        record = self.metadata["inventory"][0]  # sword
+        record = self.metadata["inventory"][0]
         record.sold_today = 1
         record.current_price = 999
 

@@ -328,4 +328,4 @@ def render_combat_outcome(outcome: dict):
         elif result == "resistant":
             print(f"{status} has reduced effect on {target}.")
 
-    print()  # spacing only
+    print()  # Spacing only

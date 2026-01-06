@@ -16,9 +16,6 @@ from game.engine.item_spawner import spawn_item
 SAVE_ROOT = "saves"
 
 
-
-# SERIALIZATION HELPERS
-
 def _serialize_status(status: Status) -> dict:
     return {
         "id": status.id,
@@ -102,7 +99,6 @@ def _deserialize_character(data: dict) -> Character:
         player.resource_name = res["name"]
         player.resource_current = res["current"]
 
-        # Restore max resource via base + bonuses
         saved_max = res["max"]
         base = player.base_resource
         bonus = max(0, saved_max - base)
@@ -110,7 +106,6 @@ def _deserialize_character(data: dict) -> Character:
         player.level_bonuses["resource"] = bonus
     
 
-    # Inventory
     player.inventory["items"].clear()
     for item_id, count in data["inventory"]["items"].items():
         item = spawn_item(item_id)
@@ -119,13 +114,11 @@ def _deserialize_character(data: dict) -> Character:
             "count": count,
         }
 
-    # Equipment
     for slot, item_id in data["equipment"].items():
         if item_id:
             item = spawn_item(item_id)
             player.equipment[slot] = item
 
-    # Statuses
     player.statuses = [_deserialize_status(s) for s in data["statuses"]]
 
     return player
@@ -178,7 +171,7 @@ def _deserialize_dungeon(data: dict) -> Dungeon_Manager:
         room.is_miniboss_room = r["is_miniboss_room"]
 
         room.contents["items"] = [spawn_item(i) for i in r["items"]]
-        room.contents["enemies"] = []  # enemies are respawned by state, not combat
+        room.contents["enemies"] = []
 
         dungeon.dungeon_rooms[(r["x"], r["y"])] = room
 
@@ -194,7 +187,6 @@ def _deserialize_dungeon(data: dict) -> Dungeon_Manager:
     return dungeon
 
 
-# PUBLIC API
 
 def save_game(engine, slot_name: str) -> None:
     os.makedirs(SAVE_ROOT, exist_ok=True)

@@ -28,7 +28,7 @@ class Dungeon_Manager():
         self.generate_dungeon()
     
     def generate_dungeon(self):
-        MAX_ATTEMPTS = 10
+        MAX_ATTEMPTS = 20
 
         for _ in range(MAX_ATTEMPTS):
             self._generate_layout()
@@ -36,7 +36,7 @@ class Dungeon_Manager():
             if self.assign_miniboss_room():
                 return
 
-        #raise RuntimeError("Failed to generate dungeon with a valid miniboss room.")
+        raise RuntimeError("Failed to generate dungeon with a valid miniboss room.")
 
     def _generate_layout(self):
         self.dungeon_rooms = {}
@@ -141,8 +141,8 @@ class Dungeon_Manager():
 
     def compute_depth(self, pos: tuple[int, int] | None = None):
         
-        #   Computes ring-depth based on coordinates.
-        #   If no position is supplied, computes depth of the player's position.
+        #  Computes ring-depth based on coordinates.
+        #  If no position is supplied, computes depth of the player's position.
         
         if pos is None:
             pos = self.player_current_pos

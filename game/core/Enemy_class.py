@@ -1,4 +1,4 @@
-#from __future__ import annotations
+
 from game.core.character import Character
 
 from game.systems.enums.enemy_type import Enemy_type
@@ -18,8 +18,6 @@ class Enemy(Character):
         self.rarity = rarity
         self.xp_reward = xp_reward
         self.gold_reward = gold_reward
-
-        self.level_scaling_factor = None # TBA
 
         self.loot_table = loot_table
 

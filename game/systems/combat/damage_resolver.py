@@ -13,7 +13,6 @@ def resolve_damage(actor: 'Character', target: 'Character', damage_def: dict) ->
             "died": False,
         }
 
-    # --- Step 1: Compute raw damage ---
     raw = 0
 
     dmg_type = damage_def["type"]
@@ -29,21 +28,20 @@ def resolve_damage(actor: 'Character', target: 'Character', damage_def: dict) ->
         stat_val = getattr(actor, damage_def["stat"], 0)
         raw = int(damage_def["base"] + stat_val * damage_def["mult"])
 
-    # --- Step 2: Status modifiers ---
+
     raw = int(raw * actor.get_damage_multiplier())
 
-    # --- Step 3: Critical ---
+
     critical = False
     if damage_def.get("can_crit", True):
         if random.random() >= 0.95:
             raw *= 2
             critical = True
 
-    # --- Step 4: Defense ---
+
     effective_defence = target.get_effective_defence()
 
     if raw <= effective_defence:
-        # Proportional blocked damage (max 50%, min 0%)
         ratio = max(0.0, min(1.0, (raw * 2 - effective_defence) / raw))
         damage = int(raw * 0.25 * ratio)
 

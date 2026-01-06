@@ -140,7 +140,6 @@ class TownGraph():
                     "destination": Town_names.TAVERN_INTERIOR.value
                 }
                         
-            # LEAVE BUILDING → back to Town Gate
             case Town_Actions.LEAVE_BUILDING:
                 if not self.is_interior():
                     return {
@@ -157,7 +156,6 @@ class TownGraph():
                     "location": location_name,
                 }
             
-            # REST (Inn Interior only)
             case Town_Actions.REST:
                 if location_name != Town_names.INN_INTERIOR.value:
                     return {
@@ -175,8 +173,7 @@ class TownGraph():
                     "heal_amount": heal_amount,
                     "location": location_name,
                 }
-            
-            # TALK (all locations)
+
             case Town_Actions.TALK:
                 return {
                     "success": True,
@@ -184,7 +181,6 @@ class TownGraph():
                     "location": location_name
                 }
             
-            # BUY FROM SHOP (Shop Interior only)
             case Town_Actions.BUY_FROM_SHOP:
                 if location_name != Town_names.SHOP_INTERIOR.value:
                     return {
@@ -203,7 +199,6 @@ class TownGraph():
                     "location": location_name
                 }
             
-            # SELL TO SHOP (Shop Interior only)
             case Town_Actions.SELL_FROM_SHOP:
                 if location_name != Town_names.SHOP_INTERIOR.value:
                     return {
@@ -220,7 +215,6 @@ class TownGraph():
                     "location": location_name
                 }
             
-            # ENTER CASTLE (Town Gate only)
             case Town_Actions.ENTER_CASTLE:
                 if location_name != Town_names.TOWN_GATE.value:
                     return {
@@ -240,7 +234,6 @@ class TownGraph():
                     "location": location_name
                 }
         
-            # ENTER CAVE (Town Gate only)
             case Town_Actions.ENTER_CAVE:
                 if location_name != Town_names.TOWN_GATE.value:
                     return {
@@ -254,7 +247,6 @@ class TownGraph():
                     "location": location_name
                 }
             
-            # LEAVE TOWN (leads to submenu)
             case Town_Actions.LEAVE_TOWN:
                 if location_name != Town_names.TOWN_GATE.value:
                     return {
@@ -268,7 +260,6 @@ class TownGraph():
                     "location": location_name
                 }
             
-            # Unknown action fallback
             case _:
                 return {
                     "success": False,

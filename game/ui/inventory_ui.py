@@ -357,9 +357,8 @@ def _paginated_inventory_view(
             continue
 
         if mode == "view":
-            continue  # view-only; numbers do nothing
+            continue
 
-        # mode == "use"
         inv_key, item, _ = page_items[idx]
         return inv_key, item
 

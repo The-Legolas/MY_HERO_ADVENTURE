@@ -541,7 +541,6 @@ class TestEnemyScaling(unittest.TestCase):
         scaled_hp = enemy.hp
         self.assertGreaterEqual(scaled_hp, original_hp)
 
-        # Second call should do nothing
         enemy.scale_stats(day_counter=100, depth=50)
         self.assertEqual(enemy.hp, scaled_hp)
 

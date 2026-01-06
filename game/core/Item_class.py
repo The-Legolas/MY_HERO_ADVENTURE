@@ -1,5 +1,3 @@
-#from __future__ import annotations
-
 from game.core.Status import Status
 
 from game.systems.enums.item_type import Item_Type
@@ -40,7 +38,6 @@ class Items():
     def get_tooltip(self) -> str:
         lines = []
 
-        # ─── STATS ───────────────────────────────────────────
         if self.stats:
             for k, v in self.stats.items():
                 name = k.replace("_", " ").title()
@@ -51,17 +48,15 @@ class Items():
                     sign = "+" if v > 0 else ""
                     lines.append(f"\t{name}: {sign}{v}")
 
-        # ─── PASSIVE MODIFIERS (resists, etc.) ───────────────
         if self.passive_modifiers:
             for k, v in self.passive_modifiers.items():
                 name = k.replace("_", " ").replace("resist", "Resist").title()
                 lines.append(f"\t{name}: +{int(v * 100)}%")
 
-        # ─── NO EFFECT ───────────────────────────────────────
         if not self.effect:
             return "\n".join(lines)
 
-        # ─── CONSUMABLE EFFECTS (dict) ───────────────────────
+        # CONSUMABLE EFFECTS (dict)
         if isinstance(self.effect, dict):
             summary_parts = []
             detail_lines = []
@@ -104,7 +99,7 @@ class Items():
 
             return "\n".join(lines)
 
-        # ─── TRIGGERED / PASSIVE EFFECTS (list) ──────────────
+        # TRIGGERED / PASSIVE EFFECTS (list)
         if isinstance(self.effect, list):
             for entry in self.effect:
                 trigger = entry.get("trigger", "unknown")
@@ -116,9 +111,7 @@ class Items():
 
                 status_name = status["id"].replace("_", " ").title()
                 duration = status.get("duration")
-                magnitude = status.get("magnitude")
 
-                # Human-readable trigger
                 trigger_text = {
                     "on_hit": "On hit",
                     "on_equip": "On equip",
@@ -181,7 +174,6 @@ class Items():
                     did_something = True
                     continue
 
-                # ─── APPLY STATUS ──────────────────────────────
                 if effect_type == "apply_status":
                     status = Status(
                         id=amount["id"],
@@ -202,7 +194,6 @@ class Items():
                         did_something = True
                     continue
 
-                # ─── REMOVE STATUS ─────────────────────────────
                 if effect_type == "remove_status":
                     success = apply_remove_status(target, amount)
 

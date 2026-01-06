@@ -44,7 +44,6 @@ class TestRoomInitialization(unittest.TestCase):
         self.assertEqual(room.room_type, Room_Types.TREASURE_ROOM)
         self.assertIsInstance(room.contents["items"], list)
 
-        # Items may be empty due to RNG, but must be valid if present
         for item in room.contents["items"]:
             self.assertIsInstance(item, Items)
 

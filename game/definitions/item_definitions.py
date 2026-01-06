@@ -30,7 +30,7 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.99, # 0.80
+        "chance": 0.80,
         "status": {
             "id": "poison",
             "magnitude": 2,
@@ -50,7 +50,7 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.96, #0,45
+        "chance": 0.45,
         "status": {
             "id": "weakened",
             "duration": 4,
@@ -70,7 +70,7 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.99, #0,15
+        "chance": 0.25,
         "status": {
             "id": "stun",
             "duration": 2,
@@ -90,7 +90,7 @@ ITEM_DEFINITIONS = {
     "effect": [
         {
         "trigger": "on_hit",
-        "chance": 0.95, # 0,60
+        "chance": 0.60,
         "status": {
             "id": "strength_up",
             "duration": 2,

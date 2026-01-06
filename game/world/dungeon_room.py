@@ -38,7 +38,7 @@ class Room():
                 for enemy in boss_room_spawner(self.day_counter):
                     self.contents["enemies"].append(enemy)
             
-            case _: #Types.EMPTY
+            case _:
                 pass
 
     def __str__(self):

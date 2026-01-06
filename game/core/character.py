@@ -125,7 +125,6 @@ class Character:
         entry = items[item_id]
         item_obj = entry["item"]
 
-        # stackable items
         if item_obj.stackable:
             entry["count"] -= amount
             if entry["count"] <= 0:
@@ -147,7 +146,7 @@ class Character:
         item = entry["item"]
         outcome = item.use(self, target)
 
-        # Consume item only on success
+
         if outcome and outcome.get("action") == "use_item":
             self.remove_item(item_id, amount=1)
 
@@ -550,7 +549,6 @@ class Character:
 
         affinity = getattr(self, "status_affinities", {}).get(new_status.id, "normal")
 
-        # IMMUNITY
         if affinity == "immune":
             if combat_log is not None:
                 combat_log.append({
@@ -564,7 +562,6 @@ class Character:
                 "status": new_status.id,
             }
         
-        # AFFINITY MODIFIERS
         chance = data.get("chance", 1.0)
         duration = new_status.remaining_turns
 
@@ -592,7 +589,6 @@ class Character:
 
         new_status.remaining_turns = duration
 
-        # RESISTANCE ROLL
         resist = self.get_status_resistance(new_status.id)
         if resist > 0 and random.random() < resist:
             if combat_log is not None:
@@ -651,7 +647,6 @@ class Character:
             )
             applied = True
         
-        # LOG APPLICATION
         if applied and combat_log is not None:
             combat_log.append({
                 "event": "status_applied",
@@ -661,7 +656,6 @@ class Character:
             })
         
 
-        # INTERRUPTS
         if applied and data.get("interrupts") and hasattr(self, "locked_state") and self.locked_state:
             rarity = getattr(self, "rarity", None)
             resist_chance = INTERRUPT_RESISTANCE_BY_RARITY.get(rarity, 0.0) if rarity else 0.0
@@ -700,7 +694,6 @@ class Character:
                 continue
             resist += item.passive_modifiers.get(key, 0.0)
 
-        # Cap to avoid total immunity
         return min(resist, 0.95)
     
     def get_effects_by_trigger(self, trigger: str) -> list[dict]:

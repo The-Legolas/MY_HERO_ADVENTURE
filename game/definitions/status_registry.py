@@ -14,8 +14,8 @@ STATUS_REGISTRY = {
                 "description": "Poison damage is reduced while Regen is active.",
                 "damage_multiplier": 0.5,
             },
-            "bloodletting": {
-                "description": "Poison damage is increased if also using Bloodletting.",
+            "bleed": {
+                "description": "Poison damage is increased if also Bleeding.",
                 "damage_multiplier": 1.4,
             },
         },

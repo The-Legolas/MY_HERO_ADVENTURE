@@ -40,12 +40,13 @@ def roll_room_type(day_counter: int, depth: int) -> Room_Types:
         if random.random() < 0.08:
             return Room_Types.REST_ROOM
 
-    #the real versions    
-    #enemy_chance = min(0.50 + day_counter * 0.01, 0.90)
-    #treasure_chance = max(0.20 - day_counter * 0.005, 0.05)
+    # The real versions
+    enemy_chance = min(0.50 + day_counter * 0.01, 0.90)
+    treasure_chance = max(0.20 - day_counter * 0.005, 0.05)
 
-    enemy_chance = max(0.50 + day_counter * 0.01, 0.99999)
-    treasure_chance = min(0.20 - day_counter * 0.005, 0.0001)
+    # Debug version
+    #enemy_chance = max(0.50 + day_counter * 0.01, 0.99999)
+    #treasure_chance = min(0.20 - day_counter * 0.005, 0.0001)
 
 
 

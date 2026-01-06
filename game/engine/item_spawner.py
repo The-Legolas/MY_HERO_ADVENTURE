@@ -15,7 +15,6 @@ def spawn_item(item_type):
     )
     item_obj.id = item_type
 
-    # Attach optional behavior data
     if "on_hit_status" in template:
         item_obj.on_hit_status = template["on_hit_status"]
 
