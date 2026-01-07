@@ -144,7 +144,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         cost={"resource": "stamina", "amount": 8},
         apply_status={
             "id": "defending",
-            "duration": 3,
+            "duration": 4,
             "magnitude": None,
             "chance": 1.0,
         },
@@ -247,7 +247,8 @@ SKILL_REGISTRY: dict[str, Skill] = {
         intent_hint="The undead raises a diseased claw.",
         target="enemy",
         damage={
-            "type": "multiplier",
+            "type": "hybrid",
+            "base": 3,
             "stat": "damage",
             "mult": 0.8,
             "can_crit": False,
@@ -386,7 +387,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "chance": 1.0,
         },
         locks_actor={
-            "state": "bracing",
+            "state": "wait",
             "turns": 2,
             "forced_action": None,
         },

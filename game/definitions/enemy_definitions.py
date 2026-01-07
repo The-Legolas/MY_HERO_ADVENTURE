@@ -6,8 +6,8 @@ from game.systems.enums.enemy_behavior_tag import Enemy_behavior_tag
 ENEMY_DEFINITIONS = {
     Enemy_type.ENEMY_GOBLIN: {
         "name": "Goblin",
-        "hp": 20,
-        "damage": 4,
+        "hp": 25,
+        "damage": 6,
         "defence": 3,
         "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.HUMANOID,
@@ -28,8 +28,8 @@ ENEMY_DEFINITIONS = {
     
     Enemy_type.ENEMY_SLIME: {
         "name": "Slime",
-        "hp": 14,
-        "damage": 3,
+        "hp": 29,
+        "damage": 5,
         "defence": 5,
         "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.OOZE,
@@ -57,8 +57,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_SHAMBLING_CORPSE: {
         "name": "Shambling Corpse",
-        "hp": 28,
-        "damage": 4,
+        "hp": 43,
+        "damage": 6,
         "defence": 2,
         "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.UNDEAD,
@@ -83,8 +83,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_DIRE_BOAR: {
         "name": "Dire Boar",
-        "hp": 40,
-        "damage": 6,
+        "hp": 55,
+        "damage": 8,
         "defence": 4,
         "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.BEAST,
@@ -110,8 +110,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_DEAD_WARDEN: {
         "name": "Dead Warden",
-        "hp": 55,
-        "damage": 6,
+        "hp": 70,
+        "damage": 8,
         "defence": 9,
         "rarity": Enemy_Rarity.UNCOMMON,
         "sub_type": Enemy_sub_type.UNDEAD,
@@ -138,8 +138,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_DIRE_WOLF: {
         "name": "Dire Wolf",
-        "hp": 32,
-        "damage": 7,
+        "hp": 47,
+        "damage": 9,
         "defence": 3,
         "rarity": Enemy_Rarity.UNCOMMON,
         "sub_type": Enemy_sub_type.BEAST,
@@ -167,8 +167,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_GELATINOUS_SENTINEL: {
         "name": "Gelatinous Sentinel",
-        "hp": 60,
-        "damage": 8,
+        "hp": 75,
+        "damage": 12,
         "defence": 12,
         "rarity": Enemy_Rarity.UNCOMMON,
         "sub_type": Enemy_sub_type.OOZE,
@@ -197,8 +197,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_WOLF:  {
         "name": "Wolf",
-        "hp": 23,
-        "damage": 8,
+        "hp": 39,
+        "damage": 10,
         "defence": 3,
         "rarity": Enemy_Rarity.UNCOMMON,
         "sub_type": Enemy_sub_type.BEAST,
@@ -222,8 +222,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_DARK_TEMPLAR: {
         "name": "Dark Templar",
-        "hp": 45,
-        "damage": 14,
+        "hp": 60,
+        "damage": 17,
         "defence": 6,
         "rarity": Enemy_Rarity.RARE,
         "sub_type": Enemy_sub_type.HUMANOID,
@@ -267,8 +267,8 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_WIGHT_CHAMPION: {
         "name": "Wight Champion",
-        "hp": 70,
-        "damage": 14,
+        "hp": 85,
+        "damage": 18,
         "defence": 7,
         "rarity": Enemy_Rarity.RARE,
         "sub_type": Enemy_sub_type.UNDEAD,
@@ -312,9 +312,9 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_DARK_TEMPLAR_INQUISITOR: {
         "name": "Dark Templar Inquisitor",
-        "hp": 65,
-        "damage": 16,
-        "defence": 8,
+        "hp": 80,
+        "damage": 19,
+        "defence": 12,
         "rarity": Enemy_Rarity.ELITE,
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 180,
@@ -360,9 +360,9 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_LICHBOUND_KNIGHT: {
         "name": "Lichbound Knight",
-        "hp": 85,
-        "damage": 16,
-        "defence": 10,
+        "hp": 90,
+        "damage": 19,
+        "defence": 13,
         "rarity": Enemy_Rarity.ELITE,
         "sub_type": Enemy_sub_type.UNDEAD,
         "xp_reward": 220,
@@ -405,9 +405,9 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_ORC: {
         "name": "Orc",
-        "hp": 50,
-        "damage": 16,
-        "defence": 5,
+        "hp": 95,
+        "damage": 19,
+        "defence": 7,
         "rarity": Enemy_Rarity.ELITE,
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 100,
@@ -445,9 +445,9 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_ASH_DRAKE: {
         "name": "Ash Drake",
-        "hp": 110,
-        "damage": 20,
-        "defence": 10,
+        "hp": 125,
+        "damage": 23,
+        "defence": 14,
         "rarity": Enemy_Rarity.MINI_BOSS,
         "sub_type": Enemy_sub_type.DRAGON,
         "xp_reward": 350,
@@ -491,9 +491,9 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_CORRUPTED_GUARDIAN: {
         "name": "Corrupted Guardian",
-        "hp": 130,
-        "damage": 20,
-        "defence": 14,
+        "hp": 145,
+        "damage": 23,
+        "defence": 16,
         "rarity": Enemy_Rarity.MINI_BOSS,
         "sub_type": Enemy_sub_type.HUMANOID,
         "xp_reward": 380,
@@ -535,9 +535,9 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_FORGOTTEN_CHAMPION: {
         "name": "Forgotten Champion",
-        "hp": 140,
-        "damage": 20,
-        "defence": 11,
+        "hp": 155,
+        "damage": 22,
+        "defence": 14,
         "rarity": Enemy_Rarity.MINI_BOSS,
         "sub_type": Enemy_sub_type.UNDEAD,
         "xp_reward": 400,

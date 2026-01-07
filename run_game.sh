@@ -10,7 +10,7 @@ EOF
 
 REQUIRED_VERSION="3.12"
 
-if [[ "$PYTHON_VERSION" != "$REQUIRED_VERSION" ]]; then
+if [[ "$PYTHON_VERSION" < "$REQUIRED_VERSION" ]]; then
   echo "Warning: Python $REQUIRED_VERSION is recommended. Detected Python $PYTHON_VERSION."
 fi
 

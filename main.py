@@ -195,15 +195,15 @@ def show_system_guide():
 
             (
                 "STATUS ICONS:\n\n"
-                " ☠  Poison       → takes damage over time\n"
+                "☠   Poison       → takes damage over time\n"
                 "🔥  Burn         → takes % health damage over time\n"
                 "🩸  Bleed        → takes stacked damage over time\n"
-                " ✚  Regen        → recovers health over time\n"
-                " ⬇  Weakened     → reduced outgoing damage\n"
-                " 🛡  Armor Down   → reduced defence\n"
-                " ⚔  Strength     → increased outgoing damage\n"
+                "✚   Regen        → recovers health over time\n"
+                "⚔⬇  Weakened     → reduced outgoing damage\n"
+                "🛡⬇  Armor Down   → reduced defence\n"
+                "⚔⬆  Strength     → increased outgoing damage\n"
                 "💫  Stun         → cannot act\n"
-                " 🛡  Defending    → increased defence"
+                "🛡   Defending    → increased defence"
             ),
             (
                 "EXIT COMMAND:\n\n"

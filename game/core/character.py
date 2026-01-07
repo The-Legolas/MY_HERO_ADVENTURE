@@ -469,6 +469,9 @@ class Character:
 
             if status.just_applied:
                 status.just_applied = False
+                status.remaining_turns -= 1
+                if status.remaining_turns <= 0:
+                    expired.append(status)
                 continue
 
             if "on_tick" in data:

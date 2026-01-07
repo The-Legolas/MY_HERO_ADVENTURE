@@ -439,9 +439,9 @@ def _inspect_player_statuses(player: Character):
         print("\nNo active statuses.")
         input("\nPress Enter to continue...")
         return
-    while True:
-        print("\n--- Your Status Effects ---")
-        inspect_entity_statuses(player)
+    #while True:
+    print("\n--- Your Status Effects ---")
+    inspect_entity_statuses(player)
 
 def get_xp_progress(player: Character) -> tuple[int, int, bool]:
     if player.class_id is None:
