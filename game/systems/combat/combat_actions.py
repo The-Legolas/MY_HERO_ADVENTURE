@@ -257,14 +257,6 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         return outcome
     
     if action.type == "defend":
-        status = Status(
-            id="defending",
-            remaining_turns=1,
-            magnitude=None,
-            source=actor.name
-        )
-        actor.apply_status(status, combat_state.log)
-
         outcome = _make_outcome(actor.name, "defend", actor.name)
         combat_state.log.append(outcome)
         return outcome
@@ -292,7 +284,10 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
         return outcome
     
     if action.type == "wait":
-        reason = action.state
+        if isinstance(action.state, dict):
+            reason = action.state.get("state")
+        else:
+            reason = action.state
 
         outcome = {
             "action": "wait",
@@ -306,7 +301,6 @@ def resolve_action(action: Action, combat_state: 'Combat_State') -> dict:
                 "reason": reason
             }
         }
-
 
         combat_state.log.append(outcome)
         return outcome

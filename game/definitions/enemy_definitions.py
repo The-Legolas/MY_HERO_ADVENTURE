@@ -58,7 +58,7 @@ ENEMY_DEFINITIONS = {
     Enemy_type.ENEMY_SHAMBLING_CORPSE: {
         "name": "Shambling Corpse",
         "hp": 43,
-        "damage": 6,
+        "damage": 4,
         "defence": 2,
         "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.UNDEAD,
@@ -198,7 +198,7 @@ ENEMY_DEFINITIONS = {
     Enemy_type.ENEMY_WOLF:  {
         "name": "Wolf",
         "hp": 39,
-        "damage": 10,
+        "damage": 8,
         "defence": 3,
         "rarity": Enemy_Rarity.UNCOMMON,
         "sub_type": Enemy_sub_type.BEAST,
@@ -610,7 +610,7 @@ ENEMY_DEFINITIONS = {
 
     Enemy_type.ENEMY_DEBUG : {
         "name": "Debug",
-        "hp": 3,
+        "hp": 300,
         "damage": 3,
         "defence": 10,
         "rarity": Enemy_Rarity.DEBUG,

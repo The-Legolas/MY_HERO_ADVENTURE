@@ -469,10 +469,10 @@ class Character:
 
             if status.just_applied:
                 status.just_applied = False
-                status.remaining_turns -= 1
-                if status.remaining_turns <= 0:
-                    expired.append(status)
-                continue
+
+                if status.id == "stun":
+                    status.remaining_turns -= 1
+                continue            
 
             if "on_tick" in data:
                 before_hp = self.hp

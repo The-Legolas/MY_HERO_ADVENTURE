@@ -37,7 +37,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "mult": 0.70,
         },
         
-        hit_chance=0.85,
+        hit_chance=0.97,
         cost = {
             "resource": "stamina",
             "amount": 10
@@ -46,7 +46,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "id": "stun",
             "duration": 1,
             "magnitude": None,
-            "chance": 0.5,
+            "chance": 1, #0.5
         },
         forbid_if_target_has=["stun"],
     ),
@@ -694,7 +694,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
         hit_chance=1.0,
         locks_actor={
-            "state": "airborne",
+            "state": "airborne_up",
             "turns": 2,
             "forced_action": None,
         },
@@ -715,7 +715,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
         hit_chance=1.0,
         locks_actor={
-            "state": "airborne",
+            "state": "airborne_down",
             "turns": 2,
             "forced_action": None,
         },

@@ -45,22 +45,21 @@ def show_combat_status(combat: Combat_State):
     for i, e in enumerate(combat.alive_enemies(), start=1):
         icons = format_status_icons(e)
         print(f"{i}. {e.name} ({e.hp}/{e.max_hp} HP) {icons}")
-        if e.intent:
-            if e.intent["type"] == "charging":
-                turns = e.intent["turns"]
+        if e.intent.get("turns"):
+            turns = e.intent["turns"]
 
-                if turns > 1:
-                    print(
-                        f"\tIntent: {e.intent['text']} "
-                        f"({turns - 1} turns)"
-                    )
-                elif turns == 1:
-                    print(
-                        f"\tIntent: {e.intent['text']} "
-                        f"(imminent)"
-                    )
-            else:
-                print(f"\tIntent: {e.intent['text']} ")
+            if turns > 1:
+                print(
+                    f"\tIntent: {e.intent['text']} "
+                    f"({turns - 1} turns)"
+                )
+            elif turns == 1:
+                print(
+                    f"\tIntent: {e.intent['text']} "
+                    f"(imminent)"
+                )
+        else:
+            print(f"\tIntent: {e.intent['text']} ")
             
     print("=====================\n")
 
@@ -87,9 +86,8 @@ def start_encounter(player: Character, room: Room) -> dict[str, any]:
 
         for enemy in combat_state.alive_enemies():
             if isinstance(enemy, Enemy) and enemy.locked_state:
-                enemy.locked_state["turns"] -= 1            
+                enemy.locked_state["turns"] -= 1         
             plan_enemy_intent(enemy, combat_state)
-            
 
         for actor in participants_sorted:
             if not combat_state.is_running:
@@ -453,79 +451,30 @@ def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
     if not intent:
         return Action(enemy, "attack", player)
 
-    if intent["type"] == "attack":
+    intent_type = intent.get("type")
+
+    if intent_type == "attack":
         return Action(enemy, "attack", player)
 
-    if intent["type"] == "skill":
+    if intent_type == "skill":
         skill = SKILL_REGISTRY.get(intent["skill_id"])
         if not skill:
             return Action(enemy, "attack", player)
 
         target = enemy if skill.target == "self" else player
         return Action(enemy, "skill", target, skill_id=skill.id)
-
-    if intent["type"] == "charging":
-        enemy.locked_state = {
-            "skill_id": intent["skill_id"],
-            "turns": intent["turns"],
-            "forced_action": intent.get("forced_action"),
-            "intent_hint": intent["text"],
-        }
-        return Action(enemy, "wait", None)
     
-    if intent["type"] == "airborne":
+    if intent_type:
+        print(intent_type, "line 468: if intent_type")
         enemy.locked_state = {
+            "state": intent_type,
             "skill_id": intent["skill_id"],
-            "turns": intent["turns"],
+            "turns": intent.get("turns", 0),
             "forced_action": intent.get("forced_action"),
             "intent_hint": intent["text"],
         }
-        return Action(enemy, "wait", None)
-    
-    if intent["type"] == "overheating":
-        enemy.locked_state = {
-            "skill_id": intent["skill_id"],
-            "turns": intent["turns"],
-            "forced_action": intent.get("forced_action"),
-            "intent_hint": intent["text"],
-        }
-        return Action(enemy, "wait", None)
-    
-    if intent["type"] == "howling":
-        enemy.locked_state = {
-            "skill_id": intent["skill_id"],
-            "turns": intent["turns"],
-            "forced_action": intent.get("forced_action"),
-            "intent_hint": intent["text"],
-        }
-        return Action(enemy, "wait", None)
-    
-    if intent["type"] == "seething":
-        enemy.locked_state = {
-            "skill_id": intent["skill_id"],
-            "turns": intent["turns"],
-            "forced_action": intent.get("forced_action"),
-            "intent_hint": intent["text"],
-        }
-        return Action(enemy, "wait", None)
-    
-    if intent["type"] == "bracing":
-        enemy.locked_state = {
-            "skill_id": intent["skill_id"],
-            "turns": intent["turns"],
-            "forced_action": intent.get("forced_action"),
-            "intent_hint": intent["text"],
-        }
-        return Action(enemy, "wait", None)
-    
-    if intent["type"] == "channeling":
-        enemy.locked_state = {
-            "skill_id": intent["skill_id"],
-            "turns": intent["turns"],
-            "forced_action": intent.get("forced_action"),
-            "intent_hint": intent["text"],
-        }
-        return Action(enemy, "wait", None)
+        return Action(enemy, "wait", None, state=enemy.locked_state)
+   
 
 def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
 
@@ -557,8 +506,10 @@ def get_available_enemy_skills(enemy, combat_state) -> list[Skill]:
 
 def plan_enemy_intent(enemy: Enemy, combat_state: Combat_State) -> None:
     if enemy.locked_state:
+        state = enemy.locked_state.get("state", "charging")
+
         enemy.intent = {
-            "type": "charging",
+            "type": state,
             "skill_id": enemy.locked_state["skill_id"],
             "turns": enemy.locked_state["turns"],
             "forced_action": enemy.locked_state.get("forced_action"),
@@ -581,12 +532,18 @@ def plan_enemy_intent(enemy: Enemy, combat_state: Combat_State) -> None:
     chosen_skill = weighted_pick_enemy_skill(enemy, skills)
 
     if chosen_skill.locks_actor:
+        lock = chosen_skill.locks_actor
+        state = lock.get("state", "charging")
+
         enemy.intent = {
-            "type": "charging",
+            "type": state,
             "skill_id": chosen_skill.id,
-            "turns": chosen_skill.locks_actor["turns"],
-            "forced_action": chosen_skill.locks_actor.get("forced_action"),
-            "text": chosen_skill.intent_hint,
+            "turns": lock["turns"],
+            "forced_action": lock.get("forced_action"),
+            "text": lock.get(
+                "intent_hint",
+                chosen_skill.intent_hint,
+            ),
         }
         return
 

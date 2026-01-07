@@ -63,6 +63,7 @@ STATUS_REGISTRY = {
         "prevents_action": True,
         "description": "Prevents the target from acting.",
         "interrupts": bool,
+        "expires_end_of_turn": True,
     },
 
     "defending": {

@@ -62,8 +62,10 @@ def format_status_icons(entity) -> str:
         data = STATUS_REGISTRY.get(status.id, {})
         icon = data.get("icon", "?")
 
-        if status.remaining_turns >= 0:
+        if status.remaining_turns > 0:
             icons.append(f"{icon} {status.remaining_turns}")
+        elif status.remaining_turns == 0:
+            pass
         else:
             icons.append(f"{icon}")
 

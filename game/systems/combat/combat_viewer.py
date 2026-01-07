@@ -1,3 +1,5 @@
+import random
+
 from game.ui.combat_text_helpers import describe_attack, describe_skill, describe_wait
 from game.ui.combat_ui import render_victory_summary
 
@@ -294,16 +296,56 @@ def render_combat_outcome(outcome: dict):
     elif action == "wait":
         reason = extra.get("reason")
 
+        rnd = random.random()
+
         if reason == "stunned":
             print(f"{actor} is stunned and cannot act.")
-
-            intent = extra.get("enemy_intent")
-            if intent:
-                print(f"The enemy is preparing to act: {intent}")
 
         elif reason == "overheating":
             print(f"{actor} is overheated and must recover.")
             print("Flames subside as it gathers itself.")
+        
+        elif reason == "seething":
+            print(f"{actor} seethes as acidic slime thickens around it.")
+            if rnd >= 0.5:
+                print("The air stings with corrosive fumes.")
+            else:
+                print("Its surface bubbles with unstable acid.")
+
+        elif reason == "channeling":
+            print(f"{actor} stands rigid, channeling necrotic energy.")
+            if rnd >= 0.5:
+                print("Dark power spirals tightly around its form.")
+            else:
+                print("The ground chills beneath its feet.")
+
+        elif reason == "howling":
+            print(f"{actor} continues its savage howl.")
+            if rnd >= 0.5:
+                print("Its muscles tense as bloodlust rises.")
+            else:
+                print("The sound reverberates through the battlefield.")
+        
+        elif reason == "charging":
+            print(f"{actor} draws in a deep, smoldering breath.")
+            if rnd >= 0.5:
+                print("Heat ripples through the air.")
+            else:
+                print("Embers glow beneath its scales.")
+
+        elif reason == "airborne_up":
+            print(f"{actor} circles high above the battlefield.")
+            if rnd >= 0.5:
+                print("Its shadow passes ominously overhead.")
+            else:
+                print("Wings beat slowly as it lines up its strike.")
+        
+        elif reason == "airborne_down":
+            print(f"{actor} hangs overhead, poised to strike.")
+            if rnd >= 0.5:
+                print("The air trembles under its weight.")
+            else:
+                print("Loose debris begins to rise from the ground.")
 
         else:
             print(f"{actor} waits.")
