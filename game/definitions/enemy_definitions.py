@@ -58,7 +58,7 @@ ENEMY_DEFINITIONS = {
     Enemy_type.ENEMY_SHAMBLING_CORPSE: {
         "name": "Shambling Corpse",
         "hp": 43,
-        "damage": 4,
+        "damage": 6,
         "defence": 2,
         "rarity": Enemy_Rarity.COMMON,
         "sub_type": Enemy_sub_type.UNDEAD,

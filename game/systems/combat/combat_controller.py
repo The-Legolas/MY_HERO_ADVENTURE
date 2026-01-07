@@ -465,7 +465,6 @@ def decide_enemy_action(enemy: Enemy, combat_state: Combat_State) -> 'Action':
         return Action(enemy, "skill", target, skill_id=skill.id)
     
     if intent_type:
-        print(intent_type, "line 468: if intent_type")
         enemy.locked_state = {
             "state": intent_type,
             "skill_id": intent["skill_id"],
