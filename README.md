@@ -166,17 +166,25 @@ This means:
 
 ---
 
+
 ## Why I Built This
 
-I built **My Hero Adventure** to bridge a common gap in learning projects:
+I built **My Hero Adventure** primarily for myself.
 
-> Small tutorials don’t prepare you for large systems,  
-> and large projects are often too opaque to learn from.
+When learning, I kept running into the same problem:
 
-This project aims to sit in between:
+> Small tutorials were too narrow to feel real,
+> While larger projects were too complex to learn from meaningfully.
 
-- Large enough to demonstrate real structure
-- Small enough to remain understandable
-- Opinionated without being rigid
+I needed something in between—something I could fully own, break, rebuild, and understand end to end.
 
-If someone learns even one thing from reading this code, it has achieved its goal, because I know I certainly have.
+This project exists to fill that space for me:
+
+- Large enough to require real structure and discipline  
+- Small enough that I can still reason about the whole system  
+- Opinionated enough to force decisions, without locking me in  
+
+The goal was to create a project where *I* could learn by doing, by making mistakes, and by iterating on something that grows over time.
+
+If someone else happens to learn something from reading this code, that’s a welcome side effect—but the real success is that I’ve already learned more from building it than I would have from following another tutorial.
+
