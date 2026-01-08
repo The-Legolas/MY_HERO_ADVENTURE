@@ -112,12 +112,17 @@ Project Structure (High-Level)
 
 ```py
 game/
-├── core/          # Characters, enemies, items, statuses
-├── systems/       # Combat, damage, skills, progression
-├── world/         # Dungeon, town, world state
-├── engine/        # Game loop, save/load, input handling
-├── ui/            # Text rendering and menus
-├── tests/         # Unit tests by system
+├── core/                # Characters, enemies, items, statuses, skills
+├── definitions/         # Various hard data for the classes
+├── engine/              # Game loop, save/load, input handling, spawning logic
+├── systems/combat/      # Combat, damage, combat logic
+├── systems/enums/       # All enum classes
+├── systems/util_funcs/  # Various util functions used throughout the code base
+├── tests/               # Unit tests by system
+├── ui/                  # Text rendering and menus
+├── ui/dialog/           # All dialog is held here
+├── world/               # Dungeon, town, world state
+├── world/town_logic/    # Town creation, layout, shop systems
 main.py
 ```
 
