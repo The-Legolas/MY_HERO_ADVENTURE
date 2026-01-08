@@ -189,6 +189,8 @@ class Character:
                 elif stat == "hp":
                     self.base_hp += value
 
+        self.get_on_equip_effects()
+
         print(f"\nYou equipped {item.name} in {slot} slot.")
         input()
         
@@ -227,6 +229,21 @@ class Character:
                 self.base_hp -= value
 
         self.add_item(item, 1)
+
+        if item.effect:
+            for effect in item.effect:
+                if effect.get("trigger") != "on_equip":
+                    continue
+
+                status_id = effect.get("status", {}).get("id")
+                if not status_id:
+                    continue
+
+                self.statuses = [
+                    s for s in self.statuses
+                    if not (s.id == status_id and s.source == item.name)
+                ]
+                
         print(f"\nYou unequipped {item.name}.")
         input()
 
@@ -456,6 +473,8 @@ class Character:
 
 
     def process_statuses(self) -> list[dict]:
+        self.get_on_equip_effects()
+
         expired = []
         logs = []
 
@@ -467,10 +486,12 @@ class Character:
         for status in statuses_sorted:
             data = STATUS_REGISTRY.get(status.id, {})
 
+            is_infinite = status.remaining_turns < 0
+
             if status.just_applied:
                 status.just_applied = False
 
-                if status.id == "stun":
+                if status.id == "stun" and not is_infinite:
                     status.remaining_turns -= 1
                 continue            
 
@@ -529,10 +550,10 @@ class Character:
                     "hp_before": before_hp,
                     "hp_after": self.hp
                 })
-
-            status.remaining_turns -= 1
-            if status.remaining_turns <= 0:
-                expired.append(status)
+            if not is_infinite:
+                status.remaining_turns -= 1
+                if status.remaining_turns <= 0:
+                    expired.append(status)
 
         for status in expired:
             self.statuses.remove(status)
@@ -716,7 +737,18 @@ class Character:
         return self.get_effects_by_trigger("on_hit")
 
     def get_on_equip_effects(self):
-        return self.get_effects_by_trigger("on_equip")
+        for effect in self.get_effects_by_trigger("on_equip"):
+            status_data = effect.get("status")
+            if not status_data:
+                continue
+
+            status = Status(
+                id=status_data["id"],
+                remaining_turns=status_data.get("duration", -1),
+                magnitude=status_data.get("magnitude", 1),
+            )
+
+            self.apply_status(status)
 
     def get_on_turn_effects(self):
         return self.get_effects_by_trigger("on_turn")

@@ -346,6 +346,13 @@ def render_combat_outcome(outcome: dict):
                 print("The air trembles under its weight.")
             else:
                 print("Loose debris begins to rise from the ground.")
+            
+        elif reason == "prepare":
+            print(f"{actor} braces firmly behind its shield.")
+            if rnd >= 0.5:
+                print("It plants its stance and refuses to yield.")
+            else:
+                print("Steel scrapes against the ground as it locks into position.")
 
         else:
             print(f"{actor} waits.")

@@ -16,7 +16,7 @@ ITEM_DEFINITIONS = {
         "category": Item_Type.WEAPON,
         "stackable": False,
         "unique": True,
-        "stats": {"damage": +20},
+        "stats": {"damage": +15},
         "effect": None,
         "value": 300
     },
@@ -159,11 +159,11 @@ ITEM_DEFINITIONS = {
     "stats": None,
     "effect": [
         {
-        "trigger": "on_turn",
+        "trigger": "on_equip",
         "status": {
             "id": "strength_up",
-            "duration": 2,
-            "magnitude": 1.15
+            "duration": -1,
+            "magnitude": 1.25
         }
         }
     ],

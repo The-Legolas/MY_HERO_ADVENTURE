@@ -46,7 +46,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "id": "stun",
             "duration": 1,
             "magnitude": None,
-            "chance": 1, #0.5
+            "chance": 0.5, 
         },
         forbid_if_target_has=["stun"],
     ),
@@ -156,7 +156,8 @@ SKILL_REGISTRY: dict[str, Skill] = {
         description="A forceful blow aimed to rattle the enemy’s senses.",
         target="enemy",
         damage={
-            "type": "multiplier",
+            "type": "hybrid",
+            "base": 5,
             "stat": "damage",
             "mult": 0.95,
         },
@@ -387,7 +388,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
             "chance": 1.0,
         },
         locks_actor={
-            "state": "wait",
+            "state": "prepare",
             "turns": 2,
             "forced_action": None,
         },
@@ -443,8 +444,10 @@ SKILL_REGISTRY: dict[str, Skill] = {
         intent_hint="Corrosive fluid spatters outward.",
         target="enemy",
         damage={
-            "type": "flat",
-            "amount": 4,
+            "type": "hybrid",
+            "base": 4,
+            "stat": "damage",
+            "mult": 1,
             "can_crit": False,
         },
         apply_status={
@@ -495,7 +498,8 @@ SKILL_REGISTRY: dict[str, Skill] = {
         intent_hint="Gelatinous mass swells and presses in.",
         target="enemy",
         damage={
-            "type": "multiplier",
+            "type": "hybrid",
+            "base": 5,
             "stat": "damage",
             "mult": 0.5,
             "can_crit": False,
@@ -658,7 +662,7 @@ SKILL_REGISTRY: dict[str, Skill] = {
         },
         locks_actor={
             "state": "charging",
-            "turns": 4,
+            "turns": 3,
             "forced_action": None,
         },
         cooldown_turns=8,

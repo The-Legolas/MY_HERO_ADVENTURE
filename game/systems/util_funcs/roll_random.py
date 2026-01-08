@@ -42,7 +42,7 @@ def roll_room_type(day_counter: int, depth: int) -> Room_Types:
 
     # The real versions
     enemy_chance = min(0.50 + day_counter * 0.01, 0.90)
-    treasure_chance = max(0.20 - day_counter * 0.005, 0.05)
+    treasure_chance = max(0.20 - day_counter * 0.005, 0.025)
 
     # Debug version
     #enemy_chance = max(0.50 + day_counter * 0.01, 0.99999)
