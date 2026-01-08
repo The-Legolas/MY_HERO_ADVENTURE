@@ -70,7 +70,7 @@ This project emphasizes:
 
 ## Requirements
 
-- **Python 3.12**
+- **Minimum Python vers. 3.12**
 - No third-party libraries required  
   *(standard library only)*
 
