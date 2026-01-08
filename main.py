@@ -13,18 +13,18 @@ from game.engine.save_system import load_game
 
 
 """
-currently 11177 lines of code as of the previous git commit
+currently __ lines of code as of the previous git commit
 Bugs:
 
 Test:
-1. re-test combat wiht the correct amount of health and dmg
+
 
 Fixed:
 
 
-
 Like to have:
-
+If I ever go back to this project then add: A new dungeon type (a swamp and a crypt maybe); add a wizard character who uses mana and an archer who uses arrows as ressources;
+maybe experiment with pygame and actually make some visuals for this game
 
 """
 
