@@ -26,8 +26,6 @@ This project emphasizes:
 - Explicit logic over hidden magic
 - Testability as a design constraint
 
-> Game mechanics exist to support architectural clarity, not to obscure it.
-
 ---
 
 ## Core Features
@@ -139,6 +137,29 @@ Cross-system dependencies are intentional and kept minimal.
 
 ---
 
+## Content Cut for Time
+
+- The game currently only features a Warrior as a playable character. Originally, I wanted to add two additional characters:
+  - A Wizard: physically weak but capable of casting powerful spells.
+  - An Archer: equipped with an arsenal of specialized arrows for different combat scenarios.
+
+  These characters would have provided distinct gameplay experiences:
+  - The Warrior would focus on tanking damage and managing skills to brute-force encounters.
+  - The Wizard would be fragile but capable of dealing significant burst damage.
+  - The Archer would require a more tactical approach, carefully selecting tools and positioning in combat.
+
+- Additionally, the game currently contains only two dungeon types:
+  - A standard cave dungeon.
+  - An end-game castle dungeon where the final boss resides.
+
+  The original design included multiple dungeon types, each with unique mechanics:
+  - The cave would be the easiest dungeon, featuring fewer enemies and limited loot.
+  - The swamp would contain more enemies focused on poison and other status effects.
+  - The mountain would feature fewer enemies overall, but they would be significantly stronger, providing greater XP rewards and higher-quality loot.
+
+- Lastly, additional equipment options were planned to support the various playstyles and enemy types introduced by this cut content. Players would have needed to make strategic decisions about their equipment based on enemy matchups and dungeon challenges.
+
+
 ## Contributions & Feedback
 
 Feedback is welcome.
@@ -151,7 +172,7 @@ This project is not feature-request driven, but useful contributions include:
 - Documentation improvements
 - Design discussions
 
-You are welcome to open issues simply to share thoughts or observations.
+You are welcome to open issues simply to share thoughts, feedback, or observations.
 
 ---
 
