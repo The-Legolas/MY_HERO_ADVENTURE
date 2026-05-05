@@ -209,3 +209,7 @@ The goal was to create a project where *I* could learn by doing, by making mista
 
 If someone else happens to learn something from reading this code, that’s a welcome side effect—but the real success is that I’ve already learned more from building it than I would have from following another tutorial.
 
+Motivation
+Quick Start
+Usage
+Contributing
